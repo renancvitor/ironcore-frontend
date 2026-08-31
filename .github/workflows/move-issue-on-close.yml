@@ -1,0 +1,17 @@
+name: Move issue to Done on Close
+on:
+  issues:
+    types: [closed]
+
+jobs:
+  move_to_done:
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Move issue to Done
+        uses: nipe0324/update-project-v2-item-field@c4af58452d1c5a788c1ea4f20e073fa722ec4a6b # v2.0.2
+        with:
+          project-url: https://github.com/users/renancvitor/projects/3
+          github-token: ${{ secrets.GH_TOKEN }}
+          field-name: 'Status'
+          field-value: 'Done'
