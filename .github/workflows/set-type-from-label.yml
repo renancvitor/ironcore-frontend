@@ -12,7 +12,7 @@ jobs:
           github_token: ${{ secrets.GH_TOKEN }}
           assignees: renancvitor
       - name: Update Project v2 Type
-        uses: nipe0324/update-project-v2-item-field@v2.0.2
+        uses: nipe0324/update-project-v2-item-field@c4af58452d1c5a788c1ea4f20e073fa722ec4a6b # v2.0.2
         if: ${{ contains(fromJson('["feature","bug","refactor","tech-debt","docs","research"]'), github.event.label.name) }}
         with:
           project-url: https://github.com/users/renancvitor/projects/3

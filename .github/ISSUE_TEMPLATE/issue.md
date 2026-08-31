@@ -12,9 +12,10 @@ Título recomendado:
 [escopo] descrição objetiva
 
 Exemplos:
-[backend] implementar consulta detalhada de workout
-[docs] atualizar documentação do fluxo de workout planning
-[infra] configurar execução do serviço no ambiente local
+[frontend] implementar tela detalhada de workout
+[ui] ajustar validação visual do formulário de perfil
+[infra] configurar execução da aplicação no ambiente local
+[docs] atualizar documentação do fluxo de navegação
 
 Antes de publicar:
 - remova as instruções que não forem necessárias;
@@ -50,9 +51,10 @@ Adicione abaixo os critérios específicos da entrega.
 Os critérios devem ser objetivos e verificáveis.
 
 Exemplos:
-- [ ] Implementar use case de consulta por ID
-- [ ] Validar ownership por `PersonId`
-- [ ] Adicionar testes unitários e de controller
+- [ ] Implementar componente, rota ou formulário conforme o escopo
+- [ ] Integrar com a API e tratar estados de carregamento e erro, se aplicável
+- [ ] Adicionar ou atualizar testes de componentes e serviços
+- [ ] Validar responsividade e acessibilidade quando houver impacto visual
 - [ ] Atualizar documentação técnica
 -->
 

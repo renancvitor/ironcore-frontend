@@ -4,10 +4,10 @@ Título recomendado:
 tipo(escopo): descrição objetiva
 
 Exemplos:
-feat(workout): add detailed workout query
-fix(body-metrics): validate person ownership
-docs(workout): document planning lifecycle
-refactor(user): isolate password change service
+feat(workout): add workout details screen
+fix(profile): validate form feedback
+docs(navigation): document routing flow
+refactor(auth): isolate session service
 chore(github): add community standards
 -->
 
@@ -40,7 +40,9 @@ Checklist
 - [ ] Sem breaking changes não intencionais
 - [ ] Testes adicionados ou atualizados, se aplicável
 - [ ] Documentação atualizada, se aplicável
-- [ ] Contratos OpenAPI atualizados, se aplicável
-- [ ] Migrations históricas preservadas, se aplicável
+- [ ] Build executado com sucesso
+- [ ] Lint ou format executado, se configurado
+- [ ] Comportamento visual validado, se aplicável
+- [ ] Responsividade e acessibilidade validadas, se aplicável
+- [ ] Integração com a API validada, se aplicável
 - [ ] Sem credenciais, tokens, segredos ou dados pessoais
-- [ ] ./mvnw clean verify --batch-mode executado com sucesso
