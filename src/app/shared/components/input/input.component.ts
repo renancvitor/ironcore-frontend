@@ -1,9 +1,11 @@
 import { Component, forwardRef, input } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-input',
-  imports: [],
+  imports: [MatFormFieldModule, MatInputModule],
   templateUrl: './input.component.html',
   styleUrl: './input.component.scss',
   providers: [
@@ -51,7 +53,7 @@ export class InputComponent implements ControlValueAccessor {
     this.onChange(this.value);
   }
 
-  handleBlue(): void {
+  handleBlur(): void {
     this.onTouched();
   }
 }

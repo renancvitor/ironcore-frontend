@@ -55,7 +55,7 @@ describe('Input', () => {
 
     fixture.detectChanges();
 
-    const error: HTMLElement = fixture.nativeElement.querySelector('.ic-input__error');
+    const error: HTMLElement = fixture.nativeElement.querySelector('mat-error');
 
     expect(error.textContent).toContain('Campo obrigatório');
   });
@@ -93,7 +93,7 @@ describe('Input', () => {
 
     const input: HTMLInputElement = fixture.nativeElement.querySelector('input');
 
-    const error: HTMLElement = fixture.nativeElement.querySelector('.ic-input__error');
+    const error: HTMLElement = fixture.nativeElement.querySelector('mat-error');
 
     expect(input.getAttribute('aria-describedby')).toBe('email-error');
     expect(error.id).toBe('email-error');
