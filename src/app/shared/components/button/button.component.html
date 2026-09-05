@@ -1,0 +1,11 @@
+<button
+  type="button"
+  class="ic-button"
+  [class.ic-button--primary]="variant() === 'primary'"
+  [class.ic-button--secondary]="variant() === 'secondary'"
+  [class.ic-button--danger]="variant() === 'danger'"
+  [class.ic-button--cancel]="variant() === 'cancel'"
+  [disabled]="disabled()"
+>
+  <ng-content />
+</button>

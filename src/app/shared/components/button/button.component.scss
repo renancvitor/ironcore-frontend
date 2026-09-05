@@ -1,0 +1,68 @@
+.ic-button {
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--ic-primary);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.ic-button--primary {
+  background-color: var(--ic-button-primary-bg);
+  color: var(--ic-button-primary-text);
+
+  &:hover:not(:disabled) {
+    background-color: var(--ic-primary-hover);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--ic-primary-active);
+  }
+}
+
+.ic-button--secondary {
+  background-color: var(--ic-button-secondary-bg);
+  color: var(--ic-button-secondary-text);
+
+  &:hover:not(:disabled) {
+    background-color: var(--ic-button-secondary-hover);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--ic-button-secondary-active);
+  }
+}
+
+.ic-button--danger {
+  background-color: var(--ic-button-danger-bg);
+  color: var(--ic-button-danger-text);
+
+  &:hover:not(:disabled) {
+    background-color: var(--ic-button-danger-hover);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--ic-button-danger-active);
+  }
+}
+
+.ic-button--cancel {
+  background-color: var(--ic-button-cancel-bg);
+  color: var(--ic-button-cancel-text);
+
+  &:hover:not(:disabled) {
+    background-color: var(--ic-button-cancel-hover);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--ic-button-cancel-active);
+  }
+}
