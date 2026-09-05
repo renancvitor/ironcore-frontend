@@ -1,0 +1,25 @@
+<div class="ic-input">
+  <label class="ic-input__label" [for]="id()">
+    {{ label() }}
+  </label>
+
+  <input
+    class="ic-input__field"
+    [class.ic-input__field--error]="!!error()"
+    [id]="id()"
+    [type]="type()"
+    [placeholder]="placeholder()"
+    [disabled]="disabled() || formDisabled"
+    [value]="value"
+    [attr.aria-invalid]="!!error()"
+    [attr.aria-describedby]="error() ? id() + '-error' : null"
+    (input)="handleInput($event)"
+    (blur)="handleBlue()"
+  />
+
+  @if (error()) {
+    <span class="ic-input__error" [id]="id() + '-error'" role="alert">
+      {{ error() }}
+    </span>
+  }
+</div>
