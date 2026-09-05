@@ -1,5 +1,7 @@
 <mat-form-field class="ic-input">
-  <mat-label>{{ label() }}</mat-label>
+  <mat-label class="ic-input__label">
+    {{ label() }}
+  </mat-label>
 
   <input
     matInput
@@ -17,7 +19,7 @@
     (blur)="handleBlur()"
   />
 
-  <mat-error [id]="id() + '-error'">
+  <mat-error class="ic-input__error" [id]="id() + '-error'">
     {{ error() }}
   </mat-error>
 </mat-form-field>
