@@ -31,10 +31,14 @@
 
   // Destrutivo
   --ic-button-danger-bg: var(--ic-red-main);
+  --ic-button-danger-hover: var(--ic-red-hover);
+  --ic-button-danger-active: var(--ic-red-active);
   --ic-button-danger-text: var(--ic-white);
 
   // Voltar / cancelar
   --ic-button-cancel-bg: var(--ic-gray-600);
+  --ic-button-cancel-hover: var(--ic-gray-400);
+  --ic-button-cancel-active: var(--ic-gray-700);
   --ic-button-cancel-text: var(--ic-white);
 
   // Campos
@@ -101,10 +105,14 @@
 
   // Destrutivo
   --ic-button-danger-bg: var(--ic-red-main);
+  --ic-button-danger-hover: var(--ic-red-hover);
+  --ic-button-danger-active: var(--ic-red-active);
   --ic-button-danger-text: var(--ic-white);
 
   // Voltar / cancelar
   --ic-button-cancel-bg: var(--ic-gray-600);
+  --ic-button-cancel-hover: var(--ic-gray-400);
+  --ic-button-cancel-active: var(--ic-gray-700);
   --ic-button-cancel-text: var(--ic-white);
 
   // Campos
