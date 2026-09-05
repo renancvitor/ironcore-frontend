@@ -1,0 +1,138 @@
+[data-theme='light'] {
+  // Estrutura
+  --ic-background: var(--ic-light-gray);
+  --ic-surface: var(--ic-cream);
+  --ic-surface-elevated: var(--ic-surface-gray);
+
+  // Texto
+  --ic-text-primary: var(--ic-black);
+  --ic-text-secondary: var(--ic-gray-900);
+  --ic-text-disabled: var(--ic-gray-600);
+
+  // Bordas
+  --ic-border-default: var(--ic-green-main);
+  --ic-border-soft: var(--ic-green-soft);
+
+  // Cor principal
+  --ic-primary: var(--ic-green-main);
+  --ic-primary-hover: var(--ic-green-hover);
+  --ic-primary-active: var(--ic-green-active);
+  --ic-primary-soft: var(--ic-green-soft);
+
+  // Botão primário
+  --ic-button-primary-bg: var(--ic-green-main);
+  --ic-button-primary-text: var(--ic-white);
+
+  // Botão secundário
+  --ic-button-secondary-bg: var(--ic-gray-600);
+  --ic-button-secondary-hover: var(--ic-gray-400);
+  --ic-button-secondary-active: var(--ic-gray-700);
+  --ic-button-secondary-text: var(--ic-white);
+
+  // Destrutivo
+  --ic-button-danger-bg: var(--ic-red-main);
+  --ic-button-danger-text: var(--ic-white);
+
+  // Voltar / cancelar
+  --ic-button-cancel-bg: var(--ic-gray-600);
+  --ic-button-cancel-text: var(--ic-white);
+
+  // Campos
+  --ic-field-bg: var(--ic-cream-field);
+  --ic-field-text: var(--ic-black);
+  --ic-field-placeholder: var(--ic-gray-900);
+  --ic-field-border: var(--ic-green-active);
+  --ic-field-border-focus: var(--ic-green-main);
+
+  // Ícones
+  --ic-icon-default: var(--ic-green-main);
+  --ic-icon-highlight: var(--ic-green-hover);
+  --ic-icon-disabled: var(--ic-gray-600);
+
+  // Menu
+  --ic-menu-bg: var(--ic-cream);
+  --ic-menu-active-bg: var(--ic-white);
+  --ic-menu-active-indicator: var(--ic-green-soft);
+  --ic-menu-icon: var(--ic-green-main);
+  --ic-menu-icon-active: var(--ic-green-hover);
+
+  // Navegação
+  --ic-navigation: var(--ic-green-main);
+
+  // Loading
+  --ic-loading: var(--ic-green-main);
+
+  // Empty state
+  --ic-empty-icon: var(--ic-gray-600);
+  --ic-empty-text: var(--ic-gray-900);
+}
+
+:root:not([data-theme]),
+[data-theme='dark'] {
+  // Estrutura
+  --ic-background: var(--ic-gray-900);
+  --ic-surface: var(--ic-black);
+  --ic-surface-elevated: var(--ic-black-soft);
+
+  // Texto
+  --ic-text-primary: var(--ic-white-soft);
+  --ic-text-secondary: var(--ic-white-secondary);
+  --ic-text-disabled: var(--ic-gray-600);
+
+  // Bordas
+  --ic-border-default: var(--ic-green-main);
+  --ic-border-soft: var(--ic-green-soft);
+
+  // Cor principal
+  --ic-primary: var(--ic-green-main);
+  --ic-primary-hover: var(--ic-green-hover);
+  --ic-primary-active: var(--ic-green-active);
+  --ic-primary-soft: var(--ic-green-soft);
+
+  // Botão primário
+  --ic-button-primary-bg: var(--ic-green-main);
+  --ic-button-primary-text: var(--ic-white);
+
+  // Botão secundário
+  --ic-button-secondary-bg: var(--ic-gray-600);
+  --ic-button-secondary-hover: var(--ic-gray-400);
+  --ic-button-secondary-active: var(--ic-gray-700);
+  --ic-button-secondary-text: var(--ic-white);
+
+  // Destrutivo
+  --ic-button-danger-bg: var(--ic-red-main);
+  --ic-button-danger-text: var(--ic-white);
+
+  // Voltar / cancelar
+  --ic-button-cancel-bg: var(--ic-gray-600);
+  --ic-button-cancel-text: var(--ic-white);
+
+  // Campos
+  --ic-field-bg: var(--ic-gray-800);
+  --ic-field-text: var(--ic-white-soft);
+  --ic-field-placeholder: var(--ic-gray-400);
+  --ic-field-border: var(--ic-green-active);
+  --ic-field-border-focus: var(--ic-green-main);
+
+  // Ícones
+  --ic-icon-default: var(--ic-green-main);
+  --ic-icon-highlight: var(--ic-green-hover);
+  --ic-icon-disabled: var(--ic-gray-600);
+
+  // Menu
+  --ic-menu-bg: var(--ic-black);
+  --ic-menu-active-bg: var(--ic-gray-800);
+  --ic-menu-active-indicator: var(--ic-green-active);
+  --ic-menu-icon: var(--ic-green-main);
+  --ic-menu-icon-active: var(--ic-green-hover);
+
+  // Navegação
+  --ic-navigation: var(--ic-green-main);
+
+  // Loading
+  --ic-loading: var(--ic-green-main);
+
+  // Empty state
+  --ic-empty-icon: var(--ic-gray-700);
+  --ic-empty-text: var(--ic-gray-600);
+}

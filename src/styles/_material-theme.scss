@@ -1,0 +1,139 @@
+@use '@angular/material' as mat;
+@use './palette' as palette;
+
+[data-theme='light'] {
+  @include mat.theme(
+    (
+      color: (
+        theme-type: light,
+        primary: palette.$ic-light-material-palette,
+        tertiary: palette.$ic-light-material-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+
+  @include mat.theme-overrides(
+    (
+      background: #edede9,
+      error: #e5383b,
+      error-container: #e5383b,
+      inverse-on-surface: #ffffff,
+      inverse-primary: #6ede8a,
+      inverse-surface: #212529,
+      on-background: #000000,
+      on-error: #ffffff,
+      on-error-container: #ffffff,
+      on-primary: #ffffff,
+      on-primary-container: #000000,
+      on-primary-fixed: #000000,
+      on-primary-fixed-variant: #ffffff,
+      on-secondary: #ffffff,
+      on-secondary-container: #ffffff,
+      on-secondary-fixed: #000000,
+      on-secondary-fixed-variant: #ffffff,
+      on-surface: #000000,
+      on-surface-variant: #212529,
+      on-tertiary: #ffffff,
+      on-tertiary-container: #000000,
+      on-tertiary-fixed: #000000,
+      on-tertiary-fixed-variant: #ffffff,
+      outline: #25a244,
+      outline-variant: #6ede8a,
+      primary: #25a244,
+      primary-container: #6ede8a,
+      primary-fixed: #6ede8a,
+      primary-fixed-dim: #2dc653,
+      scrim: #000000,
+      secondary: #6c757d,
+      secondary-container: #adb5bd,
+      secondary-fixed: #adb5bd,
+      secondary-fixed-dim: #6c757d,
+      shadow: #000000,
+      surface: #f7ede2,
+      surface-bright: #f7ede2,
+      surface-container: #f7ede2,
+      surface-container-high: #e5e5e5,
+      surface-container-highest: #e5e5e5,
+      surface-container-low: #f7ede2,
+      surface-container-lowest: #ffffff,
+      surface-dim: #edede9,
+      surface-tint: #25a244,
+      surface-variant: #f7ede2,
+      tertiary: #25a244,
+      tertiary-container: #6ede8a,
+      tertiary-fixed: #6ede8a,
+      tertiary-fixed-dim: #2dc653,
+    )
+  );
+}
+
+:root:not([data-theme]),
+[data-theme='dark'] {
+  @include mat.theme(
+    (
+      color: (
+        theme-type: dark,
+        primary: palette.$ic-dark-material-palette,
+        tertiary: palette.$ic-dark-material-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+
+  @include mat.theme-overrides(
+    (
+      background: #212529,
+      error: #e5383b,
+      error-container: #e5383b,
+      inverse-on-surface: #212529,
+      inverse-primary: #25a244,
+      inverse-surface: #f8f9fa,
+      on-background: #f8f9fa,
+      on-error: #ffffff,
+      on-error-container: #ffffff,
+      on-primary: #ffffff,
+      on-primary-container: #ffffff,
+      on-primary-fixed: #ffffff,
+      on-primary-fixed-variant: #ffffff,
+      on-secondary: #ffffff,
+      on-secondary-container: #ffffff,
+      on-secondary-fixed: #ffffff,
+      on-secondary-fixed-variant: #ffffff,
+      on-surface: #f8f9fa,
+      on-surface-variant: #edf2f4,
+      on-tertiary: #ffffff,
+      on-tertiary-container: #ffffff,
+      on-tertiary-fixed: #ffffff,
+      on-tertiary-fixed-variant: #ffffff,
+      outline: #25a244,
+      outline-variant: #6ede8a,
+      primary: #25a244,
+      primary-container: #208b3a,
+      primary-fixed: #6ede8a,
+      primary-fixed-dim: #2dc653,
+      scrim: #000000,
+      secondary: #6c757d,
+      secondary-container: #495057,
+      secondary-fixed: #adb5bd,
+      secondary-fixed-dim: #6c757d,
+      shadow: #000000,
+      surface: #000000,
+      surface-bright: #333533,
+      surface-container: #0a0908,
+      surface-container-high: #0a0908,
+      surface-container-highest: #333533,
+      surface-container-low: #000000,
+      surface-container-lowest: #000000,
+      surface-dim: #000000,
+      surface-tint: #25a244,
+      surface-variant: #333533,
+      tertiary: #25a244,
+      tertiary-container: #208b3a,
+      tertiary-fixed: #6ede8a,
+      tertiary-fixed-dim: #2dc653,
+    )
+  );
+}

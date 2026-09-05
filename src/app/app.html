@@ -1,3 +1,118 @@
-<button matButton>IronCore Material Test</button>
+<main class="showcase">
+  <mat-toolbar class="showcase__toolbar">
+    <mat-icon>shield</mat-icon>
+    <span>IronCore</span>
+    <span class="showcase__toolbar-spacer"></span>
+    <button mat-icon-button aria-label="Notificações">
+      <mat-icon [matBadge]="3" matBadgeColor="warn">notifications</mat-icon>
+    </button>
+    <button mat-icon-button aria-label="Menu">
+      <mat-icon>menu</mat-icon>
+    </button>
+  </mat-toolbar>
 
-<router-outlet />
+  <section class="showcase__intro">
+    <div>
+      <p class="showcase__eyebrow">VALIDAÇÃO VISUAL</p>
+      <h1>Componentes Angular Material</h1>
+      <p>
+        Esta tela não define <code>data-theme</code>. Ela deve iniciar no tema escuro padrão.
+      </p>
+    </div>
+    <mat-chip-set aria-label="Estado da validação">
+      <mat-chip>tema padrão</mat-chip>
+      <mat-chip highlighted>Material 3</mat-chip>
+    </mat-chip-set>
+  </section>
+
+  <mat-divider></mat-divider>
+
+  <section class="showcase__grid">
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>palette</mat-icon>
+        <mat-card-title>Ações</mat-card-title>
+        <mat-card-subtitle>Botões e estados</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="showcase__content">
+        <div class="showcase__button-row">
+          <button mat-flat-button>Primário</button>
+          <button mat-tonal-button>Tonado</button>
+          <button mat-stroked-button>Secundário</button>
+          <button mat-button>Texto</button>
+        </div>
+        <div class="showcase__button-row">
+          <button mat-flat-button class="showcase__danger-button">Destrutivo</button>
+          <button mat-flat-button disabled>Desabilitado</button>
+          <button mat-icon-button aria-label="Editar"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button disabled aria-label="Excluir"><mat-icon>delete</mat-icon></button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>edit_note</mat-icon>
+        <mat-card-title>Campos</mat-card-title>
+        <mat-card-subtitle>Preenchimento, foco e seleção</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="showcase__content showcase__fields">
+        <mat-form-field appearance="outline">
+          <mat-label>Nome do recurso</mat-label>
+          <input matInput value="Servidor principal" />
+          <mat-icon matSuffix>dns</mat-icon>
+          <mat-hint>Campo preenchido</mat-hint>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Ambiente</mat-label>
+          <mat-select value="development">
+            <mat-option value="development">Desenvolvimento</mat-option>
+            <mat-option value="production">Produção</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Observação</mat-label>
+          <textarea matInput placeholder="Placeholder do campo"></textarea>
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>tune</mat-icon>
+        <mat-card-title>Seleções</mat-card-title>
+        <mat-card-subtitle>Controles e indicadores</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="showcase__content showcase__selection">
+        <mat-checkbox checked>Monitoramento ativo</mat-checkbox>
+        <mat-slide-toggle checked>Notificações habilitadas</mat-slide-toggle>
+        <mat-radio-group aria-label="Nível de acesso">
+          <mat-radio-button value="reader">Leitura</mat-radio-button>
+          <mat-radio-button value="admin" checked>Administrador</mat-radio-button>
+        </mat-radio-group>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>sync</mat-icon>
+        <mat-card-title>Feedback</mat-card-title>
+        <mat-card-subtitle>Carregamento e informações</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="showcase__content">
+        <div class="showcase__progress">
+          <mat-progress-spinner mode="indeterminate" diameter="42"></mat-progress-spinner>
+          <div>
+            <strong>Sincronizando dados</strong>
+            <p>Verifique cor, contraste e ícone de loading.</p>
+          </div>
+        </div>
+        <mat-progress-bar mode="determinate" value="65"></mat-progress-bar>
+        <div class="showcase__empty-state">
+          <mat-icon>inbox</mat-icon>
+          <p>Nenhum registro encontrado.</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </section>
+</main>
