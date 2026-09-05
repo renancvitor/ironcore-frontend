@@ -1,0 +1,115 @@
+@use 'sass:map';
+
+:root {
+  // Verdes
+  --ic-green-main: #25a244;
+  --ic-green-hover: #2dc653;
+  --ic-green-active: #208b3a;
+  --ic-green-soft: #6ede8a;
+
+  // Vermelho
+  --ic-red-main: #e5383b;
+
+  // Neutros escuros
+  --ic-black: #000000;
+  --ic-black-soft: #0a0908;
+  --ic-gray-900: #212529;
+  --ic-gray-800: #333533;
+  --ic-gray-700: #495057;
+  --ic-gray-600: #6c757d;
+  --ic-gray-400: #adb5bd;
+
+  // Neutros claros
+  --ic-white: #ffffff;
+  --ic-white-soft: #f8f9fa;
+  --ic-white-secondary: #edf2f4;
+
+  // Fundos claros
+  --ic-light-gray: #edede9;
+  --ic-cream: #f7ede2;
+  --ic-cream-field: #f5ebe0;
+  --ic-surface-gray: #e5e5e5;
+}
+
+// Paletas tonais exigidas pelo Angular Material 3. Cada tom reutiliza apenas
+// cores aprovadas em color-themes.txt; os papéis visuais são refinados em
+// _material-theme.scss para cada tema.
+$ic-green-tones: (
+  0: #000000,
+  10: #208b3a,
+  20: #208b3a,
+  25: #208b3a,
+  30: #208b3a,
+  35: #25a244,
+  40: #25a244,
+  50: #25a244,
+  60: #2dc653,
+  70: #2dc653,
+  80: #6ede8a,
+  90: #6ede8a,
+  95: #6ede8a,
+  98: #edede9,
+  99: #f7ede2,
+  100: #ffffff,
+);
+
+$ic-red-tones: (
+  0: #000000,
+  10: #e5383b,
+  20: #e5383b,
+  25: #e5383b,
+  30: #e5383b,
+  35: #e5383b,
+  40: #e5383b,
+  50: #e5383b,
+  60: #e5383b,
+  70: #e5383b,
+  80: #e5383b,
+  90: #e5383b,
+  95: #e5383b,
+  98: #e5383b,
+  99: #e5383b,
+  100: #ffffff,
+);
+
+$ic-light-material-palette: map.merge($ic-green-tones, (
+  secondary: (
+    0: #000000, 10: #495057, 20: #495057, 25: #495057, 30: #495057,
+    35: #6c757d, 40: #6c757d, 50: #6c757d, 60: #adb5bd, 70: #adb5bd,
+    80: #adb5bd, 90: #e5e5e5, 95: #f7ede2, 98: #edede9, 99: #f7ede2, 100: #ffffff,
+  ),
+  neutral: (
+    0: #000000, 4: #000000, 6: #000000, 10: #000000, 12: #212529,
+    17: #212529, 20: #212529, 22: #212529, 24: #212529, 25: #212529,
+    30: #495057, 35: #495057, 40: #495057, 50: #6c757d, 60: #6c757d,
+    70: #adb5bd, 80: #adb5bd, 87: #e5e5e5, 90: #e5e5e5, 92: #e5e5e5,
+    94: #e5e5e5, 95: #f7ede2, 96: #f7ede2, 98: #edede9, 99: #f7ede2, 100: #ffffff,
+  ),
+  neutral-variant: (
+    0: #000000, 10: #212529, 20: #212529, 25: #212529, 30: #212529,
+    35: #495057, 40: #495057, 50: #6c757d, 60: #6c757d, 70: #adb5bd,
+    80: #6ede8a, 90: #f7ede2, 95: #f7ede2, 98: #edede9, 99: #f7ede2, 100: #ffffff,
+  ),
+  error: $ic-red-tones,
+));
+
+$ic-dark-material-palette: map.merge($ic-green-tones, (
+  secondary: (
+    0: #000000, 10: #495057, 20: #495057, 25: #495057, 30: #495057,
+    35: #6c757d, 40: #6c757d, 50: #6c757d, 60: #adb5bd, 70: #adb5bd,
+    80: #adb5bd, 90: #333533, 95: #333533, 98: #212529, 99: #212529, 100: #ffffff,
+  ),
+  neutral: (
+    0: #000000, 4: #000000, 6: #000000, 10: #0a0908, 12: #0a0908,
+    17: #0a0908, 20: #212529, 22: #212529, 24: #212529, 25: #212529,
+    30: #333533, 35: #333533, 40: #495057, 50: #495057, 60: #6c757d,
+    70: #adb5bd, 80: #adb5bd, 87: #edf2f4, 90: #edf2f4, 92: #edf2f4,
+    94: #f8f9fa, 95: #f8f9fa, 96: #f8f9fa, 98: #f8f9fa, 99: #f8f9fa, 100: #ffffff,
+  ),
+  neutral-variant: (
+    0: #000000, 10: #0a0908, 20: #0a0908, 25: #212529, 30: #212529,
+    35: #333533, 40: #333533, 50: #495057, 60: #6c757d, 70: #adb5bd,
+    80: #adb5bd, 90: #edf2f4, 95: #f8f9fa, 98: #f8f9fa, 99: #f8f9fa, 100: #ffffff,
+  ),
+  error: $ic-red-tones,
+));
