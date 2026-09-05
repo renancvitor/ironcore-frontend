@@ -1,0 +1,25 @@
+<mat-form-field class="ic-input">
+  <mat-label class="ic-input__label">
+    {{ label() }}
+  </mat-label>
+
+  <input
+    matInput
+    class="ic-input__field"
+    [class.ic-input__field--error]="!!error()"
+    [errorStateMatcher]="errorStateMatcher"
+    [id]="id()"
+    [type]="type()"
+    [placeholder]="placeholder()"
+    [disabled]="disabled() || formDisabled"
+    [value]="value"
+    [attr.aria-invalid]="!!error()"
+    [attr.aria-describedby]="error() ? id() + '-error' : null"
+    (input)="handleInput($event)"
+    (blur)="handleBlur()"
+  />
+
+  <mat-error class="ic-input__error" [id]="id() + '-error'">
+    {{ error() }}
+  </mat-error>
+</mat-form-field>

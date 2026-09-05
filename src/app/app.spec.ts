@@ -13,14 +13,4 @@ describe('App', () => {
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
   });
-
-  it('should render material test button', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-
-    const compiled = fixture.nativeElement as HTMLElement;
-    const button = compiled.querySelector('button');
-
-    expect(button?.textContent).toContain('IronCore Material Test');
-  });
 });

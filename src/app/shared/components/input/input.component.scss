@@ -1,0 +1,82 @@
+@use '@angular/material' as mat;
+
+.ic-input {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ic-space-2);
+
+  @include mat.form-field-overrides(
+    (
+      filled-container-color: var(--ic-field-bg),
+      filled-disabled-container-color: var(--ic-field-bg),
+      filled-container-shape: var(--ic-radius-md),
+      filled-input-text-color: var(--ic-field-text),
+      filled-disabled-input-text-color: var(--ic-text-disabled),
+      filled-input-text-placeholder-color: var(--ic-field-placeholder),
+      disabled-input-text-placeholder-color: var(--ic-text-disabled),
+      filled-label-text-color: var(--ic-text-primary),
+      filled-hover-label-text-color: var(--ic-text-primary),
+      filled-focus-label-text-color: var(--ic-field-border-focus),
+      filled-disabled-label-text-color: var(--ic-text-disabled),
+      filled-active-indicator-color: var(--ic-field-border),
+      filled-hover-active-indicator-color: var(--ic-field-border-focus),
+      filled-focus-active-indicator-color: var(--ic-field-border-focus),
+      filled-disabled-active-indicator-color: var(--ic-text-disabled),
+      filled-caret-color: var(--ic-field-border-focus),
+      error-text-color: var(--ic-field-error),
+      filled-error-label-text-color: var(--ic-field-error),
+      filled-error-hover-label-text-color: var(--ic-field-error),
+      filled-error-focus-label-text-color: var(--ic-field-error),
+      filled-error-active-indicator-color: var(--ic-field-error),
+      filled-error-hover-active-indicator-color: var(--ic-field-error),
+      filled-error-focus-active-indicator-color: var(--ic-field-error),
+      filled-error-caret-color: var(--ic-field-error),
+      state-layer-color: transparent,
+      hover-state-layer-opacity: 0,
+      focus-state-layer-opacity: 0,
+    )
+  );
+}
+
+.ic-input__label {
+  color: var(--ic-text-primary);
+}
+
+.ic-input__field {
+  background-color: var(--ic-field-bg);
+  color: var(--ic-field-text);
+
+  border: var(--ic-border-width-default) solid var(--ic-field-border);
+  border-radius: var(--ic-radius-md);
+
+  padding: var(--ic-space-3) var(--ic-space-4);
+
+  &::placeholder {
+    color: var(--ic-field-placeholder);
+  }
+
+  &:focus-visible {
+    border-color: var(--ic-field-border-focus);
+    outline: var(--ic-focus-ring-width) solid var(--ic-field-border-focus);
+    outline-offset: var(--ic-focus-ring-offset);
+  }
+
+  &:disabled {
+    color: var(--ic-text-disabled);
+    cursor: not-allowed;
+    opacity: var(--ic-state-disabled-opacity);
+  }
+}
+
+.ic-input__field--error {
+  border-color: var(--ic-field-error);
+
+  &:focus-visible {
+    outline-color: var(--ic-field-error);
+  }
+}
+
+.ic-input__error {
+  color: var(--ic-field-error);
+  font-size: var(--ic-font-size-sm);
+}

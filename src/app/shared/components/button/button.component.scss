@@ -1,0 +1,95 @@
+@use '@angular/material' as mat;
+
+@mixin ironcore-button-material-overrides($text-color) {
+  @include mat.button-overrides(
+    (
+      text-container-shape: var(--ic-radius-md),
+      text-horizontal-padding: var(--ic-space-4),
+      text-label-text-color: $text-color,
+      text-disabled-label-text-color: $text-color,
+      text-state-layer-color: transparent,
+      text-disabled-state-layer-color: transparent,
+      text-ripple-color: transparent,
+      text-hover-state-layer-opacity: 0,
+      text-focus-state-layer-opacity: 0,
+      text-pressed-state-layer-opacity: 0,
+    )
+  );
+}
+
+.ic-button {
+  border: 0;
+  border-radius: var(--ic-radius-md);
+  padding: var(--ic-space-3) var(--ic-space-4);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--ic-focus-ring-width) solid var(--ic-primary);
+    outline-offset: var(--ic-focus-ring-offset);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: var(--ic-state-disabled-opacity);
+  }
+}
+
+.ic-button--primary {
+  @include ironcore-button-material-overrides(var(--ic-button-primary-text));
+
+  background-color: var(--ic-button-primary-bg);
+  color: var(--ic-button-primary-text);
+
+  &:hover:not(:disabled) {
+    background-color: var(--ic-primary-hover);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--ic-primary-active);
+  }
+}
+
+.ic-button--secondary {
+  @include ironcore-button-material-overrides(var(--ic-button-secondary-text));
+
+  background-color: var(--ic-button-secondary-bg);
+  color: var(--ic-button-secondary-text);
+
+  &:hover:not(:disabled) {
+    background-color: var(--ic-button-secondary-hover);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--ic-button-secondary-active);
+  }
+}
+
+.ic-button--danger {
+  @include ironcore-button-material-overrides(var(--ic-button-danger-text));
+
+  background-color: var(--ic-button-danger-bg);
+  color: var(--ic-button-danger-text);
+
+  &:hover:not(:disabled) {
+    background-color: var(--ic-button-danger-hover);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--ic-button-danger-active);
+  }
+}
+
+.ic-button--cancel {
+  @include ironcore-button-material-overrides(var(--ic-button-cancel-text));
+
+  background-color: var(--ic-button-cancel-bg);
+  color: var(--ic-button-cancel-text);
+
+  &:hover:not(:disabled) {
+    background-color: var(--ic-button-cancel-hover);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--ic-button-cancel-active);
+  }
+}
