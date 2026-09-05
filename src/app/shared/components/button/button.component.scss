@@ -3,8 +3,8 @@
 @mixin ironcore-button-material-overrides($text-color) {
   @include mat.button-overrides(
     (
-      text-container-shape: 0.5rem,
-      text-horizontal-padding: 1rem,
+      text-container-shape: var(--ic-radius-md),
+      text-horizontal-padding: var(--ic-space-4),
       text-label-text-color: $text-color,
       text-disabled-label-text-color: $text-color,
       text-state-layer-color: transparent,
@@ -19,18 +19,18 @@
 
 .ic-button {
   border: 0;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
+  border-radius: var(--ic-radius-md);
+  padding: var(--ic-space-3) var(--ic-space-4);
   cursor: pointer;
 
   &:focus-visible {
-    outline: 2px solid var(--ic-primary);
-    outline-offset: 2px;
+    outline: var(--ic-focus-ring-width) solid var(--ic-primary);
+    outline-offset: var(--ic-focus-ring-offset);
   }
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: var(--ic-state-disabled-opacity);
   }
 }
 

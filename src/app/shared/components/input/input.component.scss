@@ -3,13 +3,13 @@
 .ic-input {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--ic-space-2);
 
   @include mat.form-field-overrides(
     (
       filled-container-color: var(--ic-field-bg),
       filled-disabled-container-color: var(--ic-field-bg),
-      filled-container-shape: 0.5rem,
+      filled-container-shape: var(--ic-radius-md),
       filled-input-text-color: var(--ic-field-text),
       filled-disabled-input-text-color: var(--ic-text-disabled),
       filled-input-text-placeholder-color: var(--ic-field-placeholder),
@@ -23,14 +23,14 @@
       filled-focus-active-indicator-color: var(--ic-field-border-focus),
       filled-disabled-active-indicator-color: var(--ic-text-disabled),
       filled-caret-color: var(--ic-field-border-focus),
-      error-text-color: var(--ic-button-danger-bg),
-      filled-error-label-text-color: var(--ic-button-danger-bg),
-      filled-error-hover-label-text-color: var(--ic-button-danger-bg),
-      filled-error-focus-label-text-color: var(--ic-button-danger-bg),
-      filled-error-active-indicator-color: var(--ic-button-danger-bg),
-      filled-error-hover-active-indicator-color: var(--ic-button-danger-bg),
-      filled-error-focus-active-indicator-color: var(--ic-button-danger-bg),
-      filled-error-caret-color: var(--ic-button-danger-bg),
+      error-text-color: var(--ic-field-error),
+      filled-error-label-text-color: var(--ic-field-error),
+      filled-error-hover-label-text-color: var(--ic-field-error),
+      filled-error-focus-label-text-color: var(--ic-field-error),
+      filled-error-active-indicator-color: var(--ic-field-error),
+      filled-error-hover-active-indicator-color: var(--ic-field-error),
+      filled-error-focus-active-indicator-color: var(--ic-field-error),
+      filled-error-caret-color: var(--ic-field-error),
       state-layer-color: transparent,
       hover-state-layer-opacity: 0,
       focus-state-layer-opacity: 0,
@@ -46,10 +46,10 @@
   background-color: var(--ic-field-bg);
   color: var(--ic-field-text);
 
-  border: 1px solid var(--ic-field-border);
-  border-radius: 0.5rem;
+  border: var(--ic-border-width-default) solid var(--ic-field-border);
+  border-radius: var(--ic-radius-md);
 
-  padding: 0.75rem 1rem;
+  padding: var(--ic-space-3) var(--ic-space-4);
 
   &::placeholder {
     color: var(--ic-field-placeholder);
@@ -57,26 +57,26 @@
 
   &:focus-visible {
     border-color: var(--ic-field-border-focus);
-    outline: 2px solid var(--ic-field-border-focus);
-    outline-offset: 2px;
+    outline: var(--ic-focus-ring-width) solid var(--ic-field-border-focus);
+    outline-offset: var(--ic-focus-ring-offset);
   }
 
   &:disabled {
     color: var(--ic-text-disabled);
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: var(--ic-state-disabled-opacity);
   }
 }
 
 .ic-input__field--error {
-  border-color: var(--ic-button-danger-bg);
+  border-color: var(--ic-field-error);
 
   &:focus-visible {
-    outline-color: var(--ic-button-danger-bg);
+    outline-color: var(--ic-field-error);
   }
 }
 
 .ic-input__error {
-  color: var(--ic-button-danger-bg);
-  font-size: 0.875rem;
+  color: var(--ic-field-error);
+  font-size: var(--ic-font-size-sm);
 }
