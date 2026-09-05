@@ -41,6 +41,7 @@ Planejamento, tarefas e histórico de evolução disponíveis no GitHub Projects
 - [Tecnologias Utilizadas](#tecnologias-utilizadas)
 - [Ferramentas Utilizadas](#ferramentas-utilizadas)
 - [Princípios de Integração com o Backend](#principios-de-integracao-com-o-backend)
+- [Documentação Técnica](#documentacao-tecnica)
 - [Escopo Inicial / MVP](#escopo-inicial--mvp)
 - [Funcionalidades Planejadas](#funcionalidades-planejadas)
 - [Testes Automatizados](#testes-automatizados)
@@ -75,12 +76,15 @@ O desenvolvimento do projeto busca consolidar habilidades como:
 
 <h2 id="status-atual-do-projeto" align="center">Status Atual do Projeto</h2>
 
-O <b>IronCore Frontend</b> está em sua fundação técnica inicial. A aplicação foi criada com Angular e possui a configuração base necessária para evoluir; os fluxos de negócio e a integração com a API ainda não foram implementados.
+O <b>IronCore Frontend</b> está em sua fundação técnica inicial. A aplicação já possui a infraestrutura de autenticação e comunicação HTTP necessária para integrar os fluxos futuros à API, mas ainda não possui telas nem rotas funcionais de negócio.
 
 ### Já existe no projeto
 
 - Aplicação Angular 21 configurada com TypeScript e SCSS.
 - Configuração de rotas inicial.
+- Provider HTTP com URL base configurável por environment.
+- Infraestrutura de autenticação com login, logout e restauração de sessão.
+- Estado do usuário autenticado em memória, interceptor com `withCredentials` para a API e guard reutilizável para rotas protegidas.
 - Configuração de build de produção e desenvolvimento.
 - Estrutura de testes unitários baseada em Vitest.
 - Configuração de formatação com Prettier.
@@ -88,9 +92,8 @@ O <b>IronCore Frontend</b> está em sua fundação técnica inicial. A aplicaç�
 
 ### Planejado para as próximas etapas
 
-- Definição da arquitetura interna do frontend e dos módulos funcionais.
-- Integração com os contratos reais do IronCore Backend.
-- Autenticação e gerenciamento de sessão conforme o modelo de segurança da API.
+- Implementação de rotas, telas e módulos funcionais.
+- Associação do guard e dos fluxos de autenticação às páginas correspondentes.
 - Telas para pessoa, métricas corporais, catálogo de exercícios e planejamento de treinos.
 - Estados de carregamento, erro, vazio e sucesso para os fluxos da interface.
 - Testes de componentes, serviços e fluxos relevantes.
@@ -139,7 +142,19 @@ Essa integração seguirá os seguintes princípios:
 - não expor detalhes técnicos desnecessários ao usuário;
 - não armazenar credenciais, tokens ou dados sensíveis de forma insegura no navegador.
 
-Os mecanismos concretos de comunicação HTTP, sessão, proteção de rotas e tratamento global de erros serão documentados quando forem implementados.
+Os mecanismos implementados de comunicação HTTP, sessão e proteção de rotas estão documentados em [Arquitetura](docs/architecture/README.md). O tratamento global de erros HTTP ainda não foi implementado.
+
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
+
+---
+
+<h2 id="documentacao-tecnica" align="center">Documentação Técnica</h2>
+
+A documentação técnica registra a arquitetura efetivamente implementada e separa convenções planejadas de estruturas já existentes:
+
+- [Índice da documentação técnica](docs/README.md)
+- [Arquitetura](docs/architecture/README.md)
+- [Estrutura do projeto](docs/project-structure/README.md)
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -247,23 +262,26 @@ npm run build
 
 <h2 id="estrutura-do-projeto" align="center">Estrutura do Projeto</h2>
 
-A estrutura atual é a base criada pelo Angular CLI. Módulos funcionais, serviços de integração, componentes reutilizáveis e camadas de infraestrutura serão introduzidos somente quando existirem responsabilidades concretas para organizá-los.
+A estrutura atual é a base criada pelo Angular CLI, estendida com a infraestrutura global de autenticação e HTTP. Módulos funcionais, componentes reutilizáveis e layout serão introduzidos somente quando existirem responsabilidades concretas para organizá-los.
 
 ```plaintext
 src/
  ├── app/
+ │    ├── core/           # autenticação, HTTP, interceptor e guard globais
  │    ├── app.config.ts   # providers globais da aplicação
  │    ├── app.html        # template raiz
- │    ├── app.routes.ts   # configuração inicial de rotas
+ │    ├── app.routes.ts   # ponto de declaração de rotas (ainda vazio)
  │    ├── app.scss        # estilos do componente raiz
  │    ├── app.spec.ts     # teste inicial do componente raiz
  │    └── app.ts          # componente raiz
+ ├── environments/        # URL base não sensível por ambiente
  ├── index.html           # página HTML principal
  ├── main.ts              # bootstrap da aplicação
  └── styles.scss          # estilos globais
 
 public/                   # assets estáticos, quando necessários
 README.md                 # documentação principal do repositório
+docs/                     # documentação técnica da arquitetura
 ```
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
