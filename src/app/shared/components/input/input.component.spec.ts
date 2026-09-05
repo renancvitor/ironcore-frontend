@@ -99,6 +99,21 @@ describe('Input', () => {
     expect(error.id).toBe('email-error');
   });
 
+  it('should clear the Material error state when error is removed', () => {
+    fixture.componentRef.setInput('error', 'Campo obrigatório');
+    fixture.detectChanges();
+
+    fixture.componentRef.setInput('error', '');
+    fixture.detectChanges();
+
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('input');
+    const error = fixture.nativeElement.querySelector('mat-error');
+
+    expect(input.getAttribute('aria-invalid')).toBe('false');
+    expect(input.getAttribute('aria-describedby')).toBeNull();
+    expect(error).toBeNull();
+  });
+
   it('should propagate value changes', () => {
     const onChange = vi.fn();
 

@@ -1,8 +1,16 @@
-import { Component, forwardRef, input } from '@angular/core';
+import { Component, effect, forwardRef, input, viewChild } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { ErrorStateMatcher } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { MatInput, MatInputModule } from '@angular/material/input';
 
+class IronCoreErrorStateMatcher implements ErrorStateMatcher {
+  constructor(private readonly hasError: () => boolean) {}
+
+  isErrorState(): boolean {
+    return this.hasError();
+  }
+}
 @Component({
   selector: 'app-input',
   imports: [MatFormFieldModule, MatInputModule],
@@ -27,8 +35,19 @@ export class InputComponent implements ControlValueAccessor {
   value = '';
   formDisabled = false;
 
+  readonly errorStateMatcher = new IronCoreErrorStateMatcher(() => !!this.error());
+
+  private readonly matInput = viewChild(MatInput);
+
   private onChange: (value: string) => void = () => {};
   private onTouched: () => void = () => {};
+
+  constructor() {
+    effect(() => {
+      this.error();
+      this.matInput()?.updateErrorState();
+    });
+  }
 
   writeValue(value: string | null): void {
     this.value = value ?? '';

@@ -5,6 +5,7 @@
     matInput
     class="ic-input__field"
     [class.ic-input__field--error]="!!error()"
+    [errorStateMatcher]="errorStateMatcher"
     [id]="id()"
     [type]="type()"
     [placeholder]="placeholder()"
@@ -16,9 +17,7 @@
     (blur)="handleBlur()"
   />
 
-  @if (error()) {
-    <mat-error [id]="id() + '-error'">
-      {{ error() }}
-    </mat-error>
-  }
+  <mat-error [id]="id() + '-error'">
+    {{ error() }}
+  </mat-error>
 </mat-form-field>
