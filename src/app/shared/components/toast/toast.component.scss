@@ -1,0 +1,46 @@
+@use '@angular/material' as mat;
+
+:host {
+  @include mat.snack-bar-overrides(
+    (
+      container-color: transparent,
+      container-shape: var(--ic-radius-md),
+    )
+  );
+}
+
+.ic-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--ic-space-3);
+  padding: var(--ic-space-3) var(--ic-space-4);
+  border-radius: var(--ic-radius-md);
+}
+
+.ic-toast__icon {
+  flex-shrink: 0;
+}
+
+.ic-toast__message {
+  margin: 0;
+}
+
+.ic-toast--success {
+  background: var(--ic-toast-success-bg);
+  color: var(--ic-toast-success-text);
+}
+
+.ic-toast--error {
+  background: var(--ic-toast-error-bg);
+  color: var(--ic-toast-error-text);
+}
+
+.ic-toast--warning {
+  background: var(--ic-toast-warning-bg);
+  color: var(--ic-toast-warning-text);
+}
+
+.ic-toast--info {
+  background: var(--ic-toast-info-bg);
+  color: var(--ic-toast-info-text);
+}
