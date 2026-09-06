@@ -1,0 +1,15 @@
+@use '@angular/material' as mat;
+
+.ic-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 100vh;
+
+  @include mat.progress-spinner-overrides(
+    (
+      active-indicator-color: var(--ic-loading),
+    )
+  );
+}
