@@ -1,0 +1,20 @@
+@use '@angular/material' as mat;
+
+:host {
+  @include mat.dialog-overrides(
+    (
+      container-color: var(--ic-surface-elevated),
+      container-shape: var(--ic-radius-md),
+      subhead-color: var(--ic-text-primary),
+      supporting-text-color: var(--ic-text-secondary),
+    )
+  );
+}
+
+p {
+  margin: 0;
+}
+
+mat-dialog-actions {
+  gap: var(--ic-space-2);
+}

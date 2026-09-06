@@ -1,0 +1,21 @@
+<h2 mat-dialog-title>
+  {{ data.title }}
+</h2>
+
+<mat-dialog-content>
+  <p>
+    {{ data.message }}
+  </p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  @if (data.secondaryAction) {
+    <app-button variant="cancel" (click)="cancel()">
+      {{ data.secondaryAction }}
+    </app-button>
+  }
+
+  <app-button variant="primary" (click)="confirm()">
+    {{ data.primaryAction }}
+  </app-button>
+</mat-dialog-actions>
