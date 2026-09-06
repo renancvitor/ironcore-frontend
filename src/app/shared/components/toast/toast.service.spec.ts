@@ -40,6 +40,9 @@ describe('ToastService', () => {
         message: 'Operação concluída.',
       },
       duration: 4000,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom',
+      panelClass: 'ic-toast-panel',
     });
   });
 
@@ -52,6 +55,9 @@ describe('ToastService', () => {
         message: 'Erro ao processar operação.',
       },
       duration: 4000,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom',
+      panelClass: 'ic-toast-panel',
     });
   });
 
@@ -64,6 +70,9 @@ describe('ToastService', () => {
         message: 'Atenção.',
       },
       duration: 4000,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom',
+      panelClass: 'ic-toast-panel',
     });
   });
 
@@ -76,6 +85,9 @@ describe('ToastService', () => {
         message: 'Informação.',
       },
       duration: 4000,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom',
+      panelClass: 'ic-toast-panel',
     });
   });
 
@@ -88,6 +100,9 @@ describe('ToastService', () => {
         message: 'Operação concluída.',
       },
       duration: 6000,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom',
+      panelClass: 'ic-toast-panel',
     });
   });
 });
