@@ -35,6 +35,9 @@ export class ToastService {
     this.snackBar.openFromComponent(ToastComponent, {
       data,
       duration,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom',
+      panelClass: 'ic-toast-panel',
     });
   }
 }

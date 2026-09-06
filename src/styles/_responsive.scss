@@ -38,3 +38,8 @@ $ic-breakpoint-tablet: 960px;
     padding-inline: var(--ic-space-3);
   }
 }
+
+.ic-toast-panel {
+  width: calc(100vw - var(--ic-space-5));
+  max-width: 480px;
+}
