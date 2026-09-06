@@ -1,4 +1,5 @@
 @use '@angular/material' as mat;
+@use '../../../../styles/responsive' as responsive;
 
 :host {
   @include mat.dialog-overrides(
@@ -17,4 +18,11 @@ p {
 
 mat-dialog-actions {
   gap: var(--ic-space-2);
+}
+
+@include responsive.mobile {
+  mat-dialog-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
 }
