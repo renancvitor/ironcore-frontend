@@ -1,0 +1,16 @@
+.ic-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ic-space-2);
+  text-align: center;
+}
+
+.ic-empty-state__icon {
+  color: var(--ic-empty-icon);
+}
+
+.ic-empty-state__message {
+  margin: 0;
+  color: var(--ic-empty-text);
+}

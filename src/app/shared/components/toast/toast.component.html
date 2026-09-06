@@ -1,0 +1,31 @@
+<div
+  class="ic-toast"
+  [class.ic-toast--success]="data.type === 'success'"
+  [class.ic-toast--error]="data.type === 'error'"
+  [class.ic-toast--warning]="data.type === 'warning'"
+  [class.ic-toast--info]="data.type === 'info'"
+>
+  <mat-icon class="ic-toast__icon">
+    @switch (data.type) {
+      @case ('success') {
+        check_circle
+      }
+
+      @case ('error') {
+        error
+      }
+
+      @case ('warning') {
+        warning
+      }
+
+      @case ('info') {
+        info
+      }
+    }
+  </mat-icon>
+
+  <span class="ic-toast__message">
+    {{ data.message }}
+  </span>
+</div>
