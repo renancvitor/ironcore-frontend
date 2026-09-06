@@ -15,6 +15,8 @@ export class DialogService {
     return this.dialog
       .open<DialogComponent, DialogData, boolean>(DialogComponent, {
         data,
+        width: '600px',
+        maxWidth: 'calc(100vw - 1.5rem)',
       })
       .afterClosed();
   }
