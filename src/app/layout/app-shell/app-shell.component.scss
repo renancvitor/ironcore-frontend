@@ -1,0 +1,48 @@
+@use '../../../styles/responsive' as responsive;
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.ic-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.ic-shell__header {
+  flex-shrink: 0;
+}
+
+.ic-shell__body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.ic-shell__sidebar {
+  flex-shrink: 0;
+}
+
+.ic-shell__content {
+  flex: 1;
+  min-width: 0;
+  padding-block: var(--ic-space-6);
+}
+
+@include responsive.tablet {
+  .ic-shell__content {
+    padding-block: var(--ic-space-4);
+  }
+}
+
+@include responsive.mobile {
+  .ic-shell__body {
+    flex-direction: column;
+  }
+
+  .ic-shell__content {
+    padding-block: var(--ic-space-3);
+  }
+}
