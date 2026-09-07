@@ -1,0 +1,35 @@
+@use '../../../styles/responsive' as responsive;
+
+:host {
+  display: block;
+}
+
+.ic-sidebar {
+  width: 240px;
+  min-height: 100%;
+  padding: var(--ic-space-4);
+
+  background: var(--ic-menu-bg);
+  box-sizing: border-box;
+}
+
+.ic-sidebar__link {
+  display: block;
+  padding: var(--ic-space-3) var(--ic-space-4);
+  border-radius: var(--ic-radius-md);
+
+  color: var(--ic-text-primary);
+  text-decoration: none;
+}
+
+.ic-sidebar__link--active {
+  background: var(--ic-menu-active-bg);
+  color: var(--ic-menu-icon-active);
+}
+
+@include responsive.mobile {
+  .ic-sidebar {
+    width: 100%;
+    min-height: auto;
+  }
+}
