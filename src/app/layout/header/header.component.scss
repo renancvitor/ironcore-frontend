@@ -1,0 +1,15 @@
+.ic-header {
+  background: var(--ic-surface);
+  color: var(--ic-text-primary);
+  border-bottom: var(--ic-border-width-default) solid var(--ic-border-soft);
+}
+
+.ic-header__content {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+}
+
+.ic-header__brand {
+  font-weight: 600;
+}
