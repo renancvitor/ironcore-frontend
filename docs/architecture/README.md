@@ -1,92 +1,78 @@
 # Documentação de Arquitetura
 
-## Visão geral
+## Visão Geral
 
-Este documento descreve a arquitetura inicial implementada no IronCore Frontend. A aplicação usa Angular standalone, com bootstrap em `src/main.ts` e providers globais concentrados em `app.config.ts`.
+O IronCore Frontend é uma aplicação Angular standalone. O bootstrap ocorre em `src/main.ts`; `app.config.ts` concentra os providers globais; e o componente raiz apenas hospeda o `router-outlet`.
 
-O objetivo atual é fornecer uma base pequena para a evolução da interface, mantendo infraestrutura transversal em `core` e evitando antecipar features, componentes compartilhados ou layout que ainda não existem.
+A foundation separa infraestrutura transversal em `core`, elementos reutilizáveis em `shared` e composição visual persistente em `layout`. Ainda não há `features`, páginas funcionais nem rotas de negócio.
 
-## Bootstrap e composição da aplicação
+## Bootstrap e Providers
 
-`main.ts` inicializa o componente `App` por `bootstrapApplication(App, appConfig)`.
-
-`app.config.ts` registra:
+`bootstrapApplication(App, appConfig)` inicia a aplicação. O `appConfig` registra:
 
 - listeners globais de erro do navegador;
-- o Router com as rotas declaradas em `app.routes.ts`;
-- a infraestrutura HTTP por `provideCoreHttp()`;
-- um `provideAppInitializer` que executa `AuthService.restoreSession()` durante a inicialização.
+- Router com as rotas de `app.routes.ts`;
+- `HttpClient`, URL base da API e interceptor pelo `provideCoreHttp()`;
+- um `provideAppInitializer` que chama `AuthService.restoreSession()` na inicialização.
 
-O componente raiz contém, no momento, um botão de verificação do Angular Material e um `<router-outlet>`. Ele não representa um shell de aplicação: não existem header, sidebar ou navegação principal implementados.
+## Camadas e Responsabilidades
 
-## Estrutura e responsabilidades
-
-### `core`
-
-`src/app/core` concentra infraestrutura global e independente de uma tela específica.
-
-| Área | Responsabilidade implementada |
+| Área | Responsabilidade atual |
 | --- | --- |
-| `auth` | Contratos de autenticação, chamadas de login/logout/restauração de sessão e estado do usuário em memória. |
-| `http` | Provider do `HttpClient` e token de injeção para a URL base da API. |
-| `interceptors` | Inclusão de credenciais para chamadas destinadas à API e limpeza do estado local após resposta `401`. |
-| `guards` | Função de guarda reutilizável para rotas autenticadas. |
+| `core/auth` | Contratos de autenticação, login, logout, restauração de sessão e estado reativo em memória. |
+| `core/http` | Provider do `HttpClient` e token `API_BASE_URL`. |
+| `core/interceptors` | Inclusão de cookies nas chamadas à API e limpeza de sessão em respostas `401`. |
+| `core/guards` | Guard reutilizável para futuras rotas autenticadas. |
+| `shared/components` | Componentes de interação e feedback sem regra de domínio. |
+| `layout` | Application shell, header e sidebar. |
 
-Serviços e modelos de negócio de uma futura funcionalidade não pertencem a `core`; eles devem permanecer na feature correspondente quando ela existir.
+`features` é uma convenção reservada para fluxos funcionais quando eles existirem. Uma feature pode usar APIs públicas de `core` e elementos de `shared`, mas não deve acessar detalhes internos de outra feature. `shared` não deve depender de features e `core` não deve depender de `features` ou `layout`.
 
-### `features`, `shared` e `layout`
+## Comunicação HTTP e Environments
 
-Esses diretórios **não existem no estado atual do repositório**.
+`provideCoreHttp()` registra o `HttpClient` com `authInterceptor` e fornece `API_BASE_URL` a partir do environment ativo. Serviços devem receber esse token; URLs da API não devem ser repetidas nas features.
 
-- `features` é a convenção planejada para encapsular fluxos funcionais, telas, componentes, serviços e modelos específicos de cada contexto.
-- `shared` é a convenção planejada para recursos realmente genéricos e reutilizáveis, sem dependência de uma feature.
-- `layout` é a convenção planejada para a estrutura visual persistente, como shell, cabeçalho e navegação.
+O interceptor identifica chamadas para a API por origem e caminho. Somente essas chamadas recebem `withCredentials: true`; chamadas externas permanecem inalteradas. Em uma resposta `401`, o estado local é limpo e o erro continua no fluxo RxJS. Não há tratamento global de `403` nesta foundation.
 
-Eles não devem ser criados vazios. A criação deve ocorrer quando uma responsabilidade concreta exigir a estrutura.
-
-## Comunicação HTTP
-
-`provideCoreHttp()` registra `HttpClient` com o `authInterceptor` e disponibiliza `API_BASE_URL`, cujo valor vem do environment ativo.
-
-O interceptor determina se uma requisição é destinada à API comparando origem e caminho com `API_BASE_URL`. Para requisições da API, clona a requisição com `withCredentials: true`; requisições externas não recebem essa alteração. Quando uma resposta possui status `401`, o estado local de autenticação é limpo e o erro continua no fluxo RxJS.
-
-O `AuthService` usa `HttpClient` e o token `API_BASE_URL` para os contratos já integrados:
-
-- `POST /api/auth/login` recebe `email` e `password`; após sucesso, mantém somente os dados do usuário no estado local.
-- `GET /api/users/me` restaura a sessão por meio do cookie enviado pelo navegador; uma resposta `401` é tratada como ausência de sessão e não interrompe a inicialização.
-- `POST /api/auth/logout` encerra a sessão no backend e limpa o estado local após sucesso.
-
-O `LoginResponse` contém campos de token porque esse é o contrato atual da API, mas o frontend não o persiste nem o utiliza como credencial. A autenticação de requisições depende do cookie enviado com `withCredentials`.
-
-## Autenticação e proteção de rotas
-
-`AuthStateService` mantém o usuário autenticado em um `signal`; `currentUser` é exposto somente para leitura e `isAuthenticated` é um valor derivado. O estado não é persistido em `localStorage`, `sessionStorage` ou mecanismo equivalente. Ao recarregar a aplicação, `restoreSession()` consulta a API para reconstruí-lo.
-
-`authGuard` libera uma rota apenas se `isAuthenticated()` for verdadeiro. Caso contrário, redireciona para `/login`. Não há rotas registradas em `app.routes.ts` nem tela de login neste momento; portanto, o guard está implementado, mas ainda não está associado a uma rota.
-
-## Environments
-
-O projeto mantém dois arquivos de ambiente:
-
-| Arquivo | Uso | `apiBaseUrl` atual |
+| Arquivo | Uso | `apiBaseUrl` |
 | --- | --- | --- |
-| `src/environments/environment.ts` | configuração padrão/produção | string vazia, para chamadas relativas à mesma origem |
+| `src/environments/environment.ts` | configuração padrão e build de produção | vazio, para chamadas relativas à mesma origem |
 | `src/environments/environment.development.ts` | `ng serve` e build `development` | `http://localhost:8080` |
 
-O `angular.json` substitui o arquivo padrão pelo de desenvolvimento na configuração `development`. Valores sensíveis não devem ser adicionados aos arquivos de environment.
+`angular.json` substitui o environment padrão pelo de desenvolvimento nessa configuração. Arquivos de environment não devem conter segredos.
 
-## Convenções atuais
+## Autenticação
 
-- A aplicação usa componentes standalone e providers funcionais do Angular.
-- O estilo padrão de componentes é SCSS.
-- Serviços globais usam `providedIn: 'root'` quando apropriado.
-- Chamadas HTTP ficam em serviços; componentes devem concentrar apresentação e interação.
-- O frontend usa contratos do backend, mas não replica validações de domínio, autorização ou ownership.
-- Estados de autenticação e dados sensíveis não devem ser persistidos no navegador sem decisão arquitetural e análise de segurança.
-- Novas estruturas devem refletir código implementado e esta documentação deve ser atualizada quando a arquitetura mudar.
+`AuthService` integra os contratos já preparados:
 
-## Limites do estado atual
+- `POST /api/auth/login`;
+- `GET /api/users/me`, para restaurar a sessão por cookie;
+- `POST /api/auth/logout`.
 
-Não estão implementados: rotas de negócio, páginas, componentes de feature, shell visual, tratamento global de erros HTTP, recursos reutilizáveis em `shared` e integrações além da infraestrutura de autenticação.
+`AuthStateService` guarda apenas o usuário autenticado em um `signal`. O token eventualmente retornado no login não é persistido nem usado como credencial pelo frontend; a sessão usa o cookie enviado pelo navegador com `withCredentials`. Ao recarregar a página, a sessão é reconstruída por `GET /api/users/me`. Um `401` nessa restauração representa ausência de sessão e não interrompe a inicialização.
 
-<p align="right"><a href="../README.md">Voltar para o índice de documentação</a></p>
+`authGuard` permite navegação somente quando há usuário no estado e, caso contrário, cria uma `UrlTree` para `/login`. Ele ainda não está ligado a uma rota, pois não há páginas de login ou área protegida entregues.
+
+## Routing e Application Shell
+
+O routing atual possui apenas a rota raiz, composta por `AppShellComponent`, com `children: []`. O shell organiza header, sidebar, área de conteúdo com `.ic-container` e um `router-outlet` interno. A sidebar contém somente o link estrutural para início.
+
+Não foram criadas rotas públicas, rotas protegidas, rota de login, redirecionamentos ou rota inicial de uma feature. Essa estrutura foi deliberadamente adiada até existirem telas funcionais reais; o shell e o guard são pontos de extensão para essa etapa.
+
+## Tema, Responsividade e Componentes Compartilhados
+
+Os tokens e temas SCSS centralizam paleta, cores semânticas, espaçamentos, bordas, foco e tipografia. Há suporte a temas claro (`data-theme='light'`) e escuro (padrão), com integração ao Angular Material. A estratégia responsiva centraliza os breakpoints mobile (`até 600px`), tablet (`601px–960px`) e desktop (`a partir de 961px`), além do container com largura máxima de `1200px`.
+
+Os componentes base entregues são:
+
+- `ButtonComponent`, com variantes primary, secondary, danger e cancel;
+- `InputComponent`, integrado a `ControlValueAccessor` e Angular Material;
+- `LoadingComponent` e `EmptyStateComponent`;
+- `DialogComponent` e `DialogService` para confirmações;
+- `ToastComponent` e `ToastService` para sucesso, erro, aviso e informação.
+
+## Recortes Atuais
+
+Não fazem parte do estado atual: telas ou fluxos de domínio, rotas públicas/protegidas completas, UI de login, associação do guard a rotas, autorização por roles, tratamento global de `403`, deploy ou publicação de artefatos.
+
+<p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>
