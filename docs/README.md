@@ -2,17 +2,24 @@
 
 Este diretório centraliza a documentação técnica do IronCore Frontend.
 
-Os documentos registram o código existente. Convenções de evolução são identificadas como planejadas e não devem ser interpretadas como estruturas já entregues.
+Os documentos descrevem estruturas já implementadas. Convenções e evoluções futuras são identificadas como planejadas e não devem ser interpretadas como funcionalidades entregues.
 
 ## Índice
 
 ### Fundação e arquitetura
 
-- [Arquitetura](architecture/README.md): bootstrap, providers globais, HTTP, autenticação, rotas e environments implementados.
-- [Estrutura do Projeto](project-structure/README.md): diretórios existentes, responsabilidades e convenções de crescimento.
+- [Arquitetura](architecture/README.md): bootstrap, HTTP, autenticação, routing, layout e convenções da aplicação.
+- [Estrutura do projeto](project-structure/README.md): diretórios existentes, responsabilidades e regras de dependência.
 
-## Estado atual
+### Releases
 
-O frontend possui a fundação Angular, infraestrutura de comunicação HTTP com a API, restauração de sessão, estado de autenticação em memória, interceptor para cookies e um guard reutilizável. Ainda não há telas funcionais, rotas registradas, shell/layout, `features` ou `shared`.
+- [Releases](releases/README.md): índice histórico das releases técnicas.
+- [v0.1.0](releases/v0.1.0/README.md): foundation técnica e visual inicial do frontend.
+
+## Observações
+
+- A documentação usa termos técnicos em inglês quando eles representam código, diretórios, ferramentas ou conceitos comuns no desenvolvimento frontend.
+- Telas funcionais, rotas públicas e protegidas completas e módulos de negócio continuam como evoluções planejadas.
+- Releases anteriores preservam a história do projeto e não devem ser reescritas para refletir o estado atual.
 
 <p align="right"><a href="../README.md">Voltar para a documentação principal</a></p>

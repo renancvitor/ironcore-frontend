@@ -76,7 +76,7 @@ O desenvolvimento do projeto busca consolidar habilidades como:
 
 <h2 id="status-atual-do-projeto" align="center">Status Atual do Projeto</h2>
 
-O <b>IronCore Frontend</b> está em sua fundação técnica inicial. A aplicação já possui a infraestrutura de autenticação e comunicação HTTP necessária para integrar os fluxos futuros à API, mas ainda não possui telas nem rotas funcionais de negócio.
+O <b>IronCore Frontend</b> está em sua foundation técnica e visual inicial. A aplicação já possui infraestrutura de autenticação e comunicação HTTP, design tokens, componentes compartilhados e application shell, mas ainda não possui telas nem rotas funcionais de negócio.
 
 ### Já existe no projeto
 
@@ -85,8 +85,12 @@ O <b>IronCore Frontend</b> está em sua fundação técnica inicial. A aplicaç�
 - Provider HTTP com URL base configurável por environment.
 - Infraestrutura de autenticação com login, logout e restauração de sessão.
 - Estado do usuário autenticado em memória, interceptor com `withCredentials` para a API e guard reutilizável para rotas protegidas.
+- Angular Material, design tokens, temas claro e escuro e breakpoints responsivos centralizados.
+- Componentes compartilhados de botão, input, loading, empty state, diálogo de confirmação e toast.
+- Application shell com header, sidebar, container de conteúdo e `router-outlet` interno.
 - Configuração de build de produção e desenvolvimento.
 - Estrutura de testes unitários baseada em Vitest.
+- CI no GitHub Actions para build e testes em `main`.
 - Configuração de formatação com Prettier.
 - Documentos de contribuição, código de conduta, segurança e licença.
 
@@ -95,8 +99,8 @@ O <b>IronCore Frontend</b> está em sua fundação técnica inicial. A aplicaç�
 - Implementação de rotas, telas e módulos funcionais.
 - Associação do guard e dos fluxos de autenticação às páginas correspondentes.
 - Telas para pessoa, métricas corporais, catálogo de exercícios e planejamento de treinos.
-- Estados de carregamento, erro, vazio e sucesso para os fluxos da interface.
-- Testes de componentes, serviços e fluxos relevantes.
+- Telas e fluxos funcionais que utilizem os componentes e feedbacks já disponíveis.
+- Evolução dos testes para as novas features e fluxos de interface.
 - Documentação técnica complementar quando houver estrutura e decisões implementadas a registrar.
 
 O estado acima descreve exclusivamente o que está presente neste repositório. Funcionalidades disponíveis no backend não devem ser interpretadas como funcionalidades já entregues na interface.
@@ -155,6 +159,8 @@ A documentação técnica registra a arquitetura efetivamente implementada e sep
 - [Índice da documentação técnica](docs/README.md)
 - [Arquitetura](docs/architecture/README.md)
 - [Estrutura do projeto](docs/project-structure/README.md)
+- [Histórico de releases](docs/releases/README.md)
+- [v0.1.0 — Foundation técnica e visual](docs/releases/v0.1.0/README.md)
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -233,7 +239,7 @@ As funcionalidades abaixo representam o escopo funcional planejado para a interf
 
 <h2 id="testes-automatizados" align="center">Testes Automatizados</h2>
 
-O projeto possui a estrutura inicial de testes unitários configurada com Vitest. À medida que os fluxos forem implementados, os testes deverão proteger comportamentos relevantes de componentes, serviços e integração com os contratos HTTP.
+O projeto possui testes unitários com Vitest para a foundation: infraestrutura de autenticação e HTTP, layout e componentes compartilhados. À medida que os fluxos forem implementados, os testes deverão proteger comportamentos relevantes de componentes, serviços e integração com os contratos HTTP.
 
 Os testes futuros devem cobrir, quando aplicável:
 
@@ -262,26 +268,29 @@ npm run build
 
 <h2 id="estrutura-do-projeto" align="center">Estrutura do Projeto</h2>
 
-A estrutura atual é a base criada pelo Angular CLI, estendida com a infraestrutura global de autenticação e HTTP. Módulos funcionais, componentes reutilizáveis e layout serão introduzidos somente quando existirem responsabilidades concretas para organizá-los.
+A estrutura atual é a base criada pelo Angular CLI, estendida com infraestrutura global, componentes reutilizáveis e layout. Módulos funcionais serão introduzidos somente quando existirem responsabilidades concretas para organizá-los.
 
 ```plaintext
 src/
  ├── app/
  │    ├── core/           # autenticação, HTTP, interceptor e guard globais
+ │    ├── layout/         # application shell, header e sidebar
+ │    ├── shared/         # componentes reutilizáveis de interação e feedback
  │    ├── app.config.ts   # providers globais da aplicação
  │    ├── app.html        # template raiz
- │    ├── app.routes.ts   # ponto de declaração de rotas (ainda vazio)
+ │    ├── app.routes.ts   # rota estrutural do shell (sem rotas-filhas)
  │    ├── app.scss        # estilos do componente raiz
  │    ├── app.spec.ts     # teste inicial do componente raiz
  │    └── app.ts          # componente raiz
  ├── environments/        # URL base não sensível por ambiente
  ├── index.html           # página HTML principal
  ├── main.ts              # bootstrap da aplicação
+ ├── styles/              # palette, tokens, tema Material e responsividade
  └── styles.scss          # estilos globais
 
 public/                   # assets estáticos, quando necessários
 README.md                 # documentação principal do repositório
-docs/                     # documentação técnica da arquitetura
+docs/                     # documentação técnica e histórico de releases
 ```
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
@@ -313,7 +322,7 @@ cd ironcore-frontend
 3. Instale as dependências:
 
 ```bash
-npm install
+npm ci
 ```
 
 4. Inicie a aplicação:
@@ -324,7 +333,7 @@ npm start
 
 Após iniciar o servidor de desenvolvimento, acesse `http://localhost:4200/` no navegador.
 
-Quando a integração for implementada, os fluxos que dependem da API exigirão que o backend correspondente esteja em execução e configurado conforme sua própria documentação.
+Os fluxos de integração disponíveis exigem que o backend correspondente esteja em execução e configurado conforme sua própria documentação. Em desenvolvimento, a URL base da API é `http://localhost:8080`.
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
