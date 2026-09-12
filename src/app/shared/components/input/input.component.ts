@@ -31,6 +31,7 @@ export class InputComponent implements ControlValueAccessor {
   type = input<'text' | 'email' | 'password' | 'number'>('text');
   disabled = input<boolean>(false);
   error = input<string>('');
+  autocomplete = input<string>('off');
 
   value = '';
   formDisabled = false;

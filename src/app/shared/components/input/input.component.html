@@ -15,6 +15,7 @@
     [value]="value"
     [attr.aria-invalid]="!!error()"
     [attr.aria-describedby]="error() ? id() + '-error' : null"
+    [attr.autocomplete]="autocomplete()"
     (input)="handleInput($event)"
     (blur)="handleBlur()"
   />
