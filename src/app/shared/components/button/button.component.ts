@@ -9,5 +9,6 @@ import { MatButtonModule } from '@angular/material/button';
 })
 export class ButtonComponent {
   variant = input<'primary' | 'secondary' | 'danger' | 'cancel'>('primary');
+  type = input<'button' | 'submit'>('button');
   disabled = input<boolean>(false);
 }

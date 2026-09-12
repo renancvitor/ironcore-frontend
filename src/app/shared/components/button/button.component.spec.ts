@@ -28,6 +28,24 @@ describe('Button', () => {
     expect(button.classList).toContain('ic-button--primary');
   });
 
+  it('should use button type by default', () => {
+    fixture.detectChanges();
+
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
+
+    expect(button.type).toBe('button');
+  });
+
+  it('should apply the submit type', () => {
+    fixture.componentRef.setInput('type', 'submit');
+
+    fixture.detectChanges();
+
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
+
+    expect(button.type).toBe('submit');
+  });
+
   it('should apply danger variant', () => {
     fixture.componentRef.setInput('variant', 'danger');
 

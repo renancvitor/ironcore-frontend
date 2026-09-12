@@ -40,6 +40,16 @@ describe('Input', () => {
     expect(input.placeholder).toBe('Digite seu nome');
   });
 
+  it('should apply autocomplete', () => {
+    fixture.componentRef.setInput('autocomplete', 'current-password');
+
+    fixture.detectChanges();
+
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('input');
+
+    expect(input.autocomplete).toBe('current-password');
+  });
+
   it('should disable the input', () => {
     fixture.componentRef.setInput('disabled', true);
 

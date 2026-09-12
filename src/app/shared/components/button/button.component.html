@@ -1,6 +1,6 @@
 <button
   matButton
-  type="button"
+  [type]="type()"
   class="ic-button"
   [class.ic-button--primary]="variant() === 'primary'"
   [class.ic-button--secondary]="variant() === 'secondary'"
