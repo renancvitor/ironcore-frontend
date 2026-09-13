@@ -5,7 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '../http/api-base-url.token';
 import { AuthStateService } from './auth-state.service';
 import { AuthService } from './auth.service';
-import { AuthenticatedUser, LoginResponse } from './auth.models';
+import { AuthenticatedUser, InitialChangePasswordRequest, LoginResponse } from './auth.models';
 
 describe('AuthService', () => {
   const apiBaseUrl = 'https://api.ironcore.test';
@@ -103,6 +103,23 @@ describe('AuthService', () => {
     expect(completed).toBe(true);
     expect(receivedError).toBe(false);
     expect(authState.currentUser()).toBeNull();
+  });
+
+  it('should send the initial password change request to the public endpoint', () => {
+    const initialChangePasswordRequest: InitialChangePasswordRequest = {
+      email: user.email,
+      currentPassword: 'current-password',
+      newPassword: 'new-password',
+      confirmNewPassword: 'new-password',
+    };
+
+    authService.initialChangePassword(initialChangePasswordRequest).subscribe();
+
+    const request = httpTestingController.expectOne(`${apiBaseUrl}/api/users/change-initial-password`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(initialChangePasswordRequest);
+
+    request.flush(null, { status: 204, statusText: 'No Content' });
   });
 
   it('should complete without an error when the session is forbidden', () => {

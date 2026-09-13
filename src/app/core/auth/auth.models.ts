@@ -15,3 +15,10 @@ export interface LoginResponse extends AuthenticatedUser {
   tokenType: string;
   expiresAt: string;
 }
+
+export interface InitialChangePasswordRequest {
+  email: string;
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
