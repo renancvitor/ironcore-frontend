@@ -1,0 +1,76 @@
+@use '../../../../styles/responsive' as responsive;
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.ic-first-access {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+
+  padding: var(--ic-space-6);
+
+  box-sizing: border-box;
+}
+
+.ic-first-access__card {
+  width: 100%;
+  max-width: 30rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--ic-space-5);
+
+  padding: var(--ic-space-6);
+
+  background-color: var(--ic-surface);
+
+  border: var(--ic-border-width-default) solid var(--ic-border-soft);
+
+  border-radius: var(--ic-radius-md);
+
+  box-sizing: border-box;
+}
+
+.ic-first-access__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ic-space-2);
+}
+
+.ic-first-access__title {
+  margin: 0;
+
+  color: var(--ic-text-primary);
+}
+
+.ic-first-access__subtitle {
+  margin: 0;
+
+  color: var(--ic-text-secondary);
+}
+
+.ic-first-access__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ic-space-4);
+}
+
+.ic-first-access__error {
+  margin: 0;
+
+  color: var(--ic-field-error);
+  font-size: var(--ic-font-size-sm);
+}
+
+@include responsive.mobile {
+  .ic-first-access {
+    padding: var(--ic-space-3);
+  }
+
+  .ic-first-access__card {
+    padding: var(--ic-space-4);
+  }
+}

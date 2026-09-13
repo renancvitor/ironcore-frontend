@@ -1,0 +1,93 @@
+<section class="ic-first-access">
+  <div class="ic-first-access__card">
+    <header class="ic-first-access__header">
+      <h1 class="ic-first-access__title">Primeiro acesso</h1>
+
+      <p class="ic-first-access__subtitle">Defina uma nova senha para continuar.</p>
+    </header>
+
+    <form class="ic-first-access__form" [formGroup]="form" (ngSubmit)="submit()">
+      <app-input
+        id="email"
+        label="E-mail"
+        type="email"
+        autocomplete="email"
+        formControlName="email"
+        [error]="
+          form.controls.email.touched && form.controls.email.hasError('required')
+            ? 'E-mail é obrigatório.'
+            : form.controls.email.touched && form.controls.email.hasError('email')
+              ? 'Informe um e-mail válido.'
+              : ''
+        "
+      />
+
+      <app-input
+        id="currentPassword"
+        label="Senha atual"
+        type="password"
+        autocomplete="current-password"
+        formControlName="currentPassword"
+        [error]="
+          form.controls.currentPassword.touched &&
+          form.controls.currentPassword.hasError('required')
+            ? 'Senha atual é obrigatória.'
+            : form.controls.currentPassword.touched &&
+                form.controls.currentPassword.hasError('minlength')
+              ? 'A senha deve ter pelo menos 8 caracteres.'
+              : ''
+        "
+      />
+
+      <app-input
+        id="newPassword"
+        label="Nova senha"
+        type="password"
+        autocomplete="new-password"
+        formControlName="newPassword"
+        [error]="
+          form.controls.newPassword.touched && form.controls.newPassword.hasError('required')
+            ? 'Nova senha é obrigatória.'
+            : form.controls.newPassword.touched && form.controls.newPassword.hasError('minlength')
+              ? 'A senha deve ter pelo menos 8 caracteres.'
+              : form.controls.newPassword.touched && form.hasError('sameAsCurrentPassword')
+                ? 'A nova senha deve ser diferente da senha atual.'
+                : ''
+        "
+      />
+
+      <app-input
+        id="confirmNewPassword"
+        label="Confirmar nova senha"
+        type="password"
+        autocomplete="new-password"
+        formControlName="confirmNewPassword"
+        [error]="
+          form.controls.confirmNewPassword.touched &&
+          form.controls.confirmNewPassword.hasError('required')
+            ? 'Confirmação da nova senha é obrigatória.'
+            : form.controls.confirmNewPassword.touched &&
+                form.controls.confirmNewPassword.hasError('minlength')
+              ? 'A senha deve ter pelo menos 8 caracteres.'
+              : form.controls.confirmNewPassword.touched && form.hasError('passwordMismatch')
+                ? 'A confirmação de senha não confere.'
+                : ''
+        "
+      />
+
+      @if (errorMessage) {
+        <p class="ic-first-access__error" role="alert">
+          {{ errorMessage }}
+        </p>
+      }
+
+      <app-button type="submit" variant="primary" [disabled]="form.invalid || loading">
+        @if (loading) {
+          Alterando senha...
+        } @else {
+          Alterar senha
+        }
+      </app-button>
+    </form>
+  </div>
+</section>
