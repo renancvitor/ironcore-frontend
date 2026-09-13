@@ -1,6 +1,17 @@
 @use '@angular/material' as mat;
 @use './palette' as palette;
 
+.ic-dialog-panel {
+  @include mat.dialog-overrides(
+    (
+      container-color: var(--ic-surface-elevated),
+      container-shape: var(--ic-radius-md),
+      subhead-color: var(--ic-text-primary),
+      supporting-text-color: var(--ic-text-secondary),
+    )
+  );
+}
+
 [data-theme='light'] {
   @include mat.theme(
     (
