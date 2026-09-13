@@ -43,36 +43,17 @@
 }
 
 .ic-input__field {
-  background-color: var(--ic-field-bg);
+  background-color: transparent;
   color: var(--ic-field-text);
-
-  border: var(--ic-border-width-default) solid var(--ic-field-border);
-  border-radius: var(--ic-radius-md);
-
-  padding: var(--ic-space-3) var(--ic-space-4);
 
   &::placeholder {
     color: var(--ic-field-placeholder);
-  }
-
-  &:focus-visible {
-    border-color: var(--ic-field-border-focus);
-    outline: var(--ic-focus-ring-width) solid var(--ic-field-border-focus);
-    outline-offset: var(--ic-focus-ring-offset);
   }
 
   &:disabled {
     color: var(--ic-text-disabled);
     cursor: not-allowed;
     opacity: var(--ic-state-disabled-opacity);
-  }
-}
-
-.ic-input__field--error {
-  border-color: var(--ic-field-error);
-
-  &:focus-visible {
-    outline-color: var(--ic-field-error);
   }
 }
 
