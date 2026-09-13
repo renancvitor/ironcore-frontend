@@ -9,6 +9,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputComponent } from '../../../shared/components/input/input.component';
 import { Router } from '@angular/router';
+import { DialogService } from '../../../shared/components/dialog/dialog.service';
 
 @Component({
   selector: 'app-login',
@@ -19,6 +20,7 @@ import { Router } from '@angular/router';
 export class LoginComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly dialogService = inject(DialogService);
 
   loading = false;
   errorMessage = '';
@@ -72,7 +74,13 @@ export class LoginComponent {
             return;
           }
 
-          this.errorMessage = error.error?.message ?? '';
+          const message = error.error?.message ?? 'Não foi possível entrar';
+
+          this.dialogService.open({
+            title: 'Não foi possível entrar',
+            message,
+            primaryAction: 'Ok',
+          });
         },
       });
   }

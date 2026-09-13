@@ -5,11 +5,13 @@ import { Subject, throwError } from 'rxjs';
 
 import { LoginResponse } from '../../../core/auth/auth.models';
 import { AuthService } from '../../../core/auth/auth.service';
+import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { LoginComponent } from './login.component';
 
 describe('LoginComponent', () => {
   const login = vi.fn();
   const navigate = vi.fn();
+  const openDialog = vi.fn();
 
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
@@ -17,6 +19,7 @@ describe('LoginComponent', () => {
   beforeEach(async () => {
     login.mockReset();
     navigate.mockReset();
+    openDialog.mockReset();
 
     await TestBed.configureTestingModule({
       imports: [LoginComponent],
@@ -28,6 +31,10 @@ describe('LoginComponent', () => {
         {
           provide: Router,
           useValue: { navigate },
+        },
+        {
+          provide: DialogService,
+          useValue: { open: openDialog },
         },
       ],
     }).compileComponents();
@@ -97,10 +104,12 @@ describe('LoginComponent', () => {
     component.submit();
     fixture.detectChanges();
 
-    const alert: HTMLElement = fixture.nativeElement.querySelector('[role="alert"]');
-
     expect(component.loading).toBe(false);
-    expect(alert.textContent?.trim()).toBe('Credenciais inválidas.');
+    expect(openDialog).toHaveBeenCalledWith({
+      title: 'N\u00e3o foi poss\u00edvel entrar',
+      message: 'Credenciais inv\u00e1lidas.',
+      primaryAction: 'Ok',
+    });
   });
 
   it('should redirect to the protected area after a successful login', () => {

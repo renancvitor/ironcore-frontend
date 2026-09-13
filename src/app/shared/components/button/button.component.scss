@@ -18,6 +18,8 @@
 }
 
 .ic-button {
+  min-width: 9rem;
+
   border: 0;
   border-radius: var(--ic-radius-md);
   padding: var(--ic-space-3) var(--ic-space-4);

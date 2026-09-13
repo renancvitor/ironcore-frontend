@@ -15,6 +15,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputComponent } from '../../../shared/components/input/input.component';
+import { DialogService } from '../../../shared/components/dialog/dialog.service';
 
 function firstAccessPasswordValidator(control: AbstractControl): ValidationErrors | null {
   const currentPassword = control.get('currentPassword')?.value;
@@ -46,6 +47,7 @@ export class FirstAccessComponent {
   private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly dialogService = inject(DialogService);
 
   loading = false;
   errorMessage = '';
@@ -109,7 +111,13 @@ export class FirstAccessComponent {
         },
 
         error: (error: HttpErrorResponse) => {
-          this.errorMessage = error.error?.message ?? '';
+          const message = error.error?.message ?? 'Ocorreu um erro ao alterar a senha.';
+
+          this.dialogService.open({
+            title: 'Não foi possível alterar a senha',
+            message,
+            primaryAction: 'Ok',
+          });
         },
       });
   }

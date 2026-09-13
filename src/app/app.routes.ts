@@ -4,6 +4,7 @@ import { authGuard } from './core/guards/auth.guard';
 import { AppShellComponent } from './layout/app-shell/app-shell.component';
 import { LoginComponent } from './features/auth/login/login.component';
 import { FirstAccessComponent } from './features/auth/first-access/first-access.component';
+import { HomeComponent } from './features/home/home.component';
 
 export const routes: Routes = [
   {
@@ -18,6 +19,11 @@ export const routes: Routes = [
     path: '',
     component: AppShellComponent,
     canActivate: [authGuard],
-    children: [],
+    children: [
+      {
+        path: '',
+        component: HomeComponent,
+      },
+    ],
   },
 ];

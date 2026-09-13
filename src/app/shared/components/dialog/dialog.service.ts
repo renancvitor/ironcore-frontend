@@ -17,6 +17,7 @@ export class DialogService {
         data,
         width: '600px',
         maxWidth: 'calc(100vw - 1.5rem)',
+        panelClass: 'ic-dialog-panel',
       })
       .afterClosed();
   }
