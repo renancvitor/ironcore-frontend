@@ -4,11 +4,13 @@ import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { Subject, throwError } from 'rxjs';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { FirstAccessComponent } from './first-access.component';
 
 describe('FirstAccessComponent', () => {
   const initialChangePassword = vi.fn();
   const navigate = vi.fn();
+  const openDialog = vi.fn();
   const email = 'renan@ironcore.test';
   const validFormValue = {
     email,
@@ -23,6 +25,7 @@ describe('FirstAccessComponent', () => {
   beforeEach(async () => {
     initialChangePassword.mockReset();
     navigate.mockReset();
+    openDialog.mockReset();
 
     await TestBed.configureTestingModule({
       imports: [FirstAccessComponent],
@@ -33,6 +36,7 @@ describe('FirstAccessComponent', () => {
           useValue: { snapshot: { queryParamMap: convertToParamMap({ email }) } },
         },
         { provide: Router, useValue: { navigate } },
+        { provide: DialogService, useValue: { open: openDialog } },
       ],
     }).compileComponents();
 
@@ -141,10 +145,12 @@ describe('FirstAccessComponent', () => {
     component.submit();
     fixture.detectChanges();
 
-    const alert: HTMLElement = fixture.nativeElement.querySelector('[role="alert"]');
-
     expect(component.loading).toBe(false);
-    expect(alert.textContent?.trim()).toBe('Credenciais inválidas.');
+    expect(openDialog).toHaveBeenCalledWith({
+      title: 'N\u00e3o foi poss\u00edvel alterar a senha',
+      message: 'Credenciais inv\u00e1lidas.',
+      primaryAction: 'Ok',
+    });
     expect(navigate).not.toHaveBeenCalled();
   });
 });
