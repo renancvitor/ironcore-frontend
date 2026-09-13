@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputComponent } from '../../../shared/components/input/input.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -17,6 +18,7 @@ import { InputComponent } from '../../../shared/components/input/input.component
 })
 export class LoginComponent {
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   loading = false;
   errorMessage = '';
@@ -52,9 +54,24 @@ export class LoginComponent {
         }),
       )
       .subscribe({
-        next: () => {},
+        next: () => {
+          this.router.navigate(['/']);
+        },
 
         error: (error: HttpErrorResponse) => {
+          if (
+            error.status === 401 &&
+            error.error?.message === 'Troca de senha inicial obrigatória.'
+          ) {
+            this.router.navigate(['/first-access'], {
+              queryParams: {
+                email: request.email,
+              },
+            });
+
+            return;
+          }
+
           this.errorMessage = error.error?.message ?? '';
         },
       });

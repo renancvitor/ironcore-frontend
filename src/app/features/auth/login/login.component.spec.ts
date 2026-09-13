@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { Subject, throwError } from 'rxjs';
 
 import { LoginResponse } from '../../../core/auth/auth.models';
@@ -8,12 +9,14 @@ import { LoginComponent } from './login.component';
 
 describe('LoginComponent', () => {
   const login = vi.fn();
+  const navigate = vi.fn();
 
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
 
   beforeEach(async () => {
     login.mockReset();
+    navigate.mockReset();
 
     await TestBed.configureTestingModule({
       imports: [LoginComponent],
@@ -21,6 +24,10 @@ describe('LoginComponent', () => {
         {
           provide: AuthService,
           useValue: { login },
+        },
+        {
+          provide: Router,
+          useValue: { navigate },
         },
       ],
     }).compileComponents();
@@ -94,5 +101,36 @@ describe('LoginComponent', () => {
 
     expect(component.loading).toBe(false);
     expect(alert.textContent?.trim()).toBe('Credenciais inválidas.');
+  });
+
+  it('should redirect to the protected area after a successful login', () => {
+    const result = new Subject<LoginResponse>();
+    login.mockReturnValue(result);
+    component.form.setValue({ email: 'renan@ironcore.test', password: 'password' });
+
+    component.submit();
+    result.next({} as LoginResponse);
+
+    expect(navigate).toHaveBeenCalledWith(['/']);
+  });
+
+  it('should redirect to first access when the backend requires the initial password change', () => {
+    login.mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            error: { message: 'Troca de senha inicial obrigatória.' },
+            status: 401,
+          }),
+      ),
+    );
+    component.form.setValue({ email: 'renan@ironcore.test', password: 'password' });
+
+    component.submit();
+
+    expect(navigate).toHaveBeenCalledWith(['/first-access'], {
+      queryParams: { email: 'renan@ironcore.test' },
+    });
+    expect(component.errorMessage).toBe('');
   });
 });
