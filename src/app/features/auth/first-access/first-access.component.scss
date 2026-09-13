@@ -5,7 +5,7 @@
   min-height: 100vh;
 }
 
-.ic-login {
+.ic-first-access {
   min-height: 100vh;
   display: grid;
   place-items: center;
@@ -15,9 +15,9 @@
   box-sizing: border-box;
 }
 
-.ic-login__card {
+.ic-first-access__card {
   width: 100%;
-  max-width: 28rem;
+  max-width: 30rem;
 
   display: flex;
   flex-direction: column;
@@ -34,31 +34,31 @@
   box-sizing: border-box;
 }
 
-.ic-login__header {
+.ic-first-access__header {
   display: flex;
   flex-direction: column;
   gap: var(--ic-space-2);
 }
 
-.ic-login__title {
+.ic-first-access__title {
   margin: 0;
 
   color: var(--ic-text-primary);
 }
 
-.ic-login__subtitle {
+.ic-first-access__subtitle {
   margin: 0;
 
   color: var(--ic-text-secondary);
 }
 
-.ic-login__form {
+.ic-first-access__form {
   display: flex;
   flex-direction: column;
   gap: var(--ic-space-4);
 }
 
-.ic-login__error {
+.ic-first-access__error {
   margin: 0;
 
   color: var(--ic-field-error);
@@ -66,11 +66,11 @@
 }
 
 @include responsive.mobile {
-  .ic-login {
+  .ic-first-access {
     padding: var(--ic-space-3);
   }
 
-  .ic-login__card {
+  .ic-first-access__card {
     padding: var(--ic-space-4);
   }
 }

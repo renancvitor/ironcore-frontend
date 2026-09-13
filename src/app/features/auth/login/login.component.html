@@ -1,43 +1,52 @@
-<form [formGroup]="form" (ngSubmit)="submit()">
-  <app-input
-    id="email"
-    label="E-mail"
-    type="email"
-    autocomplete="email"
-    formControlName="email"
-    [error]="
-      form.controls.email.touched && form.controls.email.hasError('required')
-        ? 'E-mail é obrigatório.'
-        : form.controls.email.touched && form.controls.email.hasError('email')
-          ? 'Informe um e-mail válido.'
-          : ''
-    "
-  />
+<section class="ic-login">
+  <div class="ic-login__card">
+    <header class="ic-login__header">
+      <h1 class="ic-login__title">Entrar</h1>
+      <p class="ic-login__subtitle">Acesse sua conta para continuar.</p>
+    </header>
 
-  <app-input
-    id="password"
-    label="Senha"
-    type="password"
-    autocomplete="current-password"
-    formControlName="password"
-    [error]="
-      form.controls.password.touched && form.controls.password.hasError('required')
-        ? 'Senha é obrigatória.'
-        : ''
-    "
-  />
+    <form class="ic-login__form" [formGroup]="form" (ngSubmit)="submit()">
+      <app-input
+        id="email"
+        label="E-mail"
+        type="email"
+        autocomplete="email"
+        formControlName="email"
+        [error]="
+          form.controls.email.touched && form.controls.email.hasError('required')
+            ? 'E-mail é obrigatório.'
+            : form.controls.email.touched && form.controls.email.hasError('email')
+              ? 'Informe um e-mail válido.'
+              : ''
+        "
+      />
 
-  @if (errorMessage) {
-    <p role="alert">
-      {{ errorMessage }}
-    </p>
-  }
+      <app-input
+        id="password"
+        label="Senha"
+        type="password"
+        autocomplete="current-password"
+        formControlName="password"
+        [error]="
+          form.controls.password.touched && form.controls.password.hasError('required')
+            ? 'Senha é obrigatória.'
+            : ''
+        "
+      />
 
-  <app-button type="submit" variant="primary" [disabled]="form.invalid || loading">
-    @if (loading) {
-      Entrando...
-    } @else {
-      Entrar
-    }
-  </app-button>
-</form>
+      @if (errorMessage) {
+        <p class="ic-login__error" role="alert">
+          {{ errorMessage }}
+        </p>
+      }
+
+      <app-button type="submit" variant="primary" [disabled]="form.invalid || loading">
+        @if (loading) {
+          Entrando...
+        } @else {
+          Entrar
+        }
+      </app-button>
+    </form>
+  </div>
+</section>

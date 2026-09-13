@@ -4,7 +4,12 @@ import { catchError, EMPTY, tap, throwError } from 'rxjs';
 
 import { API_BASE_URL } from '../http/api-base-url.token';
 import { AuthStateService } from './auth-state.service';
-import { AuthenticatedUser, LoginRequest, LoginResponse } from './auth.models';
+import {
+  AuthenticatedUser,
+  InitialChangePasswordRequest,
+  LoginRequest,
+  LoginResponse,
+} from './auth.models';
 
 @Injectable({
   providedIn: 'root',
@@ -48,5 +53,9 @@ export class AuthService {
         this.authState.clear();
       }),
     );
+  }
+
+  initialChangePassword(request: InitialChangePasswordRequest) {
+    return this.http.post<void>(`${this.apiBaseUrl}/api/users/change-initial-password`, request);
   }
 }
