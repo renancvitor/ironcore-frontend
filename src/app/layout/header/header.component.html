@@ -1,5 +1,17 @@
 <header class="ic-header">
-  <div class="ic-container ic-header__content">
-    <span class="ic-header__brand"> IronCore </span>
+  <div class="ic-header__content">
+    <button
+      matIconButton
+      type="button"
+      aria-label="Abrir menu"
+      matTooltip="Abrir menu"
+      (click)="menuToggle.emit()"
+    >
+      <mat-icon>menu</mat-icon>
+    </button>
+
+    <a matIconButton routerLink="/" aria-label="Página inicial" matTooltip="Página inicial">
+      <mat-icon>home</mat-icon>
+    </a>
   </div>
 </header>

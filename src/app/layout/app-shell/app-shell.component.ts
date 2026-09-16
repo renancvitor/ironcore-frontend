@@ -10,4 +10,10 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',
 })
-export class AppShellComponent {}
+export class AppShellComponent {
+  sidebarOpen = false;
+
+  toggleSidebar(): void {
+    this.sidebarOpen = !this.sidebarOpen;
+  }
+}

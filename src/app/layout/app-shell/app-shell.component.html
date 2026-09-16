@@ -1,8 +1,10 @@
 <div class="ic-shell">
-  <app-header class="ic-shell__header" />
+  <app-header class="ic-shell__header" (menuToggle)="toggleSidebar()" />
 
   <div class="ic-shell__body">
-    <app-sidebar class="ic-shell__sidebar" />
+    @if (sidebarOpen) {
+      <app-sidebar class="ic-shell__sidebar" />
+    }
 
     <main class="ic-shell__content">
       <div class="ic-container">
