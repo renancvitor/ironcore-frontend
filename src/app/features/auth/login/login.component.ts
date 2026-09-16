@@ -8,12 +8,13 @@ import { AuthService } from '../../../core/auth/auth.service';
 
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputComponent } from '../../../shared/components/input/input.component';
+import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 import { Router } from '@angular/router';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, InputComponent, ButtonComponent],
+  imports: [ReactiveFormsModule, InputComponent, ButtonComponent, LoadingComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
