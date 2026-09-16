@@ -16,6 +16,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputComponent } from '../../../shared/components/input/input.component';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
+import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 
 function firstAccessPasswordValidator(control: AbstractControl): ValidationErrors | null {
   const currentPassword = control.get('currentPassword')?.value;
@@ -39,7 +40,7 @@ function firstAccessPasswordValidator(control: AbstractControl): ValidationError
 
 @Component({
   selector: 'app-first-access',
-  imports: [ReactiveFormsModule, InputComponent, ButtonComponent],
+  imports: [ReactiveFormsModule, InputComponent, ButtonComponent, LoadingComponent],
   templateUrl: './first-access.component.html',
   styleUrl: './first-access.component.scss',
 })

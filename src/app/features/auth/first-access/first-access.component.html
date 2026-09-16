@@ -81,13 +81,13 @@
         </p>
       }
 
-      <app-button type="submit" variant="primary" [disabled]="form.invalid || loading">
-        @if (loading) {
-          Alterando senha...
-        } @else {
+      @if (loading) {
+        <app-loading />
+      } @else {
+        <app-button type="submit" variant="primary" [disabled]="form.invalid">
           Alterar senha
-        }
-      </app-button>
+        </app-button>
+      }
     </form>
   </div>
 </section>
