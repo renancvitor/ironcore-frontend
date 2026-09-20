@@ -11,4 +11,5 @@ export class ButtonComponent {
   variant = input<'primary' | 'secondary' | 'danger' | 'cancel'>('primary');
   type = input<'button' | 'submit'>('button');
   disabled = input<boolean>(false);
+  fullWidth = input<boolean>(false);
 }
