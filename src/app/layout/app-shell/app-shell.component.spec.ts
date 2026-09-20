@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { AuthService } from '../../core/auth/auth.service';
+import { ThemeService } from '../../core/theme/theme.service';
+import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { AppShellComponent } from './app-shell.component';
 
 describe('AppShellComponent', () => {
@@ -10,7 +13,12 @@ describe('AppShellComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppShellComponent],
-      providers: [provideRouter([])],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: { logout: vi.fn() } },
+        { provide: ThemeService, useValue: { currentTheme: () => 'dark', setTheme: vi.fn() } },
+        { provide: DialogService, useValue: { open: vi.fn() } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AppShellComponent);

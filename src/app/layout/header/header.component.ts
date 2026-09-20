@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,6 +8,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/theme/theme.service';
+import { DialogService } from '../../shared/components/dialog/dialog.service';
 
 @Component({
   selector: 'app-header',
@@ -18,6 +20,7 @@ export class HeaderComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly themeService = inject(ThemeService);
+  private readonly dialogService = inject(DialogService);
 
   readonly menuToggle = output<void>();
   readonly currentTheme = this.themeService.currentTheme;
@@ -26,6 +29,20 @@ export class HeaderComponent {
     this.authService.logout().subscribe({
       next: () => {
         void this.router.navigate(['/login']);
+      },
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          void this.router.navigate(['/login']);
+          return;
+        }
+
+        const message = error.error?.message ?? 'Não foi possível encerrar a sessão.';
+
+        this.dialogService.open({
+          title: 'Não foi possível sair da conta',
+          message,
+          primaryAction: 'Ok',
+        });
       },
     });
   }
