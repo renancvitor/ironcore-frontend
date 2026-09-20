@@ -14,3 +14,16 @@
 .ic-header__logout {
   margin-left: auto;
 }
+
+.ic-header__theme {
+  display: flex;
+  align-items: center;
+  gap: var(--ic-space-2);
+}
+
+.ic-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ic-space-2);
+  margin-left: auto;
+}

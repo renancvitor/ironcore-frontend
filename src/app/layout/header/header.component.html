@@ -14,25 +14,39 @@
       <mat-icon>home</mat-icon>
     </a>
 
-    <button
-      matIconButton
-      class="ic-header__logout"
-      type="button"
-      aria-label="Sair da conta"
-      matTooltip="Sair"
-      (click)="logout()"
-    >
-      <mat-icon>logout</mat-icon>
-    </button>
+    <div class="ic-header__actions">
+      <div class="ic-header__theme">
+        <mat-icon aria-hidden="true">light_mode</mat-icon>
 
-    <a
-      matIconButton
-      class="ic-header__profile"
-      routerLink="/profile"
-      aria-label="Meu perfil"
-      matTooltip="Meu perfil"
-    >
-      <mat-icon>account_circle</mat-icon>
-    </a>
+        <mat-slide-toggle
+          aria-label="Ativar tema escuro"
+          [checked]="currentTheme() === 'dark'"
+          (change)="changeTheme($event.checked)"
+        />
+
+        <mat-icon aria-hidden="true">dark_mode</mat-icon>
+      </div>
+
+      <button
+        matIconButton
+        class="ic-header__logout"
+        type="button"
+        aria-label="Sair da conta"
+        matTooltip="Sair"
+        (click)="logout()"
+      >
+        <mat-icon>logout</mat-icon>
+      </button>
+
+      <a
+        matIconButton
+        class="ic-header__profile"
+        routerLink="/profile"
+        aria-label="Meu perfil"
+        matTooltip="Meu perfil"
+      >
+        <mat-icon>account_circle</mat-icon>
+      </a>
+    </div>
   </div>
 </header>
