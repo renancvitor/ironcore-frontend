@@ -36,6 +36,10 @@
   }
 }
 
+.ic-button--full-width {
+  width: 100%;
+}
+
 .ic-button--primary {
   @include ironcore-button-material-overrides(var(--ic-button-primary-text));
 

@@ -40,13 +40,11 @@
         </p>
       }
 
-      <app-button type="submit" variant="primary" [disabled]="form.invalid || loading">
-        @if (loading) {
-          Entrando...
-        } @else {
-          Entrar
-        }
-      </app-button>
+      @if (loading) {
+        <app-loading />
+      } @else {
+        <app-button type="submit" variant="primary" [disabled]="form.invalid"> Entrar </app-button>
+      }
     </form>
   </div>
 </section>

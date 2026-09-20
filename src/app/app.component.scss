@@ -1,0 +1,11 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  isolation: isolate;
+}
+
+.ic-app-content {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}

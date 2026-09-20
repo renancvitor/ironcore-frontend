@@ -116,7 +116,7 @@ describe('FirstAccessComponent', () => {
 
     expect(initialChangePassword).toHaveBeenCalledWith(validFormValue);
     expect(component.loading).toBe(true);
-    expect(fixture.nativeElement.textContent).toContain('Alterando senha...');
+    expect(fixture.nativeElement.querySelector('app-loading')).toBeTruthy();
 
     result.complete();
 

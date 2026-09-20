@@ -28,9 +28,10 @@ describe('SidebarComponent', () => {
     expect(nav).toBeTruthy();
   });
 
-  it('should render the initial navigation link', () => {
+  it('should render the profile navigation link', () => {
     const link = fixture.nativeElement.querySelector('.ic-sidebar__link') as HTMLAnchorElement;
 
-    expect(link.textContent?.trim()).toBe('Início');
+    expect(link.textContent?.trim()).toBe('Perfil');
+    expect(link.getAttribute('href')).toBe('/profile');
   });
 });

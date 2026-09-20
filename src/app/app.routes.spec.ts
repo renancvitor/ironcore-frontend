@@ -4,6 +4,8 @@ import { LoginComponent } from './features/auth/login/login.component';
 import { FirstAccessComponent } from './features/auth/first-access/first-access.component';
 import { authGuard } from './core/guards/auth.guard';
 import { AppShellComponent } from './layout/app-shell/app-shell.component';
+import { ProfileComponent } from './features/profile/profile.component';
+import { ChangePasswordComponent } from './features/profile/change-password/change-password.component';
 import { routes } from './app.routes';
 
 describe('application routes', () => {
@@ -26,5 +28,16 @@ describe('application routes', () => {
 
     expect(applicationRoute?.component).toBe(AppShellComponent);
     expect(applicationRoute?.canActivate).toEqual([authGuard]);
+  });
+
+  it('should expose profile and password change as protected child routes', () => {
+    const applicationRoute = routes.find((route) => route.path === '');
+    const profileRoute = applicationRoute?.children?.find((route) => route.path === 'profile');
+    const changePasswordRoute = applicationRoute?.children?.find(
+      (route) => route.path === 'change-password',
+    );
+
+    expect(profileRoute?.component).toBe(ProfileComponent);
+    expect(changePasswordRoute?.component).toBe(ChangePasswordComponent);
   });
 });

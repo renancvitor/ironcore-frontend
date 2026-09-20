@@ -28,7 +28,15 @@ describe('AppShellComponent', () => {
     expect(header).toBeTruthy();
   });
 
-  it('should render the sidebar', () => {
+  it('should render the sidebar after the menu is opened', async () => {
+    expect(fixture.nativeElement.querySelector('app-sidebar')).toBeNull();
+
+    const menuButton = fixture.nativeElement.querySelector(
+      'button[aria-label="Abrir menu"]',
+    ) as HTMLButtonElement;
+    menuButton.click();
+    await fixture.whenStable();
+
     const sidebar = fixture.nativeElement.querySelector('app-sidebar');
 
     expect(sidebar).toBeTruthy();

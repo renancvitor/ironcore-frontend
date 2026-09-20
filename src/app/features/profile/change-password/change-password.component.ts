@@ -7,18 +7,19 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { AuthService } from '../../../core/auth/auth.service';
+import { ProfileService } from '../profile.service';
+import { Router } from '@angular/router';
+import { DialogService } from '../../../shared/components/dialog/dialog.service';
+import { ChangePasswordRequest } from '../profile.models';
 import { finalize } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
-import { InitialChangePasswordRequest } from '../../../core/auth/auth.models';
-import { ActivatedRoute, Router } from '@angular/router';
 
-import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputComponent } from '../../../shared/components/input/input.component';
-import { DialogService } from '../../../shared/components/dialog/dialog.service';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
+import { ToastService } from '../../../shared/components/toast/toast.service';
 
-function firstAccessPasswordValidator(control: AbstractControl): ValidationErrors | null {
+function changePasswordValidator(control: AbstractControl): ValidationErrors | null {
   const currentPassword = control.get('currentPassword')?.value;
   const newPassword = control.get('newPassword')?.value;
   const confirmNewPassword = control.get('confirmNewPassword')?.value;
@@ -39,27 +40,21 @@ function firstAccessPasswordValidator(control: AbstractControl): ValidationError
 }
 
 @Component({
-  selector: 'app-first-access',
-  imports: [ReactiveFormsModule, InputComponent, ButtonComponent, LoadingComponent],
-  templateUrl: './first-access.component.html',
-  styleUrl: './first-access.component.scss',
+  selector: 'app-change-password',
+  imports: [InputComponent, ButtonComponent, LoadingComponent, ReactiveFormsModule],
+  templateUrl: './change-password.component.html',
+  styleUrl: './change-password.component.scss',
 })
-export class FirstAccessComponent {
-  private readonly authService = inject(AuthService);
-  private readonly route = inject(ActivatedRoute);
+export class ChangePasswordComponent {
+  private readonly profileService = inject(ProfileService);
   private readonly router = inject(Router);
+  private readonly toastService = inject(ToastService);
   private readonly dialogService = inject(DialogService);
 
   loading = false;
-  errorMessage = '';
 
   readonly form = new FormGroup(
     {
-      email: new FormControl('', {
-        nonNullable: true,
-        validators: [Validators.required, Validators.email],
-      }),
-
       currentPassword: new FormControl('', {
         nonNullable: true,
         validators: [Validators.required, Validators.minLength(8)],
@@ -76,17 +71,9 @@ export class FirstAccessComponent {
       }),
     },
     {
-      validators: [firstAccessPasswordValidator],
+      validators: [changePasswordValidator],
     },
   );
-
-  constructor() {
-    const email = this.route.snapshot.queryParamMap.get('email');
-
-    if (email) {
-      this.form.controls.email.setValue(email);
-    }
-  }
 
   submit(): void {
     if (this.form.invalid || this.loading) {
@@ -95,12 +82,11 @@ export class FirstAccessComponent {
     }
 
     this.loading = true;
-    this.errorMessage = '';
 
-    const request: InitialChangePasswordRequest = this.form.getRawValue();
+    const request: ChangePasswordRequest = this.form.getRawValue();
 
-    this.authService
-      .initialChangePassword(request)
+    this.profileService
+      .changePassword(request)
       .pipe(
         finalize(() => {
           this.loading = false;
@@ -108,7 +94,11 @@ export class FirstAccessComponent {
       )
       .subscribe({
         next: () => {
-          this.router.navigate(['/login']);
+          void this.router.navigate(['/profile']).then((navigated) => {
+            if (navigated) {
+              this.toastService.success('Senha alterada com sucesso.');
+            }
+          });
         },
 
         error: (error: HttpErrorResponse) => {
@@ -121,5 +111,9 @@ export class FirstAccessComponent {
           });
         },
       });
+  }
+
+  cancel(): void {
+    void this.router.navigate(['/profile']);
   }
 }
