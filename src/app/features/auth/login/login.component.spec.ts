@@ -82,7 +82,7 @@ describe('LoginComponent', () => {
 
     expect(login).toHaveBeenCalledWith({ email: 'renan@ironcore.test', password: 'password' });
     expect(component.loading).toBe(true);
-    expect(fixture.nativeElement.textContent).toContain('Entrando...');
+    expect(fixture.nativeElement.querySelector('app-loading')).toBeTruthy();
 
     result.complete();
 
