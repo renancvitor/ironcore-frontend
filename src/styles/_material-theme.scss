@@ -12,6 +12,21 @@
   );
 }
 
+.ic-toast-panel {
+  @include mat.snack-bar-overrides(
+    (
+      container-color: transparent,
+      container-shape: 0,
+    )
+  );
+
+  &.mat-mdc-snack-bar-container .mdc-snackbar__surface {
+    padding: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+}
+
 [data-theme='light'] {
   @include mat.theme(
     (
