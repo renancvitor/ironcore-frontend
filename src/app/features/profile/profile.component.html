@@ -1,0 +1,219 @@
+<section class="ic-profile">
+  <header class="ic-profile__header">
+    <h1>Perfil</h1>
+    <p>Gerencie os dados da sua conta e informações pessoais.</p>
+  </header>
+
+  <section class="ic-profile__card">
+    <!-- Nickname -->
+    <div
+      class="ic-profile__field"
+      [class.ic-profile__field--editing]="editingField() === 'nickname'"
+    >
+      <span class="ic-profile__label">Nickname</span>
+
+      <div class="ic-profile__field-content">
+        @if (editingField() === 'nickname') {
+          <app-input id="nickname" label="Nickname" type="text" [formControl]="nicknameControl" />
+
+          <div class="ic-profile__actions">
+            <button
+              matIconButton
+              type="button"
+              aria-label="Salvar nickname"
+              [disabled]="saving() || !canSave('nickname')"
+              (click)="saveNickname()"
+            >
+              <mat-icon>check</mat-icon>
+            </button>
+
+            <button
+              matIconButton
+              type="button"
+              aria-label="Cancelar edição do nickname"
+              [disabled]="saving()"
+              (click)="cancelEdit()"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        } @else {
+          <span class="ic-profile__value">
+            {{ currentUser()?.nickname }}
+          </span>
+
+          <div class="ic-profile__actions">
+            <button
+              matIconButton
+              type="button"
+              aria-label="Editar nickname"
+              (click)="startEdit('nickname')"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (person(); as person) {
+      <!-- Nome -->
+      <div class="ic-profile__field" [class.ic-profile__field--editing]="editingField() === 'name'">
+        <span class="ic-profile__label">Nome</span>
+
+        <div class="ic-profile__field-content">
+          @if (editingField() === 'name') {
+            <app-input id="name" label="Nome" type="text" [formControl]="nameControl" />
+
+            <div class="ic-profile__actions">
+              <button
+                matIconButton
+                type="button"
+                aria-label="Salvar nome"
+                [disabled]="saving() || !canSave('name')"
+                (click)="saveName()"
+              >
+                <mat-icon>check</mat-icon>
+              </button>
+
+              <button
+                matIconButton
+                type="button"
+                aria-label="Cancelar edição do nome"
+                [disabled]="saving()"
+                (click)="cancelEdit()"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          } @else {
+            <span class="ic-profile__value">{{ person.name }}</span>
+
+            <div class="ic-profile__actions">
+              <button
+                matIconButton
+                type="button"
+                aria-label="Editar nome"
+                (click)="startEdit('name')"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Sexo -->
+      <div class="ic-profile__field" [class.ic-profile__field--editing]="editingField() === 'sex'">
+        <span class="ic-profile__label">Sexo</span>
+
+        <div class="ic-profile__field-content">
+          @if (editingField() === 'sex') {
+            <mat-form-field appearance="outline" class="ic-profile__control">
+              <mat-label>Sexo</mat-label>
+
+              <mat-select [formControl]="sexControl">
+                <mat-option value="MALE">Masculino</mat-option>
+                <mat-option value="FEMALE">Feminino</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <div class="ic-profile__actions">
+              <button
+                matIconButton
+                type="button"
+                aria-label="Salvar sexo"
+                [disabled]="saving() || !canSave('sex')"
+                (click)="saveSex()"
+              >
+                <mat-icon>check</mat-icon>
+              </button>
+
+              <button
+                matIconButton
+                type="button"
+                aria-label="Cancelar edição do sexo"
+                [disabled]="saving()"
+                (click)="cancelEdit()"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          } @else {
+            <span class="ic-profile__value">{{ sexLabel }}</span>
+
+            <div class="ic-profile__actions">
+              <button
+                matIconButton
+                type="button"
+                aria-label="Editar sexo"
+                (click)="startEdit('sex')"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Data de nascimento -->
+      <div
+        class="ic-profile__field"
+        [class.ic-profile__field--editing]="editingField() === 'birthDate'"
+      >
+        <span class="ic-profile__label">Data de nascimento</span>
+
+        <div class="ic-profile__field-content">
+          @if (editingField() === 'birthDate') {
+            <mat-form-field appearance="outline" class="ic-profile__control">
+              <mat-label>
+                <label for="birthDate">Data de nascimento</label>
+              </mat-label>
+
+              <input matInput id="birthDate" type="date" [formControl]="birthDateControl" />
+            </mat-form-field>
+
+            <div class="ic-profile__actions">
+              <button
+                matIconButton
+                type="button"
+                aria-label="Salvar data de nascimento"
+                [disabled]="saving() || !canSave('birthDate')"
+                (click)="saveBirthDate()"
+              >
+                <mat-icon>check</mat-icon>
+              </button>
+
+              <button
+                matIconButton
+                type="button"
+                aria-label="Cancelar edição da data de nascimento"
+                [disabled]="saving()"
+                (click)="cancelEdit()"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          } @else {
+            <span class="ic-profile__value">{{ birthDateLabel }}</span>
+
+            <div class="ic-profile__actions">
+              <button
+                matIconButton
+                type="button"
+                aria-label="Editar data de nascimento"
+                (click)="startEdit('birthDate')"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+  <app-button type="button" variant="primary" (click)="changePassword()">
+    Alterar senha
+  </app-button>
+</section>
