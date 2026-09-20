@@ -105,6 +105,23 @@ describe('AuthService', () => {
     expect(authState.currentUser()).toBeNull();
   });
 
+  it('should preserve the authenticated user and propagate a logout failure', () => {
+    authState.setUser(user);
+    let receivedError: HttpErrorResponse | undefined;
+
+    authService.logout().subscribe({
+      error: (error: HttpErrorResponse) => {
+        receivedError = error;
+      },
+    });
+
+    const request = httpTestingController.expectOne(`${apiBaseUrl}/api/auth/logout`);
+    request.flush(null, { status: 500, statusText: 'Internal Server Error' });
+
+    expect(receivedError?.status).toBe(500);
+    expect(authState.currentUser()).toEqual(user);
+  });
+
   it('should send the initial password change request to the public endpoint', () => {
     const initialChangePasswordRequest: InitialChangePasswordRequest = {
       email: user.email,
