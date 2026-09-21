@@ -139,25 +139,21 @@ describe('AuthService', () => {
     request.flush(null, { status: 204, statusText: 'No Content' });
   });
 
-  it('should complete without an error when the session is forbidden', () => {
-    let completed = false;
-    let receivedError = false;
+  it('should preserve the authenticated user and propagate a forbidden session restoration error', () => {
+    authState.setUser(user);
+    let receivedError: HttpErrorResponse | undefined;
 
     authService.restoreSession().subscribe({
-      error: () => {
-        receivedError = true;
-      },
-      complete: () => {
-        completed = true;
+      error: (error: HttpErrorResponse) => {
+        receivedError = error;
       },
     });
 
     const request = httpTestingController.expectOne(`${apiBaseUrl}/api/users/me`);
     request.flush(null, { status: 403, statusText: 'Forbidden' });
 
-    expect(completed).toBe(true);
-    expect(receivedError).toBe(false);
-    expect(authState.currentUser()).toBeNull();
+    expect(receivedError?.status).toBe(403);
+    expect(authState.currentUser()).toEqual(user);
   });
 
   it('should propagate unexpected errors during session restoration', () => {
