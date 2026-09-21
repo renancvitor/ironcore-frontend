@@ -38,7 +38,7 @@ export class AuthService {
         this.authState.setUser(user);
       }),
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401 || error.status === 403) {
+        if (error.status === 401) {
           return EMPTY;
         }
 
