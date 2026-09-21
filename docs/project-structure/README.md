@@ -4,7 +4,8 @@ Este documento descreve a organização principal do IronCore Frontend.
 
 O projeto usa Angular standalone e mantém responsabilidades transversais e visuais separadas:
 
-- `core`: autenticação, HTTP, interceptor e guard globais.
+- `core`: autenticação, tema, HTTP, interceptor e guard globais.
+- `features`: páginas e fluxos funcionais de autenticação, início e perfil.
 - `shared`: componentes reutilizáveis de interação e feedback.
 - `layout`: application shell e estrutura visual persistente.
 
@@ -33,7 +34,9 @@ docs
 │   └── README.md
 └── releases
     ├── README.md
-    └── v0.1.0
+    ├── v0.1.0
+    │    └── README.md
+    └── v0.2.0
         └── README.md
 ```
 
@@ -51,7 +54,15 @@ src/app
 │   ├── auth
 │   ├── guards
 │   ├── http
-│   └── interceptors
+│   ├── interceptors
+│   └── theme
+├── features
+│   ├── auth
+│   │   ├── first-access
+│   │   └── login
+│   ├── home
+│   └── profile
+│       └── change-password
 ├── layout
 │   ├── app-shell
 │   ├── header
@@ -61,6 +72,7 @@ src/app
         ├── button
         ├── dialog
         ├── empty-state
+        ├── energy-background
         ├── input
         ├── loading
         └── toast
@@ -93,7 +105,12 @@ src/app
 │   ├── auth
 │   ├── guards
 │   ├── http
-│   └── interceptors
+│   ├── interceptors
+│   └── theme
+├── features
+│   ├── auth
+│   ├── home
+│   └── profile
 ├── layout
 │   ├── app-shell
 │   ├── header
@@ -102,6 +119,7 @@ src/app
     ├── button
     ├── dialog
     ├── empty-state
+    ├── energy-background
     ├── input
     ├── loading
     └── toast
@@ -112,7 +130,7 @@ src/app
 - `core` contém infraestrutura única e transversal, sem regras de uma tela ou domínio.
 - `shared` contém componentes reutilizáveis e não depende de features.
 - `layout` contém a estrutura visual comum e não deve abrigar regras de negócio.
-- Não há diretório `features` nesta release. Ele será criado com a primeira responsabilidade funcional concreta.
-- Rotas públicas, rotas protegidas e páginas funcionais ainda não existem; a rota atual apenas compõe o application shell.
+- `features` contém fluxos funcionais e pode usar APIs públicas de `core` e componentes de `shared`, sem acessar detalhes internos de outra feature.
+- As rotas públicas são `/login` e `/first-access`. A área protegida monta o application shell e contém as páginas de início, perfil e alteração de senha.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

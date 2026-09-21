@@ -76,18 +76,19 @@ O desenvolvimento do projeto busca consolidar habilidades como:
 
 <h2 id="status-atual-do-projeto" align="center">Status Atual do Projeto</h2>
 
-O <b>IronCore Frontend</b> está em sua foundation técnica e visual inicial. A aplicação já possui infraestrutura de autenticação e comunicação HTTP, design tokens, componentes compartilhados e application shell, mas ainda não possui telas nem rotas funcionais de negócio.
+O <b>IronCore Frontend</b> evoluiu da foundation técnica e visual inicial para os primeiros fluxos funcionais de autenticação e conta. A aplicação possui rotas públicas e protegidas, sessão baseada em cookie, telas de login, primeiro acesso e perfil, além de manter a infraestrutura visual e de comunicação HTTP estabelecida anteriormente.
 
 ### Já existe no projeto
 
 - Aplicação Angular 21 configurada com TypeScript e SCSS.
-- Configuração de rotas inicial.
+- Rotas públicas para login e primeiro acesso, e rotas protegidas para início, perfil e alteração de senha.
 - Provider HTTP com URL base configurável por environment.
-- Infraestrutura de autenticação com login, logout e restauração de sessão.
-- Estado do usuário autenticado em memória, interceptor com `withCredentials` para a API e guard reutilizável para rotas protegidas.
-- Angular Material, design tokens, temas claro e escuro e breakpoints responsivos centralizados.
+- Fluxos de login, primeiro acesso, logout e restauração de sessão pelo contrato real da API.
+- Estado do usuário autenticado em memória, interceptor com `withCredentials` para a API e `authGuard` aplicado às rotas protegidas.
+- Perfil com dados separados de `User` e `Person`, edição de nickname e dados pessoais, e alteração de senha.
+- Angular Material, design tokens, alternância persistente entre temas claro e escuro e breakpoints responsivos centralizados.
 - Componentes compartilhados de botão, input, loading, empty state, diálogo de confirmação e toast.
-- Application shell com header, sidebar, container de conteúdo e `router-outlet` interno.
+- Application shell com header, sidebar, acesso ao perfil, logout, alternância de tema, container de conteúdo e `router-outlet` interno.
 - Configuração de build de produção e desenvolvimento.
 - Estrutura de testes unitários baseada em Vitest.
 - CI no GitHub Actions para build e testes em `main`.
@@ -96,12 +97,10 @@ O <b>IronCore Frontend</b> está em sua foundation técnica e visual inicial. A 
 
 ### Planejado para as próximas etapas
 
-- Implementação de rotas, telas e módulos funcionais.
-- Associação do guard e dos fluxos de autenticação às páginas correspondentes.
-- Telas para pessoa, métricas corporais, catálogo de exercícios e planejamento de treinos.
-- Telas e fluxos funcionais que utilizem os componentes e feedbacks já disponíveis.
-- Evolução dos testes para as novas features e fluxos de interface.
-- Documentação técnica complementar quando houver estrutura e decisões implementadas a registrar.
+- Telas para métricas corporais, catálogo de exercícios e planejamento de treinos.
+- Registro e histórico de sessões executadas e visualizações de evolução física.
+- Evolução dos testes para os novos fluxos de domínio e de interface.
+- Documentação técnica complementar conforme novas estruturas e decisões forem implementadas.
 
 O estado acima descreve exclusivamente o que está presente neste repositório. Funcionalidades disponíveis no backend não devem ser interpretadas como funcionalidades já entregues na interface.
 
@@ -161,6 +160,7 @@ A documentação técnica registra a arquitetura efetivamente implementada e sep
 - [Estrutura do projeto](docs/project-structure/README.md)
 - [Histórico de releases](docs/releases/README.md)
 - [v0.1.0 — Foundation técnica e visual](docs/releases/v0.1.0/README.md)
+- [v0.2.0 — Autenticação, sessão e conta](docs/releases/v0.2.0/README.md)
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -198,14 +198,12 @@ As funcionalidades abaixo representam o escopo funcional planejado para a interf
 
 ### Acesso e sessão
 
-- Login e logout conforme o contrato de autenticação do backend.
-- Proteção de rotas que exijam usuário autenticado.
-- Tratamento de sessão expirada e falhas de autenticação.
-- Fluxos de troca de senha previstos pela API.
+- Login, logout, proteção de rotas, restauração de sessão e fluxos de troca de senha foram entregues na `v0.2.0`.
+- Evoluções adicionais de tratamento de sessão e autenticação serão realizadas conforme novos contratos forem disponibilizados.
 
 ### Pessoa e evolução física
 
-- Consulta e atualização dos dados da pessoa autenticada.
+- Consulta e atualização dos dados da pessoa autenticada foram entregues na `v0.2.0`.
 - Cadastro, edição, exclusão e consulta de métricas corporais.
 - Consulta de histórico e progresso de métricas.
 
@@ -239,7 +237,7 @@ As funcionalidades abaixo representam o escopo funcional planejado para a interf
 
 <h2 id="testes-automatizados" align="center">Testes Automatizados</h2>
 
-O projeto possui testes unitários com Vitest para a foundation: infraestrutura de autenticação e HTTP, layout e componentes compartilhados. À medida que os fluxos forem implementados, os testes deverão proteger comportamentos relevantes de componentes, serviços e integração com os contratos HTTP.
+O projeto possui testes unitários com Vitest para a foundation e para os fluxos de autenticação e conta: infraestrutura de autenticação e HTTP, rotas, layout, tema, perfil e componentes compartilhados. À medida que novos fluxos forem implementados, os testes deverão proteger comportamentos relevantes de componentes, serviços e integração com os contratos HTTP.
 
 Os testes futuros devem cobrir, quando aplicável:
 
@@ -253,7 +251,7 @@ Os testes futuros devem cobrir, quando aplicável:
 Para executar os testes locais:
 
 ```bash
-npm test
+npm test -- --watch=false
 ```
 
 Para validar o build de produção:
@@ -268,17 +266,18 @@ npm run build
 
 <h2 id="estrutura-do-projeto" align="center">Estrutura do Projeto</h2>
 
-A estrutura atual é a base criada pelo Angular CLI, estendida com infraestrutura global, componentes reutilizáveis e layout. Módulos funcionais serão introduzidos somente quando existirem responsabilidades concretas para organizá-los.
+A estrutura atual é a base criada pelo Angular CLI, estendida com infraestrutura global, componentes reutilizáveis, layout e features para as responsabilidades funcionais já existentes.
 
 ```plaintext
 src/
  ├── app/
- │    ├── core/           # autenticação, HTTP, interceptor e guard globais
+ │    ├── core/           # autenticação, tema, HTTP, interceptor e guard globais
+ │    ├── features/       # autenticação, início e perfil
  │    ├── layout/         # application shell, header e sidebar
  │    ├── shared/         # componentes reutilizáveis de interação e feedback
  │    ├── app.config.ts   # providers globais da aplicação
  │    ├── app.html        # template raiz
- │    ├── app.routes.ts   # rota estrutural do shell (sem rotas-filhas)
+ │    ├── app.routes.ts   # rotas públicas e área protegida do shell
  │    ├── app.scss        # estilos do componente raiz
  │    ├── app.spec.ts     # teste inicial do componente raiz
  │    └── app.ts          # componente raiz
