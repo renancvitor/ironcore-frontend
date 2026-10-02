@@ -58,6 +58,15 @@ describe('HeaderComponent', () => {
     expect(profileLink.getAttribute('href')).toBe('/profile');
   });
 
+  it('should expose the body metrics history link', () => {
+    const link = fixture.nativeElement.querySelector(
+      'a[aria-label="Medidas corporais"]',
+    ) as HTMLAnchorElement;
+
+    expect(link).toBeTruthy();
+    expect(link.getAttribute('href')).toBe('/body-metrics');
+  });
+
   it('should log out and redirect to login after the request succeeds', () => {
     const result = new Subject<void>();
     logout.mockReturnValue(result);

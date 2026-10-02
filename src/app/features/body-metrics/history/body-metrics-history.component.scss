@@ -1,0 +1,114 @@
+@use '../../../../styles/responsive' as responsive;
+
+:host {
+  display: block;
+}
+
+.ic-body-metrics-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ic-space-5);
+}
+
+.ic-body-metrics-history__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ic-space-4);
+
+  h1 {
+    margin: 0;
+    color: var(--ic-text-primary);
+  }
+
+  p {
+    margin: var(--ic-space-2) 0 0;
+    color: var(--ic-text-secondary);
+  }
+}
+
+.ic-body-metrics-history__card {
+  overflow: hidden;
+
+  background: var(--ic-surface);
+  border: var(--ic-border-width-default) solid var(--ic-border-soft);
+  border-radius: var(--ic-radius-md);
+}
+
+.ic-body-metrics-history__table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.ic-body-metrics-history__table {
+  width: 100%;
+  min-width: 720px;
+
+  background: var(--ic-surface);
+}
+
+.ic-body-metrics-history__table th {
+  background: var(--ic-surface-elevated);
+  color: var(--ic-text-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ic-body-metrics-history__table td {
+  color: var(--ic-text-primary);
+}
+
+.ic-body-metrics-history__table th,
+.ic-body-metrics-history__table td {
+  padding-inline: var(--ic-space-4);
+}
+
+.ic-body-metrics-history__table tr:last-child td {
+  border-bottom: 0;
+}
+
+.mat-column-measuredAt {
+  width: 220px;
+}
+
+.mat-column-weightKg {
+  width: 140px;
+}
+
+.mat-column-heightCm {
+  width: 140px;
+}
+
+.mat-column-notes {
+  width: auto;
+  max-width: 420px;
+
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+mat-paginator {
+  border-top: var(--ic-border-width-default) solid var(--ic-border-soft);
+  background: var(--ic-surface);
+}
+
+@include responsive.tablet {
+  .ic-body-metrics-history {
+    gap: var(--ic-space-4);
+  }
+}
+
+@include responsive.mobile {
+  .ic-body-metrics-history {
+    gap: var(--ic-space-3);
+  }
+
+  .ic-body-metrics-history__header {
+    flex-direction: column;
+  }
+
+  .ic-body-metrics-history__table th,
+  .ic-body-metrics-history__table td {
+    padding-inline: var(--ic-space-3);
+  }
+}

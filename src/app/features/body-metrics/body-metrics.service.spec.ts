@@ -95,19 +95,37 @@ describe('BodyMetricsService', () => {
     });
   });
 
-  it('should list body metrics with the default pagination', () => {
+  it('should delegate the default pagination to the backend', () => {
     service.list().subscribe();
 
-    const request = httpTestingController.expectOne(
-      (httpRequest) =>
-        httpRequest.url === baseUrl &&
-        httpRequest.params.get('page') === '0' &&
-        httpRequest.params.get('size') === '20',
-    );
+    const request = httpTestingController.expectOne(baseUrl);
 
     expect(request.request.method).toBe('GET');
+    expect(request.request.params.keys()).toEqual([]);
     request.flush({
       metrics: { content: [], page: 0, size: 20, totalElements: 0, totalPages: 0, last: true },
+    });
+  });
+
+  it.each([
+    [2, undefined, 'page', '2'],
+    [undefined, 50, 'size', '50'],
+  ] as const)('should send only the supplied pagination parameter', (page, size, key, value) => {
+    service.list(page, size).subscribe();
+
+    const request = httpTestingController.expectOne((httpRequest) => httpRequest.url === baseUrl);
+
+    expect(request.request.params.keys()).toEqual([key]);
+    expect(request.request.params.get(key)).toBe(value);
+    request.flush({
+      metrics: {
+        content: [],
+        page: page ?? 0,
+        size: size ?? 20,
+        totalElements: 0,
+        totalPages: 0,
+        last: true,
+      },
     });
   });
 

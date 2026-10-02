@@ -7,6 +7,7 @@ import { FirstAccessComponent } from './features/auth/first-access/first-access.
 import { HomeComponent } from './features/home/home.component';
 import { ProfileComponent } from './features/profile/profile.component';
 import { ChangePasswordComponent } from './features/profile/change-password/change-password.component';
+import { BodyMetricsHistoryComponent } from './features/body-metrics/history/body-metrics-history.component';
 
 export const routes: Routes = [
   {
@@ -33,6 +34,10 @@ export const routes: Routes = [
       {
         path: `change-password`,
         component: ChangePasswordComponent,
+      },
+      {
+        path: 'body-metrics',
+        component: BodyMetricsHistoryComponent,
       },
     ],
   },
