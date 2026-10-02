@@ -5,6 +5,34 @@
     [routerLinkActiveOptions]="{ exact: true }"
     class="ic-sidebar__link"
   >
-    Perfil
+    <span class="ic-sidebar__link-content">
+      <mat-icon>account_circle</mat-icon>
+      <span>Perfil</span>
+    </span>
   </a>
+
+  <mat-expansion-panel
+    class="ic-sidebar__group"
+    routerLinkActive
+    #bodyMetricsRoutes="routerLinkActive"
+    [expanded]="bodyMetricsRoutes.isActive"
+  >
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        <span class="ic-sidebar__link-content">
+          <mat-icon>accessibility_new</mat-icon>
+          <span>Medidas corporais</span>
+        </span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+
+    <a
+      routerLink="/body-metrics"
+      routerLinkActive="ic-sidebar__link--active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="ic-sidebar__link ic-sidebar__link--child"
+    >
+      Histórico
+    </a>
+  </mat-expansion-panel>
 </nav>

@@ -27,6 +27,28 @@
   color: var(--ic-menu-icon-active);
 }
 
+.ic-sidebar__link-content {
+  display: flex;
+  align-items: center;
+  gap: var(--ic-space-3);
+}
+
+.ic-sidebar__group {
+  margin-top: var(--ic-space-2);
+
+  background: transparent;
+  box-shadow: none;
+}
+
+.ic-sidebar__group mat-expansion-panel-header {
+  padding-inline: var(--ic-space-4);
+}
+
+.ic-sidebar__link--child {
+  margin-top: var(--ic-space-1);
+  padding-left: var(--ic-space-6);
+}
+
 @include responsive.mobile {
   .ic-sidebar {
     width: 100%;
