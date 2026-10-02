@@ -6,6 +6,7 @@ import { authGuard } from './core/guards/auth.guard';
 import { AppShellComponent } from './layout/app-shell/app-shell.component';
 import { ProfileComponent } from './features/profile/profile.component';
 import { ChangePasswordComponent } from './features/profile/change-password/change-password.component';
+import { BodyMetricsHistoryComponent } from './features/body-metrics/history/body-metrics-history.component';
 import { routes } from './app.routes';
 
 describe('application routes', () => {
@@ -39,5 +40,13 @@ describe('application routes', () => {
 
     expect(profileRoute?.component).toBe(ProfileComponent);
     expect(changePasswordRoute?.component).toBe(ChangePasswordComponent);
+  });
+
+  it('should expose body metrics history inside the protected shell', () => {
+    const applicationRoute = routes.find((route) => route.path === '');
+    const historyRoute = applicationRoute?.children?.find((route) => route.path === 'body-metrics');
+
+    expect(applicationRoute?.canActivate).toEqual([authGuard]);
+    expect(historyRoute?.component).toBe(BodyMetricsHistoryComponent);
   });
 });
