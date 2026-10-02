@@ -1,0 +1,76 @@
+<section class="ic-body-metrics-history">
+  <header class="ic-body-metrics-history__header">
+    <div>
+      <h1>Medidas corporais</h1>
+      <p>Consulte o histórico das suas avaliações corporais.</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <app-loading />
+  } @else if (metrics(); as response) {
+    @if (response.metrics.totalElements === 0) {
+      <app-empty-state icon="accessibility_new" message="Nenhuma avaliação corporal encontrada." />
+    } @else {
+      <section class="ic-body-metrics-history__card" aria-label="Histórico de avaliações corporais">
+        @if (response.metrics.content.length === 0) {
+          <app-empty-state icon="history" message="Nenhuma avaliação disponível nesta página." />
+        } @else {
+          <div class="ic-body-metrics-history__table-container">
+            <table
+              mat-table
+              [dataSource]="response.metrics.content"
+              class="ic-body-metrics-history__table"
+            >
+              <ng-container matColumnDef="measuredAt">
+                <th mat-header-cell *matHeaderCellDef>Data da avaliação</th>
+
+                <td mat-cell *matCellDef="let metric">
+                  {{ metric.measuredAt | date: 'dd/MM/yyyy HH:mm' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="weightKg">
+                <th mat-header-cell *matHeaderCellDef>Peso</th>
+
+                <td mat-cell *matCellDef="let metric">
+                  {{ metric.weightKg | number: '1.1-2' }} kg
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="heightCm">
+                <th mat-header-cell *matHeaderCellDef>Altura</th>
+
+                <td mat-cell *matCellDef="let metric">
+                  {{ metric.heightCm | number: '1.0-2' }} cm
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="notes">
+                <th mat-header-cell *matHeaderCellDef>Observações</th>
+
+                <td mat-cell *matCellDef="let metric">
+                  {{ metric.notes || '—' }}
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+          </div>
+        }
+
+        <mat-paginator
+          [length]="response.metrics.totalElements"
+          [pageIndex]="response.metrics.page"
+          [pageSize]="response.metrics.size"
+          [pageSizeOptions]="[10, 20, 50, 100]"
+          [showFirstLastButtons]="true"
+          aria-label="Paginação do histórico de avaliações corporais"
+          (page)="onPageChange($event)"
+        />
+      </section>
+    }
+  }
+</section>
