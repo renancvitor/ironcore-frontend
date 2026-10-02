@@ -58,7 +58,7 @@ export class LoginComponent {
       )
       .subscribe({
         next: () => {
-          this.router.navigate(['/']);
+          void this.router.navigate(['/']);
         },
 
         error: (error: HttpErrorResponse) => {
@@ -66,7 +66,7 @@ export class LoginComponent {
             error.status === 401 &&
             error.error?.message === 'Troca de senha inicial obrigatória.'
           ) {
-            this.router.navigate(['/first-access'], {
+            void this.router.navigate(['/first-access'], {
               queryParams: {
                 email: request.email,
               },
