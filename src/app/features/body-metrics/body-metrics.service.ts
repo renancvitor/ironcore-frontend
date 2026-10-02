@@ -38,8 +38,16 @@ export class BodyMetricsService {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
-  list(page = 0, size = 20): Observable<ListBodyMetricsResponse> {
-    const params = new HttpParams().set('page', page).set('size', size);
+  list(page?: number, size?: number): Observable<ListBodyMetricsResponse> {
+    let params = new HttpParams();
+
+    if (page !== undefined) {
+      params = params.set('page', page);
+    }
+
+    if (size !== undefined) {
+      params = params.set('size', size);
+    }
 
     return this.http.get<ListBodyMetricsResponse>(this.baseUrl, { params });
   }
