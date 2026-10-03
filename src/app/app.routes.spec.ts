@@ -7,6 +7,7 @@ import { AppShellComponent } from './layout/app-shell/app-shell.component';
 import { ProfileComponent } from './features/profile/profile.component';
 import { ChangePasswordComponent } from './features/profile/change-password/change-password.component';
 import { BodyMetricsHistoryComponent } from './features/body-metrics/history/body-metrics-history.component';
+import { BodyMetricsDetailComponent } from './features/body-metrics/details/body-metrics-detail.component';
 import { routes } from './app.routes';
 
 describe('application routes', () => {
@@ -48,5 +49,15 @@ describe('application routes', () => {
 
     expect(applicationRoute?.canActivate).toEqual([authGuard]);
     expect(historyRoute?.component).toBe(BodyMetricsHistoryComponent);
+  });
+
+  it('should expose body metrics details inside the protected shell', () => {
+    const applicationRoute = routes.find((route) => route.path === '');
+    const detailRoute = applicationRoute?.children?.find(
+      (route) => route.path === 'body-metrics/:id',
+    );
+
+    expect(applicationRoute?.canActivate).toEqual([authGuard]);
+    expect(detailRoute?.component).toBe(BodyMetricsDetailComponent);
   });
 });
