@@ -1,3 +1,5 @@
+@use '../../../styles/responsive' as responsive;
+
 .ic-header {
   background: var(--ic-surface);
   color: var(--ic-text-primary);
@@ -21,8 +23,6 @@
   gap: var(--ic-space-2);
   margin-left: auto;
 }
-<<<<<<< Updated upstream
-=======
 
 @include responsive.mobile {
   .ic-header__content {
@@ -38,4 +38,3 @@
     display: none;
   }
 }
->>>>>>> Stashed changes

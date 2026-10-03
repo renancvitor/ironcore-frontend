@@ -38,7 +38,7 @@
 
 .ic-profile__field {
   display: grid;
-  grid-template-columns: 160px 1fr;
+  grid-template-columns: 160px minmax(0, 1fr);
   align-items: center;
   column-gap: var(--ic-space-5);
 }
@@ -50,6 +50,8 @@
 
 .ic-profile__value {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--ic-text-primary);
   font-weight: 400;
 }
@@ -64,10 +66,12 @@
   align-items: center;
   gap: var(--ic-space-3);
   width: 100%;
+  min-width: 0;
 }
 
 .ic-profile__field-content app-input {
   flex: 1;
+  min-width: 0;
 }
 
 .ic-profile__field--editing > .ic-profile__label {
@@ -88,7 +92,12 @@
 
 @media (max-width: 600px) {
   .ic-profile__field {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     row-gap: var(--ic-space-2);
+  }
+
+  .ic-profile__field--editing .ic-profile__field-content {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
