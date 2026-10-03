@@ -16,7 +16,14 @@ describe('AppShellComponent', () => {
       providers: [
         provideRouter([]),
         { provide: AuthService, useValue: { logout: vi.fn() } },
-        { provide: ThemeService, useValue: { currentTheme: () => 'dark', setTheme: vi.fn() } },
+        {
+          provide: ThemeService,
+          useValue: {
+            currentTheme: () => 'dark',
+            preference: () => 'system',
+            setPreference: vi.fn(),
+          },
+        },
         { provide: DialogService, useValue: { open: vi.fn() } },
       ],
     }).compileComponents();

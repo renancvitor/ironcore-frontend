@@ -14,6 +14,7 @@ import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 
 import { AuthService } from './core/auth/auth.service';
+import { ThemeService } from './core/theme/theme.service';
 import { PaginatorIntlPtBr } from './shared/config/paginator-intl-pt-br';
 
 registerLocaleData(localePt);
@@ -23,6 +24,10 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideCoreHttp(),
+
+    provideAppInitializer(() => {
+      inject(ThemeService);
+    }),
 
     provideAppInitializer(() => {
       const authService = inject(AuthService);

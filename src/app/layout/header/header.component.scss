@@ -15,15 +15,27 @@
   margin-left: auto;
 }
 
-.ic-header__theme {
-  display: flex;
-  align-items: center;
-  gap: var(--ic-space-2);
-}
-
 .ic-header__actions {
   display: flex;
   align-items: center;
   gap: var(--ic-space-2);
   margin-left: auto;
 }
+<<<<<<< Updated upstream
+=======
+
+@include responsive.mobile {
+  .ic-header__content {
+    gap: 0;
+    padding-inline: var(--ic-space-3);
+  }
+
+  .ic-header__actions {
+    gap: var(--ic-space-2);
+  }
+
+  .ic-header__body-metrics {
+    display: none;
+  }
+}
+>>>>>>> Stashed changes

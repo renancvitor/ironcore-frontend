@@ -1,18 +1,18 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, output } from '@angular/core';
+import { Component, computed, inject, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/theme/theme.service';
+import { ThemePreference } from '../../core/theme/theme.models';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 
 @Component({
   selector: 'app-header',
-  imports: [MatButtonModule, MatIconModule, RouterLink, MatTooltipModule, MatSlideToggleModule],
+  imports: [MatButtonModule, MatIconModule, RouterLink, MatTooltipModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
 })
@@ -23,7 +23,27 @@ export class HeaderComponent {
   private readonly dialogService = inject(DialogService);
 
   readonly menuToggle = output<void>();
-  readonly currentTheme = this.themeService.currentTheme;
+  private readonly nextPreference = computed<ThemePreference>(() => {
+    const next: Record<ThemePreference, ThemePreference> = {
+      system: 'light',
+      light: 'dark',
+      dark: 'system',
+    };
+    return next[this.themeService.preference()];
+  });
+  readonly themeIcon = computed(() => {
+    const icons = { system: 'computer', light: 'light_mode', dark: 'dark_mode' };
+    return icons[this.themeService.preference()];
+  });
+  readonly themeLabel = computed(() => {
+    const labels = { system: 'sistema', light: 'claro', dark: 'escuro' };
+    const preference = this.themeService.preference();
+    const current =
+      preference === 'system'
+        ? `sistema (${labels[this.themeService.currentTheme()]})`
+        : labels[preference];
+    return `Tema: ${current}. Alterar para ${labels[this.nextPreference()]}`;
+  });
 
   logout(): void {
     this.authService.logout().subscribe({
@@ -47,7 +67,7 @@ export class HeaderComponent {
     });
   }
 
-  changeTheme(checked: boolean): void {
-    this.themeService.setTheme(checked ? 'dark' : 'light');
+  changeTheme(): void {
+    this.themeService.setPreference(this.nextPreference());
   }
 }

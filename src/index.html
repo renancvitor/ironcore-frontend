@@ -2,6 +2,24 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <script>
+      // Aplica o tema antes do carregamento dos estilos. Mantenha a lógica alinhada com o ThemeService.
+      (() => {
+        let preference;
+        try {
+          preference = localStorage.getItem('Ironcore-theme');
+        } catch {
+          // Usa a preferência do sistema quando o armazenamento está indisponível.
+        }
+        const theme =
+          preference === 'light' || preference === 'dark'
+            ? preference
+            : window.matchMedia?.('(prefers-color-scheme: dark)').matches === false
+              ? 'light'
+              : 'dark';
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
     <title>IroncoreFrontend</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
