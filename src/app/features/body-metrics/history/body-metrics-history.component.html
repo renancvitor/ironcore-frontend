@@ -56,7 +56,15 @@
 
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
 
-              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+              <tr
+                mat-row
+                *matRowDef="let row; columns: displayedColumns"
+                class="ic-body-metrics-history__row"
+                tabindex="0"
+                (click)="openDetail(row.id)"
+                (keydown.enter)="openDetail(row.id)"
+                (keydown.space)="openDetail(row.id); $event.preventDefault()"
+              ></tr>
             </table>
           </div>
         }

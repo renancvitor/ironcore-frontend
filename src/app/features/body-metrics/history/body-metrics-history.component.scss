@@ -92,6 +92,20 @@ mat-paginator {
   background: var(--ic-surface);
 }
 
+.ic-body-metrics-history__row {
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--ic-surface-elevated);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ic-primary);
+    outline-offset: -2px;
+  }
+}
+
 @include responsive.tablet {
   .ic-body-metrics-history {
     gap: var(--ic-space-4);

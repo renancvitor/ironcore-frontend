@@ -8,6 +8,7 @@ import { HomeComponent } from './features/home/home.component';
 import { ProfileComponent } from './features/profile/profile.component';
 import { ChangePasswordComponent } from './features/profile/change-password/change-password.component';
 import { BodyMetricsHistoryComponent } from './features/body-metrics/history/body-metrics-history.component';
+import { BodyMetricsDetailComponent } from './features/body-metrics/details/body-metrics-detail.component';
 
 export const routes: Routes = [
   {
@@ -38,6 +39,10 @@ export const routes: Routes = [
       {
         path: 'body-metrics',
         component: BodyMetricsHistoryComponent,
+      },
+      {
+        path: 'body-metrics/:id',
+        component: BodyMetricsDetailComponent,
       },
     ],
   },
