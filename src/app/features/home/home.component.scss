@@ -1,7 +1,33 @@
+@use '../../../styles/responsive' as responsive;
+
 :host {
   display: block;
 }
 
 .ic-home {
   padding-block: var(--ic-space-6);
+}
+
+.ic-home__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ic-space-5);
+}
+
+@include responsive.tablet {
+  .ic-home__cards {
+    grid-template-columns: 1fr;
+    gap: var(--ic-space-4);
+  }
+}
+
+@include responsive.mobile {
+  .ic-home {
+    padding-block: var(--ic-space-3);
+  }
+
+  .ic-home__cards {
+    grid-template-columns: 1fr;
+    gap: var(--ic-space-3);
+  }
 }

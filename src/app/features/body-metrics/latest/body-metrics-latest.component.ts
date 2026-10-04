@@ -1,46 +1,43 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, inject, input, OnInit, signal, TemplateRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe, NgTemplateOutlet } from '@angular/common';
 
 import { BodyMetricsService } from '../body-metrics.service';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
-import { GetBodyMetricsResponse } from '../body-metrics.models';
+import { GetLatestBodyMetricsResponse } from '../body-metrics.models';
 
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 
 @Component({
-  selector: 'app-body-metrics-detail',
-  imports: [ButtonComponent, LoadingComponent, DatePipe, DecimalPipe],
-  templateUrl: './body-metrics-detail.component.html',
-  styleUrl: './body-metrics-detail.component.scss',
+  selector: 'app-body-metrics-latest',
+  imports: [ButtonComponent, LoadingComponent, DatePipe, DecimalPipe, NgTemplateOutlet],
+  templateUrl: './body-metrics-latest.component.html',
+  styleUrl: './body-metrics-latest.component.scss',
 })
-export class BodyMetricsDetailComponent implements OnInit {
+export class BodyMetricsLatestComponent implements OnInit {
+  // An embedded presentation replaces only the successful result, keeping state here.
+  readonly contentTemplate = input<TemplateRef<{ $implicit: GetLatestBodyMetricsResponse }>>();
+
   private readonly bodyMetricsService = inject(BodyMetricsService);
   private readonly dialogService = inject(DialogService);
-  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
   readonly loading = signal(false);
-  readonly metric = signal<GetBodyMetricsResponse | null>(null);
+  readonly metric = signal<GetLatestBodyMetricsResponse | null>(null);
+  readonly notFound = signal(false);
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-
-    if (!Number.isInteger(id) || id <= 0) {
-      this.backToHistory();
-      return;
-    }
-
-    this.loadBodyMetric(id);
+    this.loadBodyMetric();
   }
 
-  private loadBodyMetric(id: number): void {
+  private loadBodyMetric(): void {
     this.loading.set(true);
+    this.notFound.set(false);
 
     this.bodyMetricsService
-      .getById(id)
+      .getLatest()
       .pipe(
         finalize(() => {
           this.loading.set(false);
@@ -52,6 +49,11 @@ export class BodyMetricsDetailComponent implements OnInit {
         },
 
         error: (error) => {
+          if (error.status === 404) {
+            this.notFound.set(true);
+            return;
+          }
+
           const message = error.error?.message ?? 'Não foi possível carregar os dados corporais.';
 
           this.dialogService
@@ -61,13 +63,13 @@ export class BodyMetricsDetailComponent implements OnInit {
               primaryAction: 'Ok',
             })
             .subscribe(() => {
-              this.backToHistory();
+              void this.router.navigate(['/']);
             });
         },
       });
   }
 
-  backToHistory(): void {
-    void this.router.navigate(['/body-metrics']);
+  backToHome(): void {
+    void this.router.navigate(['/']);
   }
 }

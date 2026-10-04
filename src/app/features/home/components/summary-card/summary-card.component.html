@@ -1,0 +1,9 @@
+<section class="ic-summary-card" [attr.aria-label]="title()">
+  <header class="ic-summary-card__header">
+    <h2>{{ title() }}</h2>
+  </header>
+  <div class="ic-summary-card__content">
+    <ng-content />
+  </div>
+  <footer class="ic-summary-card__footer"><ng-content select="[summaryCardAction]" /></footer>
+</section>
