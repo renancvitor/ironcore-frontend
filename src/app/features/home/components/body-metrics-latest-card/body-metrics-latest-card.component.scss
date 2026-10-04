@@ -1,0 +1,51 @@
+@use '../../../../../styles/responsive' as responsive;
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.ic-body-metrics-latest-card__date {
+  margin: 0 0 var(--ic-space-4);
+  color: var(--ic-text-secondary);
+  font-size: var(--ic-font-size-sm);
+}
+
+.ic-body-metrics-latest-card__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ic-space-5);
+  margin: 0;
+
+  dt {
+    color: var(--ic-text-secondary);
+  }
+
+  dd {
+    margin: var(--ic-space-2) 0 0;
+    color: var(--ic-text-primary);
+    font-weight: 600;
+    font-size: 1.25rem;
+  }
+}
+
+.ic-body-metrics-latest-card__details {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ic-navigation);
+  border-radius: var(--ic-radius-md);
+  text-underline-offset: 0.2em;
+
+  &:focus-visible {
+    outline: var(--ic-focus-ring-width) solid var(--ic-primary);
+    outline-offset: var(--ic-focus-ring-offset);
+  }
+}
+
+@include responsive.mobile {
+  .ic-body-metrics-latest-card__metrics {
+    grid-template-columns: 1fr;
+    gap: var(--ic-space-3);
+  }
+}

@@ -1,0 +1,58 @@
+@use '../../../../../styles/responsive' as responsive;
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.ic-summary-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+  background: var(--ic-surface);
+  border: var(--ic-border-width-default) solid var(--ic-border-soft);
+  border-radius: var(--ic-radius-md);
+}
+
+.ic-summary-card__header {
+  padding: var(--ic-space-4) var(--ic-space-5);
+  background: var(--ic-surface-elevated);
+  border-bottom: var(--ic-border-width-default) solid var(--ic-border-soft);
+  border-radius: var(--ic-radius-md) var(--ic-radius-md) 0 0;
+
+  h2 {
+    margin: 0;
+    color: var(--ic-text-primary);
+    font-size: 1.125rem;
+  }
+}
+
+.ic-summary-card__content {
+  flex: 1;
+  padding: var(--ic-space-5);
+}
+
+.ic-summary-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--ic-space-3);
+  padding: 0 var(--ic-space-5) var(--ic-space-5);
+
+  &:empty {
+    display: none;
+  }
+}
+
+@include responsive.mobile {
+  .ic-summary-card__header,
+  .ic-summary-card__content {
+    padding: var(--ic-space-3);
+  }
+
+  .ic-summary-card__footer {
+    padding: 0 var(--ic-space-3) var(--ic-space-3);
+  }
+}

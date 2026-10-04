@@ -1,0 +1,45 @@
+<app-summary-card title="Última avaliação corporal">
+  <app-body-metrics-latest #latest [contentTemplate]="summary" />
+
+  <ng-template #summary let-metric>
+    <p class="ic-body-metrics-latest-card__date">
+      Data da avaliação: {{ metric.measuredAt | date: 'dd/MM/yyyy HH:mm' }}
+    </p>
+    <dl class="ic-body-metrics-latest-card__metrics">
+      <div>
+        <dt>Peso</dt>
+        <dd>{{ metric.weightKg | number: '1.1-2' }} kg</dd>
+      </div>
+      @if (metric.bodyFatPercentage !== null) {
+        <div>
+          <dt>Percentual de gordura</dt>
+          <dd>{{ metric.bodyFatPercentage | number: '1.1-2' }} %</dd>
+        </div>
+      }
+      @if (metric.fatMassKg !== null) {
+        <div>
+          <dt>Massa gorda</dt>
+          <dd>{{ metric.fatMassKg | number: '1.1-2' }} kg</dd>
+        </div>
+      }
+      @if (metric.leanMassKg !== null) {
+        <div>
+          <dt>Massa magra</dt>
+          <dd>{{ metric.leanMassKg | number: '1.1-2' }} kg</dd>
+        </div>
+      }
+    </dl>
+  </ng-template>
+
+  <ng-container summaryCardAction>
+    @if (latest.metric(); as metric) {
+      <a
+        class="ic-body-metrics-latest-card__details"
+        [routerLink]="['/body-metrics', metric.id]"
+        [queryParams]="{ from: 'home' }"
+      >
+        Ver detalhes
+      </a>
+    }
+  </ng-container>
+</app-summary-card>
