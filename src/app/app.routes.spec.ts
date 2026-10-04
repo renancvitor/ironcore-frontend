@@ -2,6 +2,7 @@ import { LoginComponent } from './features/auth/login/login.component';
 import { FirstAccessComponent } from './features/auth/first-access/first-access.component';
 import { authGuard } from './core/guards/auth.guard';
 import { AuthStateService } from './core/auth/auth-state.service';
+import { API_BASE_URL } from './core/http/api-base-url.token';
 import { AppShellComponent } from './layout/app-shell/app-shell.component';
 import { HomeComponent } from './features/home/home.component';
 import { ProfileComponent } from './features/profile/profile.component';
@@ -73,7 +74,12 @@ describe('application routes', () => {
 describe('lazy route authentication', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideRouter(routes), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideRouter(routes),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_BASE_URL, useValue: '' },
+      ],
     });
     TestBed.inject(AuthStateService).clear();
   });
