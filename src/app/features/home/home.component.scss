@@ -4,6 +4,10 @@
   display: block;
 }
 
+.ic-home {
+  padding-block: var(--ic-space-6);
+}
+
 .ic-home__cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -26,8 +30,4 @@
     grid-template-columns: 1fr;
     gap: var(--ic-space-3);
   }
-}
-
-.ic-home {
-  padding-block: var(--ic-space-6);
 }

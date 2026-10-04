@@ -36,4 +36,30 @@ describe('HomeComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Nenhuma avaliação corporal cadastrada.');
     TestBed.inject(HttpTestingController).verify();
   });
+
+  it('renders the three summary cards in order without additional requests', () => {
+    const element = fixture.nativeElement as HTMLElement;
+    expect(
+      Array.from(element.querySelectorAll('.ic-summary-card__header h2'), (title) =>
+        title.textContent?.trim(),
+      ),
+    ).toEqual(['Última avaliação corporal', 'Treinos em andamento', 'Evolução corporal']);
+    for (const [selector, message] of [
+      [
+        'app-in-progress-workouts-card',
+        'O resumo dos treinos em andamento ainda não está disponível.',
+      ],
+      [
+        'app-body-metrics-progress-card',
+        'O acompanhamento da evolução corporal ainda não está disponível.',
+      ],
+    ]) {
+      const card = element.querySelector(selector)!;
+      expect(card.querySelector('app-summary-card')).toBeTruthy();
+      expect(card.querySelector('app-empty-state')?.textContent).toContain(message);
+      expect(card.querySelector('a, button, app-loading')).toBeNull();
+      expect(card.querySelector('footer')?.matches(':empty')).toBe(true);
+    }
+    TestBed.inject(HttpTestingController).verify();
+  });
 });

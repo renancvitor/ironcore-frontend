@@ -32,12 +32,8 @@
   </ng-template>
 
   <ng-container summaryCardAction>
-    @if (latest.metric(); as metric) {
-      <a
-        class="ic-body-metrics-latest-card__details"
-        [routerLink]="['/body-metrics', metric.id]"
-        [queryParams]="{ from: 'home' }"
-      >
+    @if (latest.metric()) {
+      <a class="ic-body-metrics-latest-card__details" routerLink="/body-metrics/latest">
         Ver detalhes
       </a>
     }

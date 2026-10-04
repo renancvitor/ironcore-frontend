@@ -82,7 +82,7 @@ describe('BodyMetricsLatestCardComponent integration', () => {
     expect(labels).toEqual(['Peso', 'Percentual de gordura', 'Massa gorda', 'Massa magra']);
     const link = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
     expect(link.textContent).toContain('Ver detalhes');
-    expect(link.getAttribute('href')).toBe('/body-metrics/42?from=home');
+    expect(link.getAttribute('href')).toBe('/body-metrics/latest');
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     link.click();
     expect(navigate).toHaveBeenCalledOnce();
