@@ -1,126 +1,83 @@
 <section class="ic-body-metrics-latest">
-  <header class="ic-body-metrics-latest__header">
-    <div>
-      <h1>Última avaliação corporal</h1>
-      <p>Consulte todas as informações registradas na sua avaliação corporal mais recente.</p>
-    </div>
+  @if (!contentTemplate()) {
+    <header class="ic-body-metrics-latest__header">
+      <div>
+        <h1>Última avaliação corporal</h1>
+        <p>Consulte todas as informações registradas na sua avaliação corporal mais recente.</p>
+      </div>
 
-    <app-button type="button" variant="secondary" (click)="backToHome()">
-      Voltar para a home
-    </app-button>
-  </header>
+      <app-button type="button" variant="secondary" (click)="backToHome()">
+        Voltar para a home
+      </app-button>
+    </header>
+  }
 
   @if (loading()) {
     <app-loading />
   } @else if (notFound()) {
     <section class="ic-body-metrics-latest__not-found">
       <h2>Nenhuma avaliação corporal encontrada</h2>
-      <p>Você ainda não possui uma avaliação corporal cadastrada.</p>
+      <p>Nenhuma avaliação corporal cadastrada.</p>
     </section>
   } @else if (metric(); as metric) {
-    <section class="ic-body-metrics-latest__summary">
-      <span class="ic-body-metrics-latest__summary-label">Data da avaliação</span>
+    @if (contentTemplate(); as content) {
+      <ng-container
+        [ngTemplateOutlet]="content"
+        [ngTemplateOutletContext]="{ $implicit: metric }"
+      />
+    } @else {
+      <section class="ic-body-metrics-latest__summary">
+        <span class="ic-body-metrics-latest__summary-label">Data da avaliação</span>
 
-      <strong class="ic-body-metrics-latest__summary-value">
-        {{ metric.measuredAt | date: 'dd/MM/yyyy HH:mm' }}
-      </strong>
-    </section>
-
-    <div class="ic-body-metrics-latest__grid">
-      <section class="ic-body-metrics-latest__card" aria-labelledby="body-composition-title">
-        <header class="ic-body-metrics-latest__card-header">
-          <h2 id="body-composition-title">Composição corporal</h2>
-        </header>
-
-        <div class="ic-body-metrics-latest__fields">
-          <div class="ic-body-metrics-latest__field">
-            <span class="ic-body-metrics-latest__label">Peso</span>
-
-            <div class="ic-body-metrics-latest__field-content">
-              <span class="ic-body-metrics-latest__value">
-                {{ metric.weightKg | number: '1.1-2' }} kg
-              </span>
-            </div>
-          </div>
-
-          <div class="ic-body-metrics-latest__field">
-            <span class="ic-body-metrics-latest__label">Altura</span>
-
-            <div class="ic-body-metrics-latest__field-content">
-              <span class="ic-body-metrics-latest__value">
-                {{ metric.heightCm | number: '1.0-2' }} cm
-              </span>
-            </div>
-          </div>
-
-          <div class="ic-body-metrics-latest__field">
-            <span class="ic-body-metrics-latest__label">IMC</span>
-
-            <div class="ic-body-metrics-latest__field-content">
-              <span class="ic-body-metrics-latest__value">
-                {{ metric.bmi | number: '1.1-2' }}
-              </span>
-            </div>
-          </div>
-
-          <div class="ic-body-metrics-latest__field">
-            <span class="ic-body-metrics-latest__label">Percentual de gordura</span>
-
-            <div class="ic-body-metrics-latest__field-content">
-              <span class="ic-body-metrics-latest__value">
-                @if (metric.bodyFatPercentage !== null) {
-                  {{ metric.bodyFatPercentage | number: '1.1-2' }} %
-                } @else {
-                  —
-                }
-              </span>
-            </div>
-          </div>
-
-          <div class="ic-body-metrics-latest__field">
-            <span class="ic-body-metrics-latest__label">Massa gorda</span>
-
-            <div class="ic-body-metrics-latest__field-content">
-              <span class="ic-body-metrics-latest__value">
-                @if (metric.fatMassKg !== null) {
-                  {{ metric.fatMassKg | number: '1.1-2' }} kg
-                } @else {
-                  —
-                }
-              </span>
-            </div>
-          </div>
-
-          <div class="ic-body-metrics-latest__field">
-            <span class="ic-body-metrics-latest__label">Massa magra</span>
-
-            <div class="ic-body-metrics-latest__field-content">
-              <span class="ic-body-metrics-latest__value">
-                @if (metric.leanMassKg !== null) {
-                  {{ metric.leanMassKg | number: '1.1-2' }} kg
-                } @else {
-                  —
-                }
-              </span>
-            </div>
-          </div>
-        </div>
+        <strong class="ic-body-metrics-latest__summary-value">
+          {{ metric.measuredAt | date: 'dd/MM/yyyy HH:mm' }}
+        </strong>
       </section>
 
-      <section class="ic-body-metrics-latest__card" aria-labelledby="circumferences-title">
-        <header class="ic-body-metrics-latest__card-header">
-          <h2 id="circumferences-title">Circunferências</h2>
-        </header>
+      <div class="ic-body-metrics-latest__grid">
+        <section class="ic-body-metrics-latest__card" aria-labelledby="body-composition-title">
+          <header class="ic-body-metrics-latest__card-header">
+            <h2 id="body-composition-title">Composição corporal</h2>
+          </header>
 
-        @if (metric.circumferences; as circumferences) {
           <div class="ic-body-metrics-latest__fields">
             <div class="ic-body-metrics-latest__field">
-              <span class="ic-body-metrics-latest__label">Pescoço</span>
+              <span class="ic-body-metrics-latest__label">Peso</span>
 
               <div class="ic-body-metrics-latest__field-content">
                 <span class="ic-body-metrics-latest__value">
-                  @if (circumferences.neckCm !== null) {
-                    {{ circumferences.neckCm | number: '1.0-2' }} cm
+                  {{ metric.weightKg | number: '1.1-2' }} kg
+                </span>
+              </div>
+            </div>
+
+            <div class="ic-body-metrics-latest__field">
+              <span class="ic-body-metrics-latest__label">Altura</span>
+
+              <div class="ic-body-metrics-latest__field-content">
+                <span class="ic-body-metrics-latest__value">
+                  {{ metric.heightCm | number: '1.0-2' }} cm
+                </span>
+              </div>
+            </div>
+
+            <div class="ic-body-metrics-latest__field">
+              <span class="ic-body-metrics-latest__label">IMC</span>
+
+              <div class="ic-body-metrics-latest__field-content">
+                <span class="ic-body-metrics-latest__value">
+                  {{ metric.bmi | number: '1.1-2' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="ic-body-metrics-latest__field">
+              <span class="ic-body-metrics-latest__label">Percentual de gordura</span>
+
+              <div class="ic-body-metrics-latest__field-content">
+                <span class="ic-body-metrics-latest__value">
+                  @if (metric.bodyFatPercentage !== null) {
+                    {{ metric.bodyFatPercentage | number: '1.1-2' }} %
                   } @else {
                     —
                   }
@@ -129,12 +86,12 @@
             </div>
 
             <div class="ic-body-metrics-latest__field">
-              <span class="ic-body-metrics-latest__label">Peitoral</span>
+              <span class="ic-body-metrics-latest__label">Massa gorda</span>
 
               <div class="ic-body-metrics-latest__field-content">
                 <span class="ic-body-metrics-latest__value">
-                  @if (circumferences.chestCm !== null) {
-                    {{ circumferences.chestCm | number: '1.0-2' }} cm
+                  @if (metric.fatMassKg !== null) {
+                    {{ metric.fatMassKg | number: '1.1-2' }} kg
                   } @else {
                     —
                   }
@@ -143,96 +100,12 @@
             </div>
 
             <div class="ic-body-metrics-latest__field">
-              <span class="ic-body-metrics-latest__label">Ombros</span>
+              <span class="ic-body-metrics-latest__label">Massa magra</span>
 
               <div class="ic-body-metrics-latest__field-content">
                 <span class="ic-body-metrics-latest__value">
-                  @if (circumferences.shoulderCm !== null) {
-                    {{ circumferences.shoulderCm | number: '1.0-2' }} cm
-                  } @else {
-                    —
-                  }
-                </span>
-              </div>
-            </div>
-
-            <div class="ic-body-metrics-latest__field">
-              <span class="ic-body-metrics-latest__label">Braço</span>
-
-              <div class="ic-body-metrics-latest__field-content">
-                <span class="ic-body-metrics-latest__value">
-                  @if (circumferences.armCm !== null) {
-                    {{ circumferences.armCm | number: '1.0-2' }} cm
-                  } @else {
-                    —
-                  }
-                </span>
-              </div>
-            </div>
-
-            <div class="ic-body-metrics-latest__field">
-              <span class="ic-body-metrics-latest__label">Antebraço</span>
-
-              <div class="ic-body-metrics-latest__field-content">
-                <span class="ic-body-metrics-latest__value">
-                  @if (circumferences.forearmCm !== null) {
-                    {{ circumferences.forearmCm | number: '1.0-2' }} cm
-                  } @else {
-                    —
-                  }
-                </span>
-              </div>
-            </div>
-
-            <div class="ic-body-metrics-latest__field">
-              <span class="ic-body-metrics-latest__label">Cintura</span>
-
-              <div class="ic-body-metrics-latest__field-content">
-                <span class="ic-body-metrics-latest__value">
-                  @if (circumferences.waistCm !== null) {
-                    {{ circumferences.waistCm | number: '1.0-2' }} cm
-                  } @else {
-                    —
-                  }
-                </span>
-              </div>
-            </div>
-
-            <div class="ic-body-metrics-latest__field">
-              <span class="ic-body-metrics-latest__label">Quadril</span>
-
-              <div class="ic-body-metrics-latest__field-content">
-                <span class="ic-body-metrics-latest__value">
-                  @if (circumferences.hipCm !== null) {
-                    {{ circumferences.hipCm | number: '1.0-2' }} cm
-                  } @else {
-                    —
-                  }
-                </span>
-              </div>
-            </div>
-
-            <div class="ic-body-metrics-latest__field">
-              <span class="ic-body-metrics-latest__label">Coxa</span>
-
-              <div class="ic-body-metrics-latest__field-content">
-                <span class="ic-body-metrics-latest__value">
-                  @if (circumferences.thighCm !== null) {
-                    {{ circumferences.thighCm | number: '1.0-2' }} cm
-                  } @else {
-                    —
-                  }
-                </span>
-              </div>
-            </div>
-
-            <div class="ic-body-metrics-latest__field">
-              <span class="ic-body-metrics-latest__label">Panturrilha</span>
-
-              <div class="ic-body-metrics-latest__field-content">
-                <span class="ic-body-metrics-latest__value">
-                  @if (circumferences.calfCm !== null) {
-                    {{ circumferences.calfCm | number: '1.0-2' }} cm
+                  @if (metric.leanMassKg !== null) {
+                    {{ metric.leanMassKg | number: '1.1-2' }} kg
                   } @else {
                     —
                   }
@@ -240,34 +113,170 @@
               </div>
             </div>
           </div>
-        } @else {
-          <div class="ic-body-metrics-latest__empty">
-            Nenhuma circunferência foi registrada nesta avaliação.
-          </div>
-        }
+        </section>
+
+        <section class="ic-body-metrics-latest__card" aria-labelledby="circumferences-title">
+          <header class="ic-body-metrics-latest__card-header">
+            <h2 id="circumferences-title">Circunferências</h2>
+          </header>
+
+          @if (metric.circumferences; as circumferences) {
+            <div class="ic-body-metrics-latest__fields">
+              <div class="ic-body-metrics-latest__field">
+                <span class="ic-body-metrics-latest__label">Pescoço</span>
+
+                <div class="ic-body-metrics-latest__field-content">
+                  <span class="ic-body-metrics-latest__value">
+                    @if (circumferences.neckCm !== null) {
+                      {{ circumferences.neckCm | number: '1.0-2' }} cm
+                    } @else {
+                      —
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div class="ic-body-metrics-latest__field">
+                <span class="ic-body-metrics-latest__label">Peitoral</span>
+
+                <div class="ic-body-metrics-latest__field-content">
+                  <span class="ic-body-metrics-latest__value">
+                    @if (circumferences.chestCm !== null) {
+                      {{ circumferences.chestCm | number: '1.0-2' }} cm
+                    } @else {
+                      —
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div class="ic-body-metrics-latest__field">
+                <span class="ic-body-metrics-latest__label">Ombros</span>
+
+                <div class="ic-body-metrics-latest__field-content">
+                  <span class="ic-body-metrics-latest__value">
+                    @if (circumferences.shoulderCm !== null) {
+                      {{ circumferences.shoulderCm | number: '1.0-2' }} cm
+                    } @else {
+                      —
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div class="ic-body-metrics-latest__field">
+                <span class="ic-body-metrics-latest__label">Braço</span>
+
+                <div class="ic-body-metrics-latest__field-content">
+                  <span class="ic-body-metrics-latest__value">
+                    @if (circumferences.armCm !== null) {
+                      {{ circumferences.armCm | number: '1.0-2' }} cm
+                    } @else {
+                      —
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div class="ic-body-metrics-latest__field">
+                <span class="ic-body-metrics-latest__label">Antebraço</span>
+
+                <div class="ic-body-metrics-latest__field-content">
+                  <span class="ic-body-metrics-latest__value">
+                    @if (circumferences.forearmCm !== null) {
+                      {{ circumferences.forearmCm | number: '1.0-2' }} cm
+                    } @else {
+                      —
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div class="ic-body-metrics-latest__field">
+                <span class="ic-body-metrics-latest__label">Cintura</span>
+
+                <div class="ic-body-metrics-latest__field-content">
+                  <span class="ic-body-metrics-latest__value">
+                    @if (circumferences.waistCm !== null) {
+                      {{ circumferences.waistCm | number: '1.0-2' }} cm
+                    } @else {
+                      —
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div class="ic-body-metrics-latest__field">
+                <span class="ic-body-metrics-latest__label">Quadril</span>
+
+                <div class="ic-body-metrics-latest__field-content">
+                  <span class="ic-body-metrics-latest__value">
+                    @if (circumferences.hipCm !== null) {
+                      {{ circumferences.hipCm | number: '1.0-2' }} cm
+                    } @else {
+                      —
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div class="ic-body-metrics-latest__field">
+                <span class="ic-body-metrics-latest__label">Coxa</span>
+
+                <div class="ic-body-metrics-latest__field-content">
+                  <span class="ic-body-metrics-latest__value">
+                    @if (circumferences.thighCm !== null) {
+                      {{ circumferences.thighCm | number: '1.0-2' }} cm
+                    } @else {
+                      —
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div class="ic-body-metrics-latest__field">
+                <span class="ic-body-metrics-latest__label">Panturrilha</span>
+
+                <div class="ic-body-metrics-latest__field-content">
+                  <span class="ic-body-metrics-latest__value">
+                    @if (circumferences.calfCm !== null) {
+                      {{ circumferences.calfCm | number: '1.0-2' }} cm
+                    } @else {
+                      —
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="ic-body-metrics-latest__empty">
+              Nenhuma circunferência foi registrada nesta avaliação.
+            </div>
+          }
+        </section>
+      </div>
+
+      <section
+        class="ic-body-metrics-latest__card ic-body-metrics-latest__card--full"
+        aria-labelledby="notes-title"
+      >
+        <header class="ic-body-metrics-latest__card-header">
+          <h2 id="notes-title">Observações</h2>
+        </header>
+
+        <p class="ic-body-metrics-latest__notes">
+          {{ metric.notes || 'Nenhuma observação registrada.' }}
+        </p>
       </section>
-    </div>
 
-    <section
-      class="ic-body-metrics-latest__card ic-body-metrics-latest__card--full"
-      aria-labelledby="notes-title"
-    >
-      <header class="ic-body-metrics-latest__card-header">
-        <h2 id="notes-title">Observações</h2>
-      </header>
-
-      <p class="ic-body-metrics-latest__notes">
-        {{ metric.notes || 'Nenhuma observação registrada.' }}
-      </p>
-    </section>
-
-    @if (metric.updatedAt) {
-      <footer class="ic-body-metrics-latest__metadata">
-        <span>
-          Última atualização em
-          <strong>{{ metric.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
-        </span>
-      </footer>
+      @if (metric.updatedAt) {
+        <footer class="ic-body-metrics-latest__metadata">
+          <span>
+            Última atualização em
+            <strong>{{ metric.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
+          </span>
+        </footer>
+      }
     }
   }
 </section>

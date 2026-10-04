@@ -17,7 +17,9 @@ describe('BodyMetricsDetailComponent', () => {
   const getById = vi.fn();
   const openDialog = vi.fn();
   const navigate = vi.fn();
-  const route = { snapshot: { paramMap: convertToParamMap({ id: '42' }) } };
+  const route = {
+    snapshot: { paramMap: convertToParamMap({ id: '42' }), queryParamMap: convertToParamMap({}) },
+  };
 
   let fixture: ComponentFixture<BodyMetricsDetailComponent>;
   let request: Subject<GetBodyMetricsResponse>;
@@ -52,6 +54,7 @@ describe('BodyMetricsDetailComponent', () => {
     openDialog.mockReset();
     navigate.mockReset();
     route.snapshot.paramMap = convertToParamMap({ id: '42' });
+    route.snapshot.queryParamMap = convertToParamMap({});
     request = new Subject<GetBodyMetricsResponse>();
     getById.mockReturnValue(request.asObservable());
 
@@ -180,11 +183,37 @@ describe('BodyMetricsDetailComponent', () => {
     });
   });
 
-  it('returns to history from the visible button', () => {
+  it.each([
+    ['home', '/', 'Voltar para a home'],
+    ['history', '/body-metrics', 'Voltar ao histórico'],
+    [null, '/body-metrics', 'Voltar ao histórico'],
+    ['unknown', '/body-metrics', 'Voltar ao histórico'],
+  ])('returns to the origin from the visible button (%s)', (from, destination, label) => {
+    route.snapshot.queryParamMap = convertToParamMap(from ? { from } : {});
     fixture.detectChanges();
     const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    expect(button.textContent).toContain(label);
     button.click();
 
-    expect(navigate).toHaveBeenCalledWith(['/body-metrics']);
+    expect(navigate).toHaveBeenCalledWith([destination]);
+  });
+
+  it('returns home after a latest detail error is dismissed', () => {
+    route.snapshot.queryParamMap = convertToParamMap({ from: 'home' });
+    const dialogClosed = new Subject<boolean | undefined>();
+    openDialog.mockReturnValue(dialogClosed.asObservable());
+    fixture.detectChanges();
+    request.error(new HttpErrorResponse({ status: 404 }));
+    expect(navigate).not.toHaveBeenCalled();
+    dialogClosed.next(true);
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/']);
+  });
+
+  it('returns home for an invalid latest detail ID', () => {
+    route.snapshot.queryParamMap = convertToParamMap({ from: 'home' });
+    route.snapshot.paramMap = convertToParamMap({ id: 'invalid' });
+    fixture.detectChanges();
+    expect(getById).not.toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/']);
   });
 });

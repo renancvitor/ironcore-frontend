@@ -1,7 +1,7 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, input, OnInit, signal, TemplateRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe, NgTemplateOutlet } from '@angular/common';
 
 import { BodyMetricsService } from '../body-metrics.service';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
@@ -12,11 +12,14 @@ import { LoadingComponent } from '../../../shared/components/loading/loading.com
 
 @Component({
   selector: 'app-body-metrics-latest',
-  imports: [ButtonComponent, LoadingComponent, DatePipe, DecimalPipe],
+  imports: [ButtonComponent, LoadingComponent, DatePipe, DecimalPipe, NgTemplateOutlet],
   templateUrl: './body-metrics-latest.component.html',
   styleUrl: './body-metrics-latest.component.scss',
 })
 export class BodyMetricsLatestComponent implements OnInit {
+  // An embedded presentation replaces only the successful result, keeping state here.
+  readonly contentTemplate = input<TemplateRef<{ $implicit: GetLatestBodyMetricsResponse }>>();
+
   private readonly bodyMetricsService = inject(BodyMetricsService);
   private readonly dialogService = inject(DialogService);
   private readonly router = inject(Router);
