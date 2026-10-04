@@ -184,21 +184,24 @@ describe('BodyMetricsDetailComponent', () => {
   });
 
   it.each([
-    ['home', '/', 'Voltar para a home'],
+    ['home', '/body-metrics', 'Voltar ao histórico'],
     ['history', '/body-metrics', 'Voltar ao histórico'],
     [null, '/body-metrics', 'Voltar ao histórico'],
     ['unknown', '/body-metrics', 'Voltar ao histórico'],
-  ])('returns to the origin from the visible button (%s)', (from, destination, label) => {
-    route.snapshot.queryParamMap = convertToParamMap(from ? { from } : {});
-    fixture.detectChanges();
-    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
-    expect(button.textContent).toContain(label);
-    button.click();
+  ])(
+    'always returns to history, ignoring legacy origin parameters (%s)',
+    (from, destination, label) => {
+      route.snapshot.queryParamMap = convertToParamMap(from ? { from } : {});
+      fixture.detectChanges();
+      const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+      expect(button.textContent).toContain(label);
+      button.click();
 
-    expect(navigate).toHaveBeenCalledWith([destination]);
-  });
+      expect(navigate).toHaveBeenCalledWith([destination]);
+    },
+  );
 
-  it('returns home after a latest detail error is dismissed', () => {
+  it('returns to history after an error even with a legacy home origin', () => {
     route.snapshot.queryParamMap = convertToParamMap({ from: 'home' });
     const dialogClosed = new Subject<boolean | undefined>();
     openDialog.mockReturnValue(dialogClosed.asObservable());
@@ -206,14 +209,14 @@ describe('BodyMetricsDetailComponent', () => {
     request.error(new HttpErrorResponse({ status: 404 }));
     expect(navigate).not.toHaveBeenCalled();
     dialogClosed.next(true);
-    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/']);
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/body-metrics']);
   });
 
-  it('returns home for an invalid latest detail ID', () => {
+  it('returns to history for an invalid ID even with a legacy home origin', () => {
     route.snapshot.queryParamMap = convertToParamMap({ from: 'home' });
     route.snapshot.paramMap = convertToParamMap({ id: 'invalid' });
     fixture.detectChanges();
     expect(getById).not.toHaveBeenCalled();
-    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/']);
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/body-metrics']);
   });
 });

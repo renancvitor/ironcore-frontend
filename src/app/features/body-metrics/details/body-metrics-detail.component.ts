@@ -25,15 +25,11 @@ export class BodyMetricsDetailComponent implements OnInit {
   readonly loading = signal(false);
   readonly metric = signal<GetBodyMetricsResponse | null>(null);
 
-  get returnToHome(): boolean {
-    return this.route.snapshot.queryParamMap.get('from') === 'home';
-  }
-
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
 
     if (!Number.isInteger(id) || id <= 0) {
-      this.back();
+      this.backToHistory();
       return;
     }
 
@@ -65,13 +61,13 @@ export class BodyMetricsDetailComponent implements OnInit {
               primaryAction: 'Ok',
             })
             .subscribe(() => {
-              this.back();
+              this.backToHistory();
             });
         },
       });
   }
 
-  back(): void {
-    void this.router.navigate([this.returnToHome ? '/' : '/body-metrics']);
+  backToHistory(): void {
+    void this.router.navigate(['/body-metrics']);
   }
 }
