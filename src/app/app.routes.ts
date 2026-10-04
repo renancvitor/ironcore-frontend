@@ -45,6 +45,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'body-metrics/latest',
+        loadComponent: () =>
+          import('./features/body-metrics/latest/body-metrics-latest.component').then(
+            (m) => m.BodyMetricsLatestComponent,
+          ),
+      },
+      {
         path: 'body-metrics/:id',
         loadComponent: () =>
           import('./features/body-metrics/details/body-metrics-detail.component').then(
