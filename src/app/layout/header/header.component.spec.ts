@@ -6,13 +6,15 @@ import { Subject, throwError } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/theme/theme.service';
+import { ThemePreference } from '../../core/theme/theme.models';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { HeaderComponent } from './header.component';
 
 describe('HeaderComponent', () => {
   const logout = vi.fn();
   const openDialog = vi.fn();
-  const setTheme = vi.fn();
+  const preference = signal<ThemePreference>('system');
+  const setPreference = vi.fn();
   const currentTheme = signal<'light' | 'dark'>('dark');
 
   let component: HeaderComponent;
@@ -22,7 +24,8 @@ describe('HeaderComponent', () => {
   beforeEach(async () => {
     logout.mockReset();
     openDialog.mockReset();
-    setTheme.mockReset();
+    preference.set('system');
+    setPreference.mockReset().mockImplementation((value: ThemePreference) => preference.set(value));
     currentTheme.set('dark');
 
     await TestBed.configureTestingModule({
@@ -32,7 +35,11 @@ describe('HeaderComponent', () => {
         { provide: AuthService, useValue: { logout } },
         {
           provide: ThemeService,
-          useValue: { currentTheme: currentTheme.asReadonly(), setTheme },
+          useValue: {
+            currentTheme: currentTheme.asReadonly(),
+            preference: preference.asReadonly(),
+            setPreference,
+          },
         },
         { provide: DialogService, useValue: { open: openDialog } },
       ],
@@ -126,11 +133,32 @@ describe('HeaderComponent', () => {
     });
   });
 
-  it('should update the theme from the toggle state', () => {
-    component.changeTheme(false);
-    component.changeTheme(true);
+  it('should cycle system, light and dark with matching icons and accessible labels', () => {
+    const button = fixture.nativeElement.querySelector('.ic-header__theme') as HTMLButtonElement;
+    const icon = button.querySelector('mat-icon')!;
+    expect(icon.textContent?.trim()).toBe('computer');
+    expect(button.getAttribute('aria-label')).toBe('Tema: sistema (escuro). Alterar para claro');
+    button.click();
+    fixture.detectChanges();
+    expect(setPreference).toHaveBeenLastCalledWith('light');
+    expect(icon.textContent?.trim()).toBe('light_mode');
+    expect(button.getAttribute('aria-label')).toBe('Tema: claro. Alterar para escuro');
+    button.click();
+    fixture.detectChanges();
+    expect(setPreference).toHaveBeenLastCalledWith('dark');
+    expect(icon.textContent?.trim()).toBe('dark_mode');
+    expect(button.getAttribute('aria-label')).toBe('Tema: escuro. Alterar para sistema');
+    button.click();
+    fixture.detectChanges();
+    expect(setPreference).toHaveBeenLastCalledWith('system');
+    expect(icon.textContent?.trim()).toBe('computer');
+  });
 
-    expect(setTheme).toHaveBeenNthCalledWith(1, 'light');
-    expect(setTheme).toHaveBeenNthCalledWith(2, 'dark');
+  it('should keep the system icon when the effective theme changes', () => {
+    currentTheme.set('light');
+    fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('.ic-header__theme') as HTMLButtonElement;
+    expect(button.textContent?.trim()).toBe('computer');
+    expect(button.getAttribute('aria-label')).toBe('Tema: sistema (claro). Alterar para claro');
   });
 });

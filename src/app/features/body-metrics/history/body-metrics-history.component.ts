@@ -42,6 +42,10 @@ export class BodyMetricsHistoryComponent {
     this.loadBodyMetricsHistory(event.pageIndex, event.pageSize);
   }
 
+  openDetail(id: number): void {
+    void this.router.navigate(['/body-metrics', id]);
+  }
+
   private loadBodyMetricsHistory(page?: number, size?: number): void {
     this.loading.set(true);
 

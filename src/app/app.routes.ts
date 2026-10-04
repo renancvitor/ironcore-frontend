@@ -1,43 +1,55 @@
 import { Routes } from '@angular/router';
 
 import { authGuard } from './core/guards/auth.guard';
-import { AppShellComponent } from './layout/app-shell/app-shell.component';
-import { LoginComponent } from './features/auth/login/login.component';
-import { FirstAccessComponent } from './features/auth/first-access/first-access.component';
-import { HomeComponent } from './features/home/home.component';
-import { ProfileComponent } from './features/profile/profile.component';
-import { ChangePasswordComponent } from './features/profile/change-password/change-password.component';
-import { BodyMetricsHistoryComponent } from './features/body-metrics/history/body-metrics-history.component';
 
 export const routes: Routes = [
   {
     path: 'login',
-    component: LoginComponent,
+    loadComponent: () =>
+      import('./features/auth/login/login.component').then((m) => m.LoginComponent),
   },
   {
     path: 'first-access',
-    component: FirstAccessComponent,
+    loadComponent: () =>
+      import('./features/auth/first-access/first-access.component').then(
+        (m) => m.FirstAccessComponent,
+      ),
   },
   {
     path: '',
-    component: AppShellComponent,
+    loadComponent: () =>
+      import('./layout/app-shell/app-shell.component').then((m) => m.AppShellComponent),
     canActivate: [authGuard],
     children: [
       {
         path: '',
-        component: HomeComponent,
+        loadComponent: () => import('./features/home/home.component').then((m) => m.HomeComponent),
       },
       {
         path: 'profile',
-        component: ProfileComponent,
+        loadComponent: () =>
+          import('./features/profile/profile.component').then((m) => m.ProfileComponent),
       },
       {
-        path: `change-password`,
-        component: ChangePasswordComponent,
+        path: 'change-password',
+        loadComponent: () =>
+          import('./features/profile/change-password/change-password.component').then(
+            (m) => m.ChangePasswordComponent,
+          ),
       },
       {
         path: 'body-metrics',
-        component: BodyMetricsHistoryComponent,
+        loadComponent: () =>
+          import('./features/body-metrics/history/body-metrics-history.component').then(
+            (m) => m.BodyMetricsHistoryComponent,
+          ),
+      },
+      {
+        path: 'body-metrics/:id',
+        loadComponent: () =>
+          import('./features/body-metrics/details/body-metrics-detail.component').then(
+            (m) => m.BodyMetricsDetailComponent,
+          ),
       },
     ],
   },

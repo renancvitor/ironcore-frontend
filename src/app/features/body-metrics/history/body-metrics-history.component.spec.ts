@@ -144,6 +144,55 @@ describe('BodyMetricsHistoryComponent', () => {
     expect(fixture.nativeElement.querySelector('app-loading')).toBeTruthy();
   });
 
+  it('opens the selected evaluation from the history row', () => {
+    firstRequest.next({
+      metrics: {
+        content: [
+          { id: 42, measuredAt: '2026-09-30T08:30:00', weightKg: 82, heightCm: 178, notes: null },
+        ],
+        page: 0,
+        size: 20,
+        totalElements: 1,
+        totalPages: 1,
+        last: true,
+      },
+    });
+    firstRequest.complete();
+    fixture.detectChanges();
+
+    const row = fixture.nativeElement.querySelector('tr[mat-row]') as HTMLTableRowElement;
+    row.click();
+
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/body-metrics', 42]);
+  });
+
+  it('opens a focused history row with Enter or Space', () => {
+    firstRequest.next({
+      metrics: {
+        content: [
+          { id: 42, measuredAt: '2026-09-30T08:30:00', weightKg: 82, heightCm: 178, notes: null },
+        ],
+        page: 0,
+        size: 20,
+        totalElements: 1,
+        totalPages: 1,
+        last: true,
+      },
+    });
+    firstRequest.complete();
+    fixture.detectChanges();
+
+    const row = fixture.nativeElement.querySelector('tr[mat-row]') as HTMLTableRowElement;
+    expect(row.tabIndex).toBe(0);
+    row.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    const space = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+    row.dispatchEvent(space);
+
+    expect(navigate).toHaveBeenCalledTimes(2);
+    expect(navigate).toHaveBeenCalledWith(['/body-metrics', 42]);
+    expect(space.defaultPrevented).toBe(true);
+  });
+
   it('shows the backend error and navigates home only after the dialog closes', () => {
     const dialogClosed = new Subject<boolean | undefined>();
     openDialog.mockReturnValue(dialogClosed.asObservable());

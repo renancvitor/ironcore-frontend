@@ -16,6 +16,7 @@
 
     <a
       matIconButton
+      class="ic-header__body-metrics"
       routerLink="/body-metrics"
       aria-label="Medidas corporais"
       matTooltip="Medidas corporais"
@@ -24,17 +25,16 @@
     </a>
 
     <div class="ic-header__actions">
-      <div class="ic-header__theme">
-        <mat-icon aria-hidden="true">light_mode</mat-icon>
-
-        <mat-slide-toggle
-          aria-label="Ativar tema escuro"
-          [checked]="currentTheme() === 'dark'"
-          (change)="changeTheme($event.checked)"
-        />
-
-        <mat-icon aria-hidden="true">dark_mode</mat-icon>
-      </div>
+      <button
+        matIconButton
+        class="ic-header__theme"
+        type="button"
+        [attr.aria-label]="themeLabel()"
+        [matTooltip]="themeLabel()"
+        (click)="changeTheme()"
+      >
+        <mat-icon aria-hidden="true">{{ themeIcon() }}</mat-icon>
+      </button>
 
       <button
         matIconButton
