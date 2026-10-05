@@ -11,6 +11,7 @@ import { MatTableModule } from '@angular/material/table';
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { Router } from '@angular/router';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-body-metrics-history',
@@ -21,6 +22,7 @@ import { Router } from '@angular/router';
     EmptyStateComponent,
     DatePipe,
     DecimalPipe,
+    ButtonComponent,
   ],
   templateUrl: './body-metrics-history.component.html',
   styleUrl: './body-metrics-history.component.scss',
@@ -44,6 +46,10 @@ export class BodyMetricsHistoryComponent {
 
   openDetail(id: number): void {
     void this.router.navigate(['/body-metrics', id]);
+  }
+
+  openProgress(): void {
+    void this.router.navigate(['/body-metrics/progress']);
   }
 
   private loadBodyMetricsHistory(page?: number, size?: number): void {

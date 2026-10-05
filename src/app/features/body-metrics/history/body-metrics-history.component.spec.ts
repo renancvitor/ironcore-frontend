@@ -193,6 +193,13 @@ describe('BodyMetricsHistoryComponent', () => {
     expect(space.defaultPrevented).toBe(true);
   });
 
+  it('opens evolution from the header action even while history loads', () => {
+    const button = fixture.nativeElement.querySelector('app-button button') as HTMLButtonElement;
+    expect(button.textContent).toContain('Ver evolução');
+    button.click();
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/body-metrics/progress']);
+  });
+
   it('shows the backend error and navigates home only after the dialog closes', () => {
     const dialogClosed = new Subject<boolean | undefined>();
     openDialog.mockReturnValue(dialogClosed.asObservable());
