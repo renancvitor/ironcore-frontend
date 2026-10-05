@@ -10,6 +10,7 @@ import { ChangePasswordComponent } from './features/profile/change-password/chan
 import { BodyMetricsHistoryComponent } from './features/body-metrics/history/body-metrics-history.component';
 import { BodyMetricsDetailComponent } from './features/body-metrics/details/body-metrics-detail.component';
 import { BodyMetricsLatestComponent } from './features/body-metrics/latest/body-metrics-latest.component';
+import { BodyMetricsProgressComponent } from './features/body-metrics/progress/body-metrics-progress.component';
 import { routes } from './app.routes';
 
 describe('application routes', () => {
@@ -80,6 +81,14 @@ describe('application routes', () => {
     );
     expect(await children[latestIndex].loadComponent?.()).toBe(BodyMetricsLatestComponent);
   });
+
+  it('lazy loads one evolution screen before the dynamic detail route', async () => {
+    const children = routes.find((route) => route.path === '')!.children!;
+    const index = children.findIndex((route) => route.path === 'body-metrics/progress');
+    expect(index).toBeGreaterThanOrEqual(0);
+    expect(index).toBeLessThan(children.findIndex((route) => route.path === 'body-metrics/:id'));
+    expect(await children[index].loadComponent?.()).toBe(BodyMetricsProgressComponent);
+  });
 });
 
 describe('lazy route authentication', () => {
@@ -101,6 +110,7 @@ describe('lazy route authentication', () => {
     '/change-password',
     '/body-metrics',
     '/body-metrics/latest',
+    '/body-metrics/progress',
     '/body-metrics/1',
   ])('should redirect unauthenticated access to %s to login', async (url) => {
     const harness = await RouterTestingHarness.create();
