@@ -1,0 +1,125 @@
+<p class="ic-chart__help">
+  Cada ponto representa o último valor válido registrado no mês. A linha conecta as avaliações
+  disponíveis ao longo do período.
+</p>
+<fieldset class="ic-chart__legend">
+  <legend>Medidas exibidas</legend>
+  @for (series of chart().series; track series.metric) {
+    <label>
+      <input
+        type="checkbox"
+        [checked]="!hidden().includes(series.metric)"
+        (change)="toggle(series.metric)"
+      />
+      <svg viewBox="0 0 32 12" aria-hidden="true" class="ic-chart__sample">
+        <line
+          x1="0"
+          y1="6"
+          x2="32"
+          y2="6"
+          [attr.stroke]="series.color"
+          [attr.stroke-dasharray]="series.dash"
+          stroke-width="3"
+        />
+      </svg>
+      {{ series.label }} ({{ series.unit }})
+    </label>
+  }
+</fieldset>
+@if (insufficient()) {
+  <p role="status">
+    Ainda não há dados suficientes para traçar uma linha de evolução. As medidas isoladas estão
+    disponíveis no gráfico e na tabela.
+  </p>
+}
+@if (visible().length === 0) {
+  <p role="status">Selecione pelo menos uma medida para visualizar o gráfico.</p>
+} @else {
+  <div
+    class="ic-chart__scroll"
+    tabindex="0"
+    role="region"
+    aria-label="Gráfico com rolagem horizontal em telas pequenas"
+  >
+    <svg
+      class="ic-chart__plot"
+      viewBox="0 0 760 340"
+      role="img"
+      [attr.aria-label]="title() + '. Valores completos disponíveis na tabela abaixo.'"
+    >
+      <text x="60" y="18">{{ chart().unit }}</text>
+      @for (tick of chart().ticks; track tick.value) {
+        <line class="ic-chart__grid" x1="60" x2="730" [attr.y1]="tick.y" [attr.y2]="tick.y" />
+        <text x="50" [attr.y]="tick.y + 4" text-anchor="end">
+          {{ tick.value | number: '1.0-2' }}
+        </text>
+      }
+      @for (month of chart().months; track month.period) {
+        <text [attr.transform]="'translate(' + month.x + ', 284) rotate(-35)'" text-anchor="end">
+          {{ month.label }}
+        </text>
+      }
+      @for (series of visible(); track series.metric) {
+        <g [attr.stroke]="series.color">
+          @if (series.hasLine) {
+            <path
+              class="ic-chart__line"
+              [attr.d]="series.path"
+              fill="none"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              vector-effect="non-scaling-stroke"
+              [attr.stroke-dasharray]="series.dash"
+            />
+          }
+          @for (point of series.points; track point.period) {
+            <circle
+              [attr.cx]="point.x"
+              [attr.cy]="point.y"
+              [attr.r]="series.hasLine ? 2.5 : 4"
+              [attr.fill]="series.color"
+            >
+              <title>
+                {{ series.label }} — {{ point.label }}: {{ point.value | number: '1.0-2' }}
+                {{ series.unit }}
+              </title>
+            </circle>
+          }
+        </g>
+      }
+      <text x="730" y="330" text-anchor="end">Mês da avaliação</text>
+    </svg>
+  </div>
+}
+<details class="ic-chart__data">
+  <summary>Ver valores em tabela</summary>
+  <div class="ic-chart__scroll" tabindex="0" role="region" aria-label="Valores mensais das medidas">
+    <table>
+      <caption>
+        {{
+          title()
+        }}
+        — valores retornados para o período
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Medida</th>
+          <th scope="col">Mês</th>
+          <th scope="col">Valor</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (series of chart().series; track series.metric) {
+          @for (point of series.points; track point.period) {
+            <tr>
+              <th scope="row">{{ series.label }}</th>
+              <td>{{ point.label }}</td>
+              <td>{{ point.value | number: '1.0-2' }} {{ series.unit }}</td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</details>
