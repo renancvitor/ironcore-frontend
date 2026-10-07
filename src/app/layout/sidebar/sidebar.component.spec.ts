@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
-import { By } from '@angular/platform-browser';
 import { MatExpansionPanel } from '@angular/material/expansion';
+import { By } from '@angular/platform-browser';
+import { provideRouter, Router } from '@angular/router';
 
 import { SidebarComponent } from './sidebar.component';
 

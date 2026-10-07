@@ -2,15 +2,20 @@ import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 import { LOCALE_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { BodyMetricsProgressChartComponent } from './body-metrics-progress-chart.component';
+
 import {
   BodyMetricsProgressChartType as Type,
   BodyMetricsProgressMetric as Metric,
 } from '../../body-metrics.models';
+import { BodyMetricsProgressChartComponent } from './body-metrics-progress-chart.component';
 
 registerLocaleData(localePt);
 
 describe('BodyMetricsProgressChartComponent', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [{ provide: LOCALE_ID, useValue: 'pt-BR' }] });
+  });
+
   it.each([
     [Type.BODY_COMPOSITION, Metric.WEIGHT_KG, 'Peso', 'kg'],
     [Type.CIRCUMFERENCES, Metric.WAIST_CM, 'Cintura', 'cm'],
@@ -18,7 +23,6 @@ describe('BodyMetricsProgressChartComponent', () => {
   ])(
     'renders exact backend values, labels and units for %s with an accessible table',
     (chartType, metric, label, unit) => {
-      TestBed.configureTestingModule({ providers: [{ provide: LOCALE_ID, useValue: 'pt-BR' }] });
       const fixture = TestBed.createComponent(BodyMetricsProgressChartComponent);
       fixture.componentRef.setInput('title', label);
       fixture.componentRef.setInput('data', {
@@ -38,19 +42,28 @@ describe('BodyMetricsProgressChartComponent', () => {
         ],
       });
       fixture.detectChanges();
+
       const element = fixture.nativeElement as HTMLElement;
+
       expect(element.querySelector('svg[role="img"]')?.getAttribute('aria-label')).toContain(label);
       expect(element.querySelectorAll('circle')).toHaveLength(2);
+
       const rows = element.querySelectorAll('tbody tr');
-      expect(rows[0].textContent).toContain('01/2026');
-      expect(rows[1].textContent).toContain('03/2026');
-      expect(rows[1].textContent).toContain(`77,25 ${unit}`);
-      expect(rows[1].textContent).toContain(label);
+
+      expect(
+        [...element.querySelectorAll('thead th')].map((cell) => cell.textContent?.trim()),
+      ).toEqual(['Medida', '01/2026', '03/2026']);
+      expect(rows).toHaveLength(1);
+      expect(
+        [...rows[0].querySelectorAll('th, td')].map((cell) => cell.textContent?.trim()),
+      ).toEqual([label, `79 ${unit}`, `77,25 ${unit}`]);
+
       (element.querySelector('input[type="checkbox"]') as HTMLInputElement).click();
       fixture.detectChanges();
+
       expect(element.querySelector('svg[role="img"]')).toBeNull();
       expect(element.textContent).toContain('Selecione pelo menos uma medida');
-      expect(element.querySelectorAll('tbody tr')).toHaveLength(2);
+      expect(element.querySelectorAll('tbody tr')).toHaveLength(1);
     },
   );
 
@@ -71,12 +84,12 @@ describe('BodyMetricsProgressChartComponent', () => {
       ],
     });
     fixture.detectChanges();
+
     expect(fixture.nativeElement.querySelectorAll('circle')).toHaveLength(1);
     expect(fixture.nativeElement.textContent).toContain('Ainda não há dados suficientes');
   });
 
   it('connects June 12.41% to August 14.23% without inventing a July point, row or tooltip', () => {
-    TestBed.configureTestingModule({ providers: [{ provide: LOCALE_ID, useValue: 'pt-BR' }] });
     const fixture = TestBed.createComponent(BodyMetricsProgressChartComponent);
     fixture.componentRef.setInput('title', 'Percentual de gordura');
     fixture.componentRef.setInput('data', {
@@ -96,19 +109,26 @@ describe('BodyMetricsProgressChartComponent', () => {
       ],
     });
     fixture.detectChanges();
+
     const element = fixture.nativeElement as HTMLElement;
+
     expect(element.querySelector('.ic-chart__line')?.getAttribute('d')?.match(/[ML]/g)).toEqual([
       'M',
       'L',
     ]);
     expect(element.querySelectorAll('circle')).toHaveLength(2);
+
     const tooltips = [...element.querySelectorAll('circle title')].map(
       (title) => title.textContent,
     );
+
     expect(tooltips[0]).toContain('06/2026: 12,41');
     expect(tooltips[1]).toContain('08/2026: 14,23');
     expect(tooltips.join(' ')).not.toContain('07/2026');
-    expect(element.querySelectorAll('tbody tr')).toHaveLength(2);
+    expect(element.querySelectorAll('tbody tr')).toHaveLength(1);
+    expect(
+      [...element.querySelectorAll('thead th')].map((cell) => cell.textContent?.trim()),
+    ).toEqual(['Medida', '06/2026', '08/2026']);
     expect(element.querySelector('tbody')?.textContent).not.toContain('07/2026');
     expect(element.querySelector('.ic-chart__plot')?.textContent).toContain('07/2026');
     expect(element.textContent).not.toContain('Ainda não há dados suficientes');
@@ -142,22 +162,79 @@ describe('BodyMetricsProgressChartComponent', () => {
         ],
       });
       fixture.detectChanges();
+
       const element = fixture.nativeElement as HTMLElement;
       const line = element.querySelector('.ic-chart__line')!;
+
       expect(line.getAttribute('d')?.match(/[ML]/g)).toEqual(['M', 'L', 'L', 'L']);
+      expect(line.hasAttribute('stroke-dasharray')).toBe(false);
+      expect(
+        element.querySelector('.ic-chart__sample line')?.hasAttribute('stroke-dasharray'),
+      ).toBe(false);
       expect(line.getAttribute('vector-effect')).toBe('non-scaling-stroke');
       expect(element.querySelectorAll('.ic-chart__plot circle')).toHaveLength(4);
       expect(element.querySelector('circle title')?.textContent).toContain('01/2026');
       expect(element.querySelector('circle title')?.textContent).toContain(label);
       expect(element.querySelector('circle title')?.textContent).toContain(unit);
+
       const checkbox = element.querySelector('input[type="checkbox"]') as HTMLInputElement;
+
       checkbox.click();
       fixture.detectChanges();
+
       expect(element.querySelector('.ic-chart__line')).toBeNull();
+
       checkbox.click();
       fixture.detectChanges();
+
       expect(element.querySelector('.ic-chart__line')).toBeTruthy();
-      expect(element.querySelectorAll('tbody tr')).toHaveLength(4);
+      expect(element.querySelectorAll('tbody tr')).toHaveLength(1);
     },
   );
+
+  it('pivots multiple measures by real months, preserving missing cells and valid zero', () => {
+    const fixture = TestBed.createComponent(BodyMetricsProgressChartComponent);
+    fixture.componentRef.setInput('title', 'Composição corporal');
+    fixture.componentRef.setInput('data', {
+      startDate: '2026-06-01',
+      endDate: '2026-08-31',
+      chartType: Type.BODY_COMPOSITION,
+      series: [
+        {
+          metric: Metric.WEIGHT_KG,
+          label: 'Peso',
+          unit: 'kg',
+          points: [
+            { period: '2026-08', value: 66 },
+            { period: '2026-06', value: 65 },
+          ],
+        },
+        {
+          metric: Metric.FAT_MASS_KG,
+          label: 'Massa gorda',
+          unit: 'kg',
+          points: [{ period: '2026-06', value: 0 }],
+        },
+      ],
+    });
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(
+      [...element.querySelectorAll('thead th')].map((cell) => cell.textContent?.trim()),
+    ).toEqual(['Medida', '06/2026', '08/2026']);
+    expect(
+      [...element.querySelectorAll('tbody tr')].map((row) =>
+        [...row.querySelectorAll('th, td')].map((cell) => cell.textContent?.trim()),
+      ),
+    ).toEqual([
+      ['Peso', '65 kg', '66 kg'],
+      ['Massa gorda', '0 kg', '—'],
+    ]);
+    expect(element.querySelector('details > summary')?.textContent).toContain(
+      'Ver valores em tabela',
+    );
+    expect(element.querySelectorAll('tbody th[scope="row"]')).toHaveLength(2);
+  });
 });

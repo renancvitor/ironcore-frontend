@@ -40,12 +40,14 @@ describe('body metrics progress presentation', () => {
       { period: '2026-03', value: 77 },
       { period: '2026-01', value: 79 },
     ];
+
     const result = buildProgressChart({
       startDate: '2026-01-01',
       endDate: '2026-03-31',
       chartType: BodyMetricsProgressChartType.BODY_COMPOSITION,
       series: [{ metric: BodyMetricsProgressMetric.WEIGHT_KG, label: 'Peso', unit: 'kg', points }],
     });
+
     expect(result.months.map((month) => month.label)).toEqual(['01/2026', '02/2026', '03/2026']);
     expect(result.series[0].points.map((point) => point.value)).toEqual([79, 77]);
     expect(points[0].period).toBe('2026-03');
@@ -70,6 +72,7 @@ describe('body metrics progress presentation', () => {
         },
       ],
     });
+
     expect(result.series[0].points).toHaveLength(1);
     expect(result.series[0].points[0]).toMatchObject({ value: 0, x: 395, y: 260 });
     expect(result.series[0].path).not.toContain('L');
@@ -93,6 +96,7 @@ describe('body metrics progress presentation', () => {
         },
       ],
     });
+
     expect(result.series[0].path.match(/L/g)).toHaveLength(1);
     expect(result.series[0].points[0].y).toBe(result.series[0].points[1].y);
     expect(monthLabel('2025-12')).toBe('12/2025');
@@ -105,6 +109,7 @@ describe('body metrics progress presentation', () => {
       { period: '2026-01', value: 79 },
       { period: '2026-04', value: 76 },
     ];
+
     const result = buildProgressChart({
       startDate: '2026-01-01',
       endDate: '2026-05-31',
@@ -112,6 +117,7 @@ describe('body metrics progress presentation', () => {
       series: [{ metric: BodyMetricsProgressMetric.WEIGHT_KG, label: 'Peso', unit: 'kg', points }],
     });
     const series = result.series[0];
+
     expect(series.path.match(/[ML]/g)).toEqual(['M', 'L', 'L', 'L']);
     expect(series.points.map((point) => point.value)).toEqual([79, 78, 76, 74]);
     expect(series.points.map((point) => point.period)).not.toContain('2026-03');
@@ -146,10 +152,54 @@ describe('body metrics progress presentation', () => {
         },
       ],
     });
+
     expect(result.series[0].path.match(/[ML]/g)).toEqual(['M', 'L', 'L']);
     expect(result.series[1].path.match(/[ML]/g)).toEqual(['M', 'L']);
     expect(result.series[1].hasLine).toBe(true);
     expect(result.series[1].points[0].value).toBe(0);
     expect(result.series[1].points).toHaveLength(2);
+  });
+
+  it('assigns nine distinct stable colors to circumference measures regardless of missing series', () => {
+    const metrics = [
+      BodyMetricsProgressMetric.NECK_CM,
+      BodyMetricsProgressMetric.CHEST_CM,
+      BodyMetricsProgressMetric.SHOULDER_CM,
+      BodyMetricsProgressMetric.ARM_CM,
+      BodyMetricsProgressMetric.FOREARM_CM,
+      BodyMetricsProgressMetric.WAIST_CM,
+      BodyMetricsProgressMetric.HIP_CM,
+      BodyMetricsProgressMetric.THIGH_CM,
+      BodyMetricsProgressMetric.CALF_CM,
+    ];
+
+    const response = {
+      startDate: '2026-06-01',
+      endDate: '2026-08-31',
+      chartType: BodyMetricsProgressChartType.CIRCUMFERENCES,
+      series: metrics.map((metric) => ({
+        metric,
+        label: metric,
+        unit: 'cm',
+        points: [{ period: '2026-06', value: 30 }],
+      })),
+    };
+
+    const all = buildProgressChart(response);
+
+    expect(new Set(all.series.map((series) => series.color)).size).toBe(9);
+    expect(
+      all.series.find((series) => series.metric === BodyMetricsProgressMetric.CALF_CM)?.color,
+    ).toBe('var(--ic-chart-series-3)');
+    expect(
+      all.series.find((series) => series.metric === BodyMetricsProgressMetric.ARM_CM)?.color,
+    ).toBe('var(--ic-chart-series-4)');
+
+    const withoutNeck = buildProgressChart({
+      ...response,
+      series: response.series.slice(1),
+    });
+
+    expect(withoutNeck.series[0].color).toBe(all.series[1].color);
   });
 });

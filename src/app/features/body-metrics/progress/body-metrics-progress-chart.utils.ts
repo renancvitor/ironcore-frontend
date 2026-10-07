@@ -1,6 +1,7 @@
 import {
   BodyMetricsProgressChartRequest,
   BodyMetricsProgressChartResponse,
+  BodyMetricsProgressMetric,
 } from '../body-metrics.models';
 
 const CHART_LEFT = 60;
@@ -13,19 +14,22 @@ const CHART_HEIGHT = 230;
 const TICK_COUNT = 5;
 const TICK_DIVISIONS = TICK_COUNT - 1;
 
-const SERIES_COLORS = ['var(--ic-primary)', 'var(--ic-text-primary)', 'var(--ic-red-main)'];
-
-const SERIES_DASHES = [
-  '',
-  '8 4',
-  '2 4',
-  '12 4 2 4',
-  '4 4',
-  '12 6',
-  '2 3 8 3',
-  '16 3 4 3',
-  '6 3 2 3',
-];
+const SERIES_PALETTE_SLOT: Record<BodyMetricsProgressMetric, number> = {
+  [BodyMetricsProgressMetric.WEIGHT_KG]: 0,
+  [BodyMetricsProgressMetric.FAT_MASS_KG]: 1,
+  [BodyMetricsProgressMetric.LEAN_MASS_KG]: 2,
+  [BodyMetricsProgressMetric.BODY_FAT_PERCENTAGE]: 6,
+  [BodyMetricsProgressMetric.BMI]: 8,
+  [BodyMetricsProgressMetric.NECK_CM]: 0,
+  [BodyMetricsProgressMetric.CHEST_CM]: 1,
+  [BodyMetricsProgressMetric.SHOULDER_CM]: 8,
+  [BodyMetricsProgressMetric.ARM_CM]: 3,
+  [BodyMetricsProgressMetric.FOREARM_CM]: 4,
+  [BodyMetricsProgressMetric.WAIST_CM]: 5,
+  [BodyMetricsProgressMetric.HIP_CM]: 6,
+  [BodyMetricsProgressMetric.THIGH_CM]: 7,
+  [BodyMetricsProgressMetric.CALF_CM]: 2,
+};
 
 export function localDateString(date: Date): string {
   const year = date.getFullYear();
@@ -98,7 +102,7 @@ export function buildProgressChart(response: BodyMetricsProgressChartResponse) {
 
   const series = response.series
     .filter((item) => item.points.length > 0)
-    .map((item, index) => {
+    .map((item) => {
       const points = [...item.points]
         .sort((first, second) => first.period.localeCompare(second.period))
         .map((point) => ({
@@ -112,13 +116,14 @@ export function buildProgressChart(response: BodyMetricsProgressChartResponse) {
         .map((point, pointIndex) => `${pointIndex === 0 ? 'M' : 'L'}${point.x},${point.y}`)
         .join(' ');
 
+      const paletteSlot = SERIES_PALETTE_SLOT[item.metric];
+
       return {
         ...item,
         points,
         path,
         hasLine: points.length > 1,
-        color: SERIES_COLORS[index % SERIES_COLORS.length],
-        dash: SERIES_DASHES[index % SERIES_DASHES.length],
+        color: `var(--ic-chart-series-${paletteSlot + 1})`,
       };
     });
 
