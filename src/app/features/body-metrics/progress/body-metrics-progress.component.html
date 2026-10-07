@@ -53,7 +53,7 @@
   </form>
 
   <fieldset class="ic-body-metrics-progress__types">
-    <legend>Tipo de gráfico</legend>
+    <legend>Tipo de visão</legend>
 
     @for (option of options; track option.type) {
       <label
@@ -96,6 +96,22 @@
           Tentar novamente
         </app-button>
       </div>
+    } @else if (changesResponse(); as data) {
+      <p class="ic-body-metrics-progress__period">
+        Período exibido:
+        {{ data.startDate | date: 'dd/MM/yyyy' }}
+        a
+        {{ data.endDate | date: 'dd/MM/yyyy' }}
+      </p>
+
+      @if (data.changes.length > 0) {
+        <app-body-metrics-progress-changes [data]="data" />
+      } @else {
+        <app-empty-state
+          icon="compare_arrows"
+          message="Não há dados suficientes para comparar. É necessário ter pelo menos duas avaliações com valores válidos para a mesma medida no período selecionado."
+        />
+      }
     } @else if (response(); as data) {
       <p class="ic-body-metrics-progress__period">
         Período exibido:

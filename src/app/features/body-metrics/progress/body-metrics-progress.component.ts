@@ -3,10 +3,11 @@ import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
-import { finalize, Subscription } from 'rxjs';
+import { finalize, Observable, Subscription } from 'rxjs';
 
 import { BodyMetricsService } from '../body-metrics.service';
 import {
+  BodyMetricsProgressChangesResponse,
   BodyMetricsProgressChartResponse,
   BodyMetricsProgressChartType,
 } from '../body-metrics.models';
@@ -16,11 +17,14 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 
 import { BodyMetricsProgressChartComponent } from './chart/body-metrics-progress-chart.component';
+import { BodyMetricsProgressChangesComponent } from './changes/body-metrics-progress-changes.component';
 import {
   defaultProgressPeriod,
   localDateString,
   progressPeriodError,
 } from './body-metrics-progress-chart.utils';
+
+type BodyMetricsProgressView = BodyMetricsProgressChartType | 'CHANGES';
 
 @Component({
   selector: 'app-body-metrics-progress',
@@ -31,6 +35,7 @@ import {
     LoadingComponent,
     EmptyStateComponent,
     BodyMetricsProgressChartComponent,
+    BodyMetricsProgressChangesComponent,
   ],
   templateUrl: './body-metrics-progress.component.html',
   styleUrl: './body-metrics-progress.component.scss',
@@ -42,7 +47,7 @@ export class BodyMetricsProgressComponent implements OnInit {
   private request?: Subscription;
   private period = defaultProgressPeriod();
 
-  readonly options = [
+  readonly options: { type: BodyMetricsProgressView; label: string }[] = [
     {
       type: BodyMetricsProgressChartType.BODY_COMPOSITION,
       label: 'Composição corporal',
@@ -55,10 +60,17 @@ export class BodyMetricsProgressComponent implements OnInit {
       type: BodyMetricsProgressChartType.BODY_FAT,
       label: 'Percentual de gordura',
     },
+    {
+      type: 'CHANGES',
+      label: 'Comparativo',
+    },
   ];
 
-  readonly selected = signal(BodyMetricsProgressChartType.BODY_COMPOSITION);
+  readonly selected = signal<BodyMetricsProgressView>(
+    BodyMetricsProgressChartType.BODY_COMPOSITION,
+  );
   readonly response = signal<BodyMetricsProgressChartResponse | null>(null);
+  readonly changesResponse = signal<BodyMetricsProgressChangesResponse | null>(null);
   readonly loading = signal(false);
   readonly error = signal('');
   readonly validationError = signal('');
@@ -88,7 +100,7 @@ export class BodyMetricsProgressComponent implements OnInit {
     this.loadProgress();
   }
 
-  select(type: BodyMetricsProgressChartType): void {
+  select(type: BodyMetricsProgressView): void {
     if (type === this.selected()) {
       return;
     }
@@ -125,6 +137,7 @@ export class BodyMetricsProgressComponent implements OnInit {
     this.request?.unsubscribe();
 
     this.response.set(null);
+    this.changesResponse.set(null);
     this.error.set('');
     this.loading.set(true);
 
@@ -138,6 +151,11 @@ export class BodyMetricsProgressComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
+          if ('changes' in response) {
+            this.changesResponse.set(response);
+            return;
+          }
+
           this.response.set(response);
         },
 
@@ -150,7 +168,13 @@ export class BodyMetricsProgressComponent implements OnInit {
       });
   }
 
-  private getProgressRequest() {
+  private getProgressRequest(): Observable<
+    BodyMetricsProgressChartResponse | BodyMetricsProgressChangesResponse
+  > {
+    if (this.selected() === 'CHANGES') {
+      return this.bodyMetricsService.getChanges(this.period);
+    }
+
     if (this.selected() === BodyMetricsProgressChartType.BODY_COMPOSITION) {
       return this.bodyMetricsService.getBodyComposition(this.period);
     }

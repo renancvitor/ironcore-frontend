@@ -135,6 +135,146 @@ describe('BodyMetricsProgressComponent', () => {
     http.expectNone((request) => request.url.startsWith(base));
   });
 
+  it('opens comparison from the fourth control using only the applied period', () => {
+    flush(takeRequest('body-composition'));
+    fixture.componentInstance.form.setValue({ startDate: '2025-01-01', endDate: '2025-03-31' });
+    fixture.componentInstance.applyPeriod();
+    flush(takeRequest('body-composition'));
+    fixture.componentInstance.form.controls.startDate.setValue('2025-02-01');
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const radios = element.querySelectorAll<HTMLInputElement>('input[name="progress-type"]');
+
+    expect(element.querySelector('legend')?.textContent).toBe('Tipo de visão');
+    expect(radios).toHaveLength(4);
+    radios[3].click();
+    fixture.detectChanges();
+
+    const request = takeRequest('changes');
+
+    expect(request.request.params.get('startDate')).toBe('2025-01-01');
+    expect(request.request.params.get('endDate')).toBe('2025-03-31');
+    expect(element.querySelector('app-loading')).toBeTruthy();
+    expect(element.querySelector('app-body-metrics-progress-chart')).toBeNull();
+    expect(element.querySelector('app-body-metrics-progress-changes')).toBeNull();
+
+    request.flush({
+      startDate: '2025-01-01',
+      endDate: '2025-03-31',
+      changes: [
+        {
+          metric: 'WEIGHT_KG',
+          label: 'Peso',
+          unit: 'kg',
+          firstDate: '2025-01-05',
+          firstValue: 80,
+          lastDate: '2025-03-20',
+          lastValue: 78,
+          absoluteChange: -2,
+          percentageChange: -2.5,
+        },
+      ],
+    });
+    fixture.detectChanges();
+
+    expect(element.querySelector('app-loading')).toBeNull();
+    expect(element.querySelector('app-body-metrics-progress-changes')).toBeTruthy();
+    expect(element.querySelector('app-body-metrics-progress-chart')).toBeNull();
+    expect(element.querySelectorAll('form')).toHaveLength(1);
+    expect(element.querySelector('.ic-body-metrics-progress__period')?.textContent).toContain(
+      '01/01/2025',
+    );
+    expect(element.querySelector('tbody')?.textContent).toContain('-2 kg');
+
+    fixture.componentInstance.select('CHANGES');
+    http.expectNone((pending) => pending.url.startsWith(base));
+
+    fixture.componentInstance.form.setValue({ startDate: '2025-02-01', endDate: '2025-03-31' });
+    fixture.componentInstance.applyPeriod();
+    fixture.detectChanges();
+
+    expect(element.querySelector('app-body-metrics-progress-changes')).toBeNull();
+    expect(element.querySelector('app-loading')).toBeTruthy();
+
+    const next = takeRequest('changes');
+    expect(next.request.params.get('startDate')).toBe('2025-02-01');
+    next.flush({ startDate: '2025-02-01', endDate: '2025-03-31', changes: [] });
+    fixture.detectChanges();
+
+    expect(element.querySelector('app-empty-state')?.textContent).toContain('duas avaliações');
+    expect(element.querySelector('app-body-metrics-progress-changes')).toBeNull();
+
+    radios[0].click();
+    flush(takeRequest('body-composition'), [
+      {
+        metric: 'WEIGHT_KG',
+        label: 'Peso',
+        unit: 'kg',
+        points: [{ period: '2025-02', value: 80 }],
+      },
+    ]);
+    fixture.detectChanges();
+
+    expect(element.querySelector('app-body-metrics-progress-chart')).toBeTruthy();
+    expect(element.querySelector('app-body-metrics-progress-changes')).toBeNull();
+  });
+
+  it('cancels pending comparison requests on period, view and destruction', () => {
+    const chartRequest = takeRequest('body-composition');
+    fixture.componentInstance.select('CHANGES');
+    expect(chartRequest.cancelled).toBe(true);
+
+    const first = takeRequest('changes');
+    fixture.componentInstance.form.setValue({ startDate: '2025-01-01', endDate: '2025-03-31' });
+    fixture.componentInstance.applyPeriod();
+    expect(first.cancelled).toBe(true);
+    expect(fixture.componentInstance.loading()).toBe(true);
+
+    const second = takeRequest('changes');
+    fixture.componentInstance.select(Type.BODY_FAT);
+    expect(second.cancelled).toBe(true);
+    const chart = takeRequest('body-fat');
+    fixture.componentInstance.select('CHANGES');
+    expect(chart.cancelled).toBe(true);
+
+    const last = takeRequest('changes');
+    fixture.destroy();
+    expect(last.cancelled).toBe(true);
+  });
+
+  it.each([null, { message: 'Período não permitido.' }])(
+    'handles comparison errors and retries the same period (%s)',
+    (error) => {
+      flush(takeRequest('body-composition'));
+      fixture.componentInstance.select('CHANGES');
+      const request = takeRequest('changes');
+      const params = request.request.params.toString();
+      request.flush(error, { status: 500, statusText: 'Error' });
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      expect(element.querySelector('app-loading')).toBeNull();
+      expect(element.querySelector('app-empty-state')).toBeNull();
+      expect(element.querySelector('#progress-result [role="alert"]')?.textContent).toContain(
+        error?.message ?? 'Não foi possível carregar',
+      );
+
+      element.querySelector<HTMLButtonElement>('#progress-result button')!.click();
+      const retry = takeRequest('changes');
+      expect(retry.request.params.toString()).toBe(params);
+      retry.flush({ startDate: '2025-01-01', endDate: '2025-03-31', changes: [] });
+      fixture.detectChanges();
+      expect(element.querySelector('[role="alert"]')).toBeNull();
+      expect(element.querySelector('app-empty-state')).toBeTruthy();
+
+      fixture.componentInstance.form.setValue({ startDate: '2025-04-01', endDate: '2025-01-01' });
+      fixture.componentInstance.applyPeriod();
+      http.expectNone((pending) => pending.url.startsWith(base));
+      expect(fixture.componentInstance.validationError()).toContain('maior');
+    },
+  );
+
   it('cancels stale requests on selection and cancels pending work on destruction', () => {
     const first = takeRequest('body-composition');
 

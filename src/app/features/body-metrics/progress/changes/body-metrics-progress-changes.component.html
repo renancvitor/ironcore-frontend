@@ -1,0 +1,52 @@
+<p class="ic-body-metrics-progress-changes__help">
+  Compare o primeiro e o último valor válido de cada medida no período. As datas podem variar entre
+  as medidas. Apenas medidas com pelo menos duas avaliações válidas são exibidas.
+</p>
+
+<div
+  class="ic-body-metrics-progress-changes__scroll"
+  tabindex="0"
+  role="region"
+  aria-label="Comparativo de medidas com rolagem horizontal em telas pequenas"
+>
+  <table class="ic-body-metrics-progress-changes__table">
+    <caption>
+      Valores iniciais, finais e variações no período
+    </caption>
+
+    <thead>
+      <tr>
+        <th scope="col">Medida</th>
+        <th scope="col">Inicial</th>
+        <th scope="col">Final</th>
+        <th scope="col">Diferença</th>
+        <th scope="col">Variação</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (change of data().changes; track change.metric) {
+        <tr>
+          <th scope="row">{{ change.label }}</th>
+
+          <td>
+            {{ change.firstValue | number: '1.0-2' }} {{ change.unit }}
+            <time class="ic-body-metrics-progress-changes__date" [attr.datetime]="change.firstDate">
+              {{ change.firstDate | date: 'dd/MM/yyyy' }}
+            </time>
+          </td>
+
+          <td>
+            {{ change.lastValue | number: '1.0-2' }} {{ change.unit }}
+            <time class="ic-body-metrics-progress-changes__date" [attr.datetime]="change.lastDate">
+              {{ change.lastDate | date: 'dd/MM/yyyy' }}
+            </time>
+          </td>
+
+          <td>{{ formatChange(change.absoluteChange) }} {{ change.unit }}</td>
+          <td>{{ formatChange(change.percentageChange) }}%</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
