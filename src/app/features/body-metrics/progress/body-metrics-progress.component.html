@@ -1,0 +1,117 @@
+<section class="ic-body-metrics-progress">
+  <header class="ic-body-metrics-progress__header">
+    <div>
+      <h1>Evolução corporal</h1>
+      <p>Acompanhe suas medidas ao longo do tempo.</p>
+    </div>
+
+    <app-button type="button" variant="secondary" (click)="backToHistory()">
+      Voltar ao histórico
+    </app-button>
+  </header>
+
+  <form class="ic-body-metrics-progress__filters" [formGroup]="form" (ngSubmit)="applyPeriod()">
+    <div class="ic-body-metrics-progress__field">
+      <label for="progress-start">Data inicial</label>
+
+      <input
+        id="progress-start"
+        type="date"
+        formControlName="startDate"
+        required
+        [max]="today"
+        [attr.aria-invalid]="!!validationError()"
+        aria-describedby="period-help period-error"
+      />
+    </div>
+
+    <div class="ic-body-metrics-progress__field">
+      <label for="progress-end">Data final</label>
+
+      <input
+        id="progress-end"
+        type="date"
+        formControlName="endDate"
+        required
+        [max]="today"
+        [attr.aria-invalid]="!!validationError()"
+        aria-describedby="period-help period-error"
+      />
+    </div>
+
+    <app-button type="submit"> Aplicar período </app-button>
+
+    <p id="period-help" class="ic-body-metrics-progress__help">
+      Selecione até 12 meses, sem datas futuras.
+    </p>
+
+    @if (validationError()) {
+      <p id="period-error" class="ic-body-metrics-progress__error" role="alert">
+        {{ validationError() }}
+      </p>
+    }
+  </form>
+
+  <fieldset class="ic-body-metrics-progress__types">
+    <legend>Tipo de gráfico</legend>
+
+    @for (option of options; track option.type) {
+      <label
+        class="ic-body-metrics-progress__type"
+        [class.ic-body-metrics-progress__type--selected]="selected() === option.type"
+      >
+        <input
+          type="radio"
+          name="progress-type"
+          [value]="option.type"
+          [checked]="selected() === option.type"
+          (change)="select(option.type)"
+          aria-controls="progress-result"
+        />
+
+        <span>{{ option.label }}</span>
+      </label>
+    }
+  </fieldset>
+
+  <section
+    id="progress-result"
+    class="ic-body-metrics-progress__result"
+    [attr.aria-busy]="loading()"
+    aria-labelledby="progress-title"
+  >
+    <h2 id="progress-title">
+      {{ selectedLabel }}
+    </h2>
+
+    @if (loading()) {
+      <app-loading />
+    } @else if (error()) {
+      <div class="ic-body-metrics-progress__error-state">
+        <p role="alert">
+          {{ error() }}
+        </p>
+
+        <app-button type="button" variant="secondary" (click)="retry()">
+          Tentar novamente
+        </app-button>
+      </div>
+    } @else if (response(); as data) {
+      <p class="ic-body-metrics-progress__period">
+        Período exibido:
+        {{ data.startDate | date: 'dd/MM/yyyy' }}
+        a
+        {{ data.endDate | date: 'dd/MM/yyyy' }}
+      </p>
+
+      @if (hasData) {
+        <app-body-metrics-progress-chart [data]="data" [title]="selectedLabel" />
+      } @else {
+        <app-empty-state
+          icon="show_chart"
+          message="Nenhuma medida disponível para este gráfico no período selecionado."
+        />
+      }
+    }
+  </section>
+</section>

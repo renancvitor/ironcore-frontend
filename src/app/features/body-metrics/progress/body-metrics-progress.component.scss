@@ -1,0 +1,191 @@
+@use '../../../../styles/responsive' as responsive;
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.ic-body-metrics-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ic-space-5);
+}
+
+.ic-body-metrics-progress__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ic-space-4);
+
+  h1 {
+    margin: 0;
+    color: var(--ic-text-primary);
+  }
+
+  p {
+    margin: var(--ic-space-2) 0 0;
+    color: var(--ic-text-secondary);
+  }
+}
+
+.ic-body-metrics-progress__filters,
+.ic-body-metrics-progress__result {
+  min-width: 0;
+  padding: var(--ic-space-5);
+
+  background: var(--ic-surface);
+  border: var(--ic-border-width-default) solid var(--ic-border-soft);
+  border-radius: var(--ic-radius-md);
+}
+
+.ic-body-metrics-progress__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--ic-space-4);
+}
+
+.ic-body-metrics-progress__field {
+  display: flex;
+  flex: 1 1 180px;
+  flex-direction: column;
+  gap: var(--ic-space-2);
+
+  min-width: 0;
+
+  input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: var(--ic-space-3);
+
+    background: var(--ic-field-bg);
+    border: var(--ic-border-width-default) solid var(--ic-field-border);
+    border-radius: var(--ic-radius-md);
+    color: var(--ic-field-text);
+    font: inherit;
+  }
+}
+
+.ic-body-metrics-progress__help {
+  flex-basis: 100%;
+  margin: 0;
+
+  color: var(--ic-text-secondary);
+  font-size: var(--ic-font-size-sm);
+}
+
+.ic-body-metrics-progress__error {
+  flex-basis: 100%;
+  margin: 0;
+
+  color: var(--ic-field-error);
+  font-size: var(--ic-font-size-sm);
+}
+
+.ic-body-metrics-progress__types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ic-space-2);
+
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+
+  legend {
+    margin-bottom: var(--ic-space-3);
+  }
+}
+
+.ic-body-metrics-progress__type {
+  display: flex;
+  align-items: center;
+  gap: var(--ic-space-2);
+
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: var(--ic-space-3) var(--ic-space-4);
+
+  background: var(--ic-surface);
+  border: var(--ic-border-width-default) solid var(--ic-border-soft);
+  border-radius: var(--ic-radius-md);
+  cursor: pointer;
+
+  input {
+    accent-color: var(--ic-primary);
+  }
+}
+
+.ic-body-metrics-progress__type--selected {
+  border-color: var(--ic-primary);
+  box-shadow: inset 0 -3px var(--ic-primary);
+}
+
+.ic-body-metrics-progress__result {
+  h2 {
+    margin: 0;
+    color: var(--ic-text-primary);
+    font-size: 1.25rem;
+  }
+}
+
+.ic-body-metrics-progress__period {
+  color: var(--ic-text-secondary);
+}
+
+.ic-body-metrics-progress__error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ic-space-3);
+
+  p {
+    margin: 0;
+    color: var(--ic-field-error);
+  }
+}
+
+.ic-body-metrics-progress input:focus-visible {
+  outline: var(--ic-focus-ring-width) solid var(--ic-primary);
+  outline-offset: var(--ic-focus-ring-offset);
+}
+
+:host-context([data-theme='dark']) input[type='date'] {
+  color-scheme: dark;
+}
+
+:host-context([data-theme='light']) input[type='date'] {
+  color-scheme: light;
+}
+
+@include responsive.tablet {
+  .ic-body-metrics-progress {
+    gap: var(--ic-space-4);
+  }
+}
+
+@include responsive.mobile {
+  .ic-body-metrics-progress {
+    gap: var(--ic-space-3);
+  }
+
+  .ic-body-metrics-progress__header {
+    flex-direction: column;
+  }
+
+  .ic-body-metrics-progress__filters,
+  .ic-body-metrics-progress__result {
+    padding: var(--ic-space-3);
+  }
+
+  .ic-body-metrics-progress__field {
+    flex-basis: 100%;
+  }
+
+  .ic-body-metrics-progress__type {
+    width: 100%;
+  }
+}

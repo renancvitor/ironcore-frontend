@@ -52,6 +52,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'body-metrics/progress',
+        loadComponent: () =>
+          import('./features/body-metrics/progress/body-metrics-progress.component').then(
+            (m) => m.BodyMetricsProgressComponent,
+          ),
+      },
+      {
         path: 'body-metrics/:id',
         loadComponent: () =>
           import('./features/body-metrics/details/body-metrics-detail.component').then(

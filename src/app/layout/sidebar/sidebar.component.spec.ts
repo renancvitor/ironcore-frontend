@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
-import { By } from '@angular/platform-browser';
 import { MatExpansionPanel } from '@angular/material/expansion';
+import { By } from '@angular/platform-browser';
+import { provideRouter, Router } from '@angular/router';
 
 import { SidebarComponent } from './sidebar.component';
 
@@ -12,7 +12,12 @@ describe('SidebarComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SidebarComponent],
-      providers: [provideRouter([{ path: 'body-metrics', component: SidebarComponent }])],
+      providers: [
+        provideRouter([
+          { path: 'body-metrics', component: SidebarComponent },
+          { path: 'body-metrics/progress', component: SidebarComponent },
+        ]),
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SidebarComponent);
@@ -57,5 +62,25 @@ describe('SidebarComponent', () => {
       .componentInstance as MatExpansionPanel;
 
     expect(panel.expanded).toBe(true);
+  });
+
+  it('opens evolution, highlights only its link and expands the body metrics group', async () => {
+    const link = fixture.nativeElement.querySelector(
+      'a[href="/body-metrics/progress"]',
+    ) as HTMLAnchorElement;
+    expect(link.textContent).toContain('Evolução');
+    link.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(TestBed.inject(Router).url).toBe('/body-metrics/progress');
+    expect(link.classList.contains('ic-sidebar__link--active')).toBe(true);
+    expect(
+      fixture.nativeElement
+        .querySelector('a[href="/body-metrics"]')
+        .classList.contains('ic-sidebar__link--active'),
+    ).toBe(false);
+    expect(
+      fixture.debugElement.query(By.directive(MatExpansionPanel)).componentInstance.expanded,
+    ).toBe(true);
   });
 });

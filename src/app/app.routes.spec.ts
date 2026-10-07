@@ -1,16 +1,23 @@
-import { LoginComponent } from './features/auth/login/login.component';
-import { FirstAccessComponent } from './features/auth/first-access/first-access.component';
-import { authGuard } from './core/guards/auth.guard';
-import { AuthStateService } from './core/auth/auth-state.service';
-import { API_BASE_URL } from './core/http/api-base-url.token';
-import { AppShellComponent } from './layout/app-shell/app-shell.component';
-import { HomeComponent } from './features/home/home.component';
-import { ProfileComponent } from './features/profile/profile.component';
-import { ChangePasswordComponent } from './features/profile/change-password/change-password.component';
-import { BodyMetricsHistoryComponent } from './features/body-metrics/history/body-metrics-history.component';
-import { BodyMetricsDetailComponent } from './features/body-metrics/details/body-metrics-detail.component';
-import { BodyMetricsLatestComponent } from './features/body-metrics/latest/body-metrics-latest.component';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+
 import { routes } from './app.routes';
+import { AuthStateService } from './core/auth/auth-state.service';
+import { authGuard } from './core/guards/auth.guard';
+import { API_BASE_URL } from './core/http/api-base-url.token';
+import { FirstAccessComponent } from './features/auth/first-access/first-access.component';
+import { LoginComponent } from './features/auth/login/login.component';
+import { BodyMetricsDetailComponent } from './features/body-metrics/details/body-metrics-detail.component';
+import { BodyMetricsHistoryComponent } from './features/body-metrics/history/body-metrics-history.component';
+import { BodyMetricsLatestComponent } from './features/body-metrics/latest/body-metrics-latest.component';
+import { BodyMetricsProgressComponent } from './features/body-metrics/progress/body-metrics-progress.component';
+import { HomeComponent } from './features/home/home.component';
+import { ChangePasswordComponent } from './features/profile/change-password/change-password.component';
+import { ProfileComponent } from './features/profile/profile.component';
+import { AppShellComponent } from './layout/app-shell/app-shell.component';
 
 describe('application routes', () => {
   it('should load login as a public route', async () => {
@@ -80,6 +87,14 @@ describe('application routes', () => {
     );
     expect(await children[latestIndex].loadComponent?.()).toBe(BodyMetricsLatestComponent);
   });
+
+  it('lazy loads one evolution screen before the dynamic detail route', async () => {
+    const children = routes.find((route) => route.path === '')!.children!;
+    const index = children.findIndex((route) => route.path === 'body-metrics/progress');
+    expect(index).toBeGreaterThanOrEqual(0);
+    expect(index).toBeLessThan(children.findIndex((route) => route.path === 'body-metrics/:id'));
+    expect(await children[index].loadComponent?.()).toBe(BodyMetricsProgressComponent);
+  });
 });
 
 describe('lazy route authentication', () => {
@@ -101,6 +116,7 @@ describe('lazy route authentication', () => {
     '/change-password',
     '/body-metrics',
     '/body-metrics/latest',
+    '/body-metrics/progress',
     '/body-metrics/1',
   ])('should redirect unauthenticated access to %s to login', async (url) => {
     const harness = await RouterTestingHarness.create();
@@ -111,11 +127,6 @@ describe('lazy route authentication', () => {
     expect(harness.routeNativeElement?.querySelector('app-app-shell')).toBeNull();
   });
 });
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
-import { RouterTestingHarness } from '@angular/router/testing';
 
 describe('independent body metrics screens', () => {
   it.each([
@@ -138,9 +149,11 @@ describe('independent body metrics screens', () => {
         nickname: 'Teste',
         mustChangePassword: false,
       });
+
       const http = TestBed.inject(HttpTestingController);
       const harness = await RouterTestingHarness.create();
       await harness.navigateByUrl(url);
+
       const request = http.expectOne(`/api/users/me${url}`);
       request.flush({
         id: 42,
@@ -156,12 +169,15 @@ describe('independent body metrics screens', () => {
         updatedAt: null,
       });
       harness.detectChanges();
+
       expect(harness.routeNativeElement?.querySelector(selector)).toBeTruthy();
       expect(harness.routeNativeElement?.querySelector(absent)).toBeNull();
+
       const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
       (
         harness.routeNativeElement?.querySelector(`${selector} button`) as HTMLButtonElement
       ).click();
+
       expect(navigate).toHaveBeenCalledExactlyOnceWith([returnUrl]);
       http.verify();
     },
