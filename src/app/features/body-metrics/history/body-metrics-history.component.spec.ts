@@ -194,10 +194,27 @@ describe('BodyMetricsHistoryComponent', () => {
   });
 
   it('opens evolution from the header action even while history loads', () => {
-    const button = fixture.nativeElement.querySelector('app-button button') as HTMLButtonElement;
+    const button = Array.from(
+      fixture.nativeElement.querySelectorAll('app-button button') as NodeListOf<HTMLButtonElement>,
+    ).find((button) => button.textContent?.includes('Ver evolução'))!;
     expect(button.textContent).toContain('Ver evolução');
     button.click();
     expect(navigate).toHaveBeenCalledExactlyOnceWith(['/body-metrics/progress']);
+  });
+
+  it.each(['loading', 'empty'] as const)('opens creation from the %s history', (state) => {
+    if (state === 'empty') {
+      firstRequest.next({
+        metrics: { content: [], page: 0, size: 20, totalElements: 0, totalPages: 0, last: true },
+      });
+      firstRequest.complete();
+      fixture.detectChanges();
+    }
+    const button = Array.from(
+      fixture.nativeElement.querySelectorAll('app-button button') as NodeListOf<HTMLButtonElement>,
+    ).find((button) => button.textContent?.includes('Nova avaliação'))!;
+    button.click();
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/body-metrics/create']);
   });
 
   it('shows the backend error and navigates home only after the dialog closes', () => {
