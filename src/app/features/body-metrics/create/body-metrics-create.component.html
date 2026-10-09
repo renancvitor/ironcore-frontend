@@ -1,0 +1,368 @@
+<section class="ic-body-metrics-create">
+  <header class="ic-body-metrics-create__header">
+    <div>
+      <h1>Nova avaliação corporal</h1>
+      <p>Registre seus dados corporais para acompanhar sua evolução ao longo do tempo.</p>
+    </div>
+  </header>
+
+  <form class="ic-body-metrics-create__form" [formGroup]="form" (ngSubmit)="createBodyMetrics()">
+    <section class="ic-body-metrics-create__card" aria-labelledby="main-data-title">
+      <header class="ic-body-metrics-create__section-header">
+        <h2 id="main-data-title">Dados principais</h2>
+        <p>Peso e altura são obrigatórios para registrar a avaliação.</p>
+      </header>
+
+      <div class="ic-body-metrics-create__grid ic-body-metrics-create__grid--main">
+        <div class="ic-body-metrics-create__field">
+          <label for="weightKg">
+            Peso
+            <span aria-hidden="true">*</span>
+          </label>
+
+          <div class="ic-body-metrics-create__input-wrapper">
+            <input
+              id="weightKg"
+              type="number"
+              inputmode="decimal"
+              step="any"
+              formControlName="weightKg"
+              [attr.aria-invalid]="form.controls.weightKg.invalid && form.controls.weightKg.touched"
+              [attr.aria-describedby]="
+                form.controls.weightKg.invalid && form.controls.weightKg.touched
+                  ? 'weightKg-error'
+                  : null
+              "
+            />
+
+            <span class="ic-body-metrics-create__unit">kg</span>
+          </div>
+
+          @if (form.controls.weightKg.touched && form.controls.weightKg.hasError('required')) {
+            <p id="weightKg-error" class="ic-body-metrics-create__field-error">Informe o peso.</p>
+          } @else if (
+            form.controls.weightKg.touched && form.controls.weightKg.hasError('positive')
+          ) {
+            <p id="weightKg-error" class="ic-body-metrics-create__field-error">
+              O peso deve ser maior do que zero.
+            </p>
+          } @else if (form.controls.weightKg.touched && form.controls.weightKg.hasError('max')) {
+            <p id="weightKg-error" class="ic-body-metrics-create__field-error">
+              O peso não pode ultrapassar 500 kg.
+            </p>
+          }
+        </div>
+
+        <div class="ic-body-metrics-create__field">
+          <label for="heightCm">
+            Altura
+            <span aria-hidden="true">*</span>
+          </label>
+
+          <div class="ic-body-metrics-create__input-wrapper">
+            <input
+              id="heightCm"
+              type="number"
+              inputmode="decimal"
+              step="any"
+              formControlName="heightCm"
+              [attr.aria-invalid]="form.controls.heightCm.invalid && form.controls.heightCm.touched"
+              [attr.aria-describedby]="
+                form.controls.heightCm.invalid && form.controls.heightCm.touched
+                  ? 'heightCm-error'
+                  : null
+              "
+            />
+
+            <span class="ic-body-metrics-create__unit">cm</span>
+          </div>
+
+          @if (form.controls.heightCm.touched && form.controls.heightCm.hasError('required')) {
+            <p id="heightCm-error" class="ic-body-metrics-create__field-error">Informe a altura.</p>
+          } @else if (
+            form.controls.heightCm.touched && form.controls.heightCm.hasError('positive')
+          ) {
+            <p id="heightCm-error" class="ic-body-metrics-create__field-error">
+              A altura deve ser maior do que zero.
+            </p>
+          } @else if (form.controls.heightCm.touched && form.controls.heightCm.hasError('max')) {
+            <p id="heightCm-error" class="ic-body-metrics-create__field-error">
+              A altura não pode ultrapassar 300 cm.
+            </p>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="ic-body-metrics-create__card" aria-labelledby="circumferences-title">
+      <header class="ic-body-metrics-create__section-header">
+        <h2 id="circumferences-title">Circunferências</h2>
+        <p>Campos opcionais. Preencha apenas as medidas disponíveis na avaliação.</p>
+      </header>
+
+      <div class="ic-body-metrics-create__grid">
+        <div class="ic-body-metrics-create__field">
+          <label for="neckCm">Pescoço</label>
+
+          <div class="ic-body-metrics-create__input-wrapper">
+            <input
+              id="neckCm"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="any"
+              formControlName="neckCm"
+              [attr.aria-invalid]="form.controls.neckCm.invalid && form.controls.neckCm.touched"
+              [attr.aria-describedby]="circumferenceError('neckCm') ? 'neckCm-error' : null"
+            />
+
+            <span class="ic-body-metrics-create__unit">cm</span>
+          </div>
+
+          @if (circumferenceError('neckCm'); as error) {
+            <p id="neckCm-error" class="ic-body-metrics-create__field-error">
+              {{ error }}
+            </p>
+          }
+        </div>
+
+        <div class="ic-body-metrics-create__field">
+          <label for="chestCm">Peitoral</label>
+
+          <div class="ic-body-metrics-create__input-wrapper">
+            <input
+              id="chestCm"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="any"
+              formControlName="chestCm"
+              [attr.aria-invalid]="form.controls.chestCm.invalid && form.controls.chestCm.touched"
+              [attr.aria-describedby]="circumferenceError('chestCm') ? 'chestCm-error' : null"
+            />
+
+            <span class="ic-body-metrics-create__unit">cm</span>
+          </div>
+
+          @if (circumferenceError('chestCm'); as error) {
+            <p id="chestCm-error" class="ic-body-metrics-create__field-error">
+              {{ error }}
+            </p>
+          }
+        </div>
+
+        <div class="ic-body-metrics-create__field">
+          <label for="shoulderCm">Ombros</label>
+
+          <div class="ic-body-metrics-create__input-wrapper">
+            <input
+              id="shoulderCm"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="any"
+              formControlName="shoulderCm"
+              [attr.aria-invalid]="
+                form.controls.shoulderCm.invalid && form.controls.shoulderCm.touched
+              "
+              [attr.aria-describedby]="circumferenceError('shoulderCm') ? 'shoulderCm-error' : null"
+            />
+
+            <span class="ic-body-metrics-create__unit">cm</span>
+          </div>
+
+          @if (circumferenceError('shoulderCm'); as error) {
+            <p id="shoulderCm-error" class="ic-body-metrics-create__field-error">
+              {{ error }}
+            </p>
+          }
+        </div>
+
+        <div class="ic-body-metrics-create__field">
+          <label for="armCm">Braço</label>
+
+          <div class="ic-body-metrics-create__input-wrapper">
+            <input
+              id="armCm"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="any"
+              formControlName="armCm"
+              [attr.aria-invalid]="form.controls.armCm.invalid && form.controls.armCm.touched"
+              [attr.aria-describedby]="circumferenceError('armCm') ? 'armCm-error' : null"
+            />
+
+            <span class="ic-body-metrics-create__unit">cm</span>
+          </div>
+
+          @if (circumferenceError('armCm'); as error) {
+            <p id="armCm-error" class="ic-body-metrics-create__field-error">
+              {{ error }}
+            </p>
+          }
+        </div>
+
+        <div class="ic-body-metrics-create__field">
+          <label for="forearmCm">Antebraço</label>
+
+          <div class="ic-body-metrics-create__input-wrapper">
+            <input
+              id="forearmCm"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="any"
+              formControlName="forearmCm"
+              [attr.aria-invalid]="
+                form.controls.forearmCm.invalid && form.controls.forearmCm.touched
+              "
+              [attr.aria-describedby]="circumferenceError('forearmCm') ? 'forearmCm-error' : null"
+            />
+
+            <span class="ic-body-metrics-create__unit">cm</span>
+          </div>
+
+          @if (circumferenceError('forearmCm'); as error) {
+            <p id="forearmCm-error" class="ic-body-metrics-create__field-error">
+              {{ error }}
+            </p>
+          }
+        </div>
+
+        <div class="ic-body-metrics-create__field">
+          <label for="waistCm">Cintura</label>
+
+          <div class="ic-body-metrics-create__input-wrapper">
+            <input
+              id="waistCm"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="any"
+              formControlName="waistCm"
+              [attr.aria-invalid]="form.controls.waistCm.invalid && form.controls.waistCm.touched"
+              [attr.aria-describedby]="circumferenceError('waistCm') ? 'waistCm-error' : null"
+            />
+
+            <span class="ic-body-metrics-create__unit">cm</span>
+          </div>
+
+          @if (circumferenceError('waistCm'); as error) {
+            <p id="waistCm-error" class="ic-body-metrics-create__field-error">
+              {{ error }}
+            </p>
+          }
+        </div>
+
+        <div class="ic-body-metrics-create__field">
+          <label for="hipCm">Quadril</label>
+
+          <div class="ic-body-metrics-create__input-wrapper">
+            <input
+              id="hipCm"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="any"
+              formControlName="hipCm"
+              [attr.aria-invalid]="form.controls.hipCm.invalid && form.controls.hipCm.touched"
+              [attr.aria-describedby]="circumferenceError('hipCm') ? 'hipCm-error' : null"
+            />
+
+            <span class="ic-body-metrics-create__unit">cm</span>
+          </div>
+
+          @if (circumferenceError('hipCm'); as error) {
+            <p id="hipCm-error" class="ic-body-metrics-create__field-error">
+              {{ error }}
+            </p>
+          }
+        </div>
+
+        <div class="ic-body-metrics-create__field">
+          <label for="thighCm">Coxa</label>
+
+          <div class="ic-body-metrics-create__input-wrapper">
+            <input
+              id="thighCm"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="any"
+              formControlName="thighCm"
+              [attr.aria-invalid]="form.controls.thighCm.invalid && form.controls.thighCm.touched"
+              [attr.aria-describedby]="circumferenceError('thighCm') ? 'thighCm-error' : null"
+            />
+
+            <span class="ic-body-metrics-create__unit">cm</span>
+          </div>
+
+          @if (circumferenceError('thighCm'); as error) {
+            <p id="thighCm-error" class="ic-body-metrics-create__field-error">
+              {{ error }}
+            </p>
+          }
+        </div>
+
+        <div class="ic-body-metrics-create__field">
+          <label for="calfCm">Panturrilha</label>
+
+          <div class="ic-body-metrics-create__input-wrapper">
+            <input
+              id="calfCm"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="any"
+              formControlName="calfCm"
+              [attr.aria-invalid]="form.controls.calfCm.invalid && form.controls.calfCm.touched"
+              [attr.aria-describedby]="circumferenceError('calfCm') ? 'calfCm-error' : null"
+            />
+
+            <span class="ic-body-metrics-create__unit">cm</span>
+          </div>
+
+          @if (circumferenceError('calfCm'); as error) {
+            <p id="calfCm-error" class="ic-body-metrics-create__field-error">
+              {{ error }}
+            </p>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="ic-body-metrics-create__card" aria-labelledby="notes-title">
+      <header class="ic-body-metrics-create__section-header">
+        <h2 id="notes-title">Observações</h2>
+        <p>Adicione alguma informação relevante sobre esta avaliação.</p>
+      </header>
+
+      <div class="ic-body-metrics-create__field">
+        <label for="notes">Observações</label>
+
+        <textarea
+          id="notes"
+          rows="4"
+          formControlName="notes"
+          placeholder="Ex.: avaliação realizada pela manhã, em jejum..."
+        ></textarea>
+      </div>
+    </section>
+
+    <footer class="ic-body-metrics-create__actions">
+      <app-button
+        type="button"
+        variant="secondary"
+        [disabled]="loading()"
+        (click)="backToHistory()"
+      >
+        Cancelar
+      </app-button>
+
+      <app-button type="submit" variant="primary" [disabled]="loading()">
+        {{ loading() ? 'Salvando...' : 'Salvar avaliação' }}
+      </app-button>
+    </footer>
+  </form>
+</section>

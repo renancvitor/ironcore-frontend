@@ -106,6 +106,12 @@ mat-paginator {
   }
 }
 
+.ic-body-metrics-history__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ic-space-3);
+}
+
 @include responsive.tablet {
   .ic-body-metrics-history {
     gap: var(--ic-space-4);
@@ -119,6 +125,12 @@ mat-paginator {
 
   .ic-body-metrics-history__header {
     flex-direction: column;
+  }
+
+  .ic-body-metrics-history__actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .ic-body-metrics-history__table th,

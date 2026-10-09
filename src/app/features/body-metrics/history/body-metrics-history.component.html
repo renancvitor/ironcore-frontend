@@ -4,7 +4,12 @@
       <h1>Medidas corporais</h1>
       <p>Consulte o histórico das suas avaliações corporais.</p>
     </div>
-    <app-button variant="primary" (click)="openProgress()">Ver evolução</app-button>
+
+    <div class="ic-body-metrics-history__actions">
+      <app-button variant="secondary" (click)="openProgress()"> Ver evolução </app-button>
+
+      <app-button variant="primary" (click)="openCreate()"> Nova avaliação </app-button>
+    </div>
   </header>
 
   @if (loading()) {
