@@ -52,6 +52,10 @@ export class BodyMetricsHistoryComponent {
     void this.router.navigate(['/body-metrics/progress']);
   }
 
+  openCreate(): void {
+    void this.router.navigate(['/body-metrics/create']);
+  }
+
   private loadBodyMetricsHistory(page?: number, size?: number): void {
     this.loading.set(true);
 
