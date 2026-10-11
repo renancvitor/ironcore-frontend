@@ -1,0 +1,153 @@
+@use '../../../../styles/responsive' as responsive;
+
+:host {
+  display: block;
+}
+
+.ic-metric-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ic-space-4);
+}
+
+.ic-metric-fields--main {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ic-metric-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ic-space-2);
+  min-width: 0;
+
+  label {
+    color: var(--ic-text-primary);
+    font-weight: 600;
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: var(--ic-space-3);
+    border: var(--ic-border-width-default) solid var(--ic-border-soft);
+    border-radius: var(--ic-radius-sm);
+    background: var(--ic-surface);
+    color: var(--ic-text-primary);
+    font: inherit;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--ic-primary);
+      box-shadow: 0 0 0 var(--ic-focus-ring-width)
+        color-mix(in srgb, var(--ic-primary) 20%, transparent);
+    }
+    &[aria-invalid='true'] {
+      border-color: var(--ic-field-error);
+    }
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.65;
+    }
+  }
+
+  textarea {
+    min-height: 7rem;
+    resize: vertical;
+  }
+}
+
+.ic-metric-field__control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ic-space-2);
+  min-width: 0;
+}
+
+.ic-metric-field__input-wrapper {
+  position: relative;
+  input {
+    padding-right: 3.5rem;
+  }
+}
+
+.ic-metric-field__unit {
+  position: absolute;
+  top: 50%;
+  right: var(--ic-space-3);
+  transform: translateY(-50%);
+  color: var(--ic-text-secondary);
+  pointer-events: none;
+}
+
+.ic-metric-field__error {
+  margin: 0;
+  color: var(--ic-field-error);
+  font-size: var(--ic-font-size-sm);
+  line-height: 1.4;
+}
+
+.ic-metric-field--padded {
+  padding: var(--ic-space-4);
+}
+
+.ic-metric-fields--rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  .ic-metric-field {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--ic-space-4);
+    min-height: 56px;
+    padding: var(--ic-space-3) var(--ic-space-4);
+    border-bottom: var(--ic-border-width-default) solid var(--ic-border-soft);
+
+    label {
+      padding-top: var(--ic-space-3);
+      color: var(--ic-text-secondary);
+      font-weight: 500;
+    }
+  }
+
+  .ic-metric-field__control {
+    width: min(100%, 220px);
+  }
+
+  &:not(.ic-metric-fields--main) .ic-metric-field:last-child {
+    border-bottom: 0;
+  }
+}
+
+@include responsive.tablet {
+  .ic-metric-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@include responsive.mobile {
+  .ic-metric-fields {
+    grid-template-columns: 1fr;
+  }
+  .ic-metric-field--padded {
+    padding: var(--ic-space-3);
+  }
+  .ic-metric-fields--rows {
+    .ic-metric-field {
+      flex-direction: column;
+      gap: var(--ic-space-2);
+      padding: var(--ic-space-3);
+      label {
+        padding-top: 0;
+      }
+    }
+    .ic-metric-field__control {
+      width: 100%;
+    }
+  }
+}

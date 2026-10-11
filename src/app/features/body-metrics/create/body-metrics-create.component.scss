@@ -57,92 +57,6 @@
   }
 }
 
-.ic-body-metrics-create__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--ic-space-4);
-}
-
-.ic-body-metrics-create__grid--main {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.ic-body-metrics-create__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ic-space-2);
-
-  label {
-    color: var(--ic-text-primary);
-    font-weight: 600;
-  }
-
-  input,
-  textarea {
-    width: 100%;
-    box-sizing: border-box;
-
-    padding: var(--ic-space-3);
-
-    border: var(--ic-border-width-default) solid var(--ic-border-soft);
-    border-radius: var(--ic-radius-sm);
-    background: var(--ic-surface);
-    color: var(--ic-text-primary);
-    font: inherit;
-
-    transition:
-      border-color 0.15s ease,
-      box-shadow 0.15s ease;
-
-    &:focus {
-      outline: none;
-      border-color: var(--ic-primary);
-      box-shadow: 0 0 0 var(--ic-focus-ring-width)
-        color-mix(in srgb, var(--ic-primary) 20%, transparent);
-    }
-
-    &[aria-invalid='true'] {
-      border-color: var(--ic-field-error);
-    }
-
-    &:disabled {
-      cursor: not-allowed;
-      opacity: 0.65;
-    }
-  }
-
-  textarea {
-    min-height: 7rem;
-    resize: vertical;
-  }
-}
-
-.ic-body-metrics-create__input-wrapper {
-  position: relative;
-
-  input {
-    padding-right: 3.5rem;
-  }
-}
-
-.ic-body-metrics-create__unit {
-  position: absolute;
-  top: 50%;
-  right: var(--ic-space-3);
-  transform: translateY(-50%);
-
-  color: var(--ic-text-secondary);
-  pointer-events: none;
-}
-
-.ic-body-metrics-create__field-error {
-  margin: 0;
-
-  color: var(--ic-field-error);
-  font-size: var(--ic-font-size-sm);
-  line-height: 1.4;
-}
-
 .ic-body-metrics-create__actions {
   display: flex;
   justify-content: flex-end;
@@ -153,10 +67,6 @@
 @include responsive.tablet {
   .ic-body-metrics-create {
     gap: var(--ic-space-4);
-  }
-
-  .ic-body-metrics-create__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -171,11 +81,6 @@
 
   .ic-body-metrics-create__card {
     padding: var(--ic-space-4);
-  }
-
-  .ic-body-metrics-create__grid,
-  .ic-body-metrics-create__grid--main {
-    grid-template-columns: 1fr;
   }
 
   .ic-body-metrics-create__actions {
