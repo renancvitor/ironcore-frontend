@@ -23,6 +23,7 @@
         type="button"
         aria-label="Voltar ao histórico"
         matTooltip="Voltar ao histórico"
+        [disabled]="saving()"
         (click)="backToHistory()"
       >
         <mat-icon>arrow_back</mat-icon>

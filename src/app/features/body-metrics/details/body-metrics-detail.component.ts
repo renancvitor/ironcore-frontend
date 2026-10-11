@@ -208,6 +208,10 @@ export class BodyMetricsDetailComponent implements OnInit {
   }
 
   backToHistory(): void {
+    if (this.saving()) {
+      return;
+    }
+
     void this.router.navigate(['/body-metrics']);
   }
 }

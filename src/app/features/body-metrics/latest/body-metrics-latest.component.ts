@@ -10,13 +10,11 @@ import { BodyMetricsService } from '../body-metrics.service';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { GetLatestBodyMetricsResponse } from '../body-metrics.models';
 
-import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 
 @Component({
   selector: 'app-body-metrics-latest',
   imports: [
-    ButtonComponent,
     LoadingComponent,
     DatePipe,
     DecimalPipe,

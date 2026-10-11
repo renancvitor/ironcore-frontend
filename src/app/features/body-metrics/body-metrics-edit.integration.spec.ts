@@ -172,7 +172,7 @@ describe('body metrics editing across routes', () => {
     http.expectOne(`${endpoint}/42`).flush(original);
     harness.detectChanges();
     Array.from(harness.routeNativeElement!.querySelectorAll('button'))
-      .find((button) => button.textContent?.includes('Editar avaliação'))!
+      .find((button) => button.getAttribute('aria-label') === 'Editar avaliação')!
       .click();
     harness.detectChanges();
     for (const [name, value] of [

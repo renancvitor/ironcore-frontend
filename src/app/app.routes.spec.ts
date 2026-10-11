@@ -551,7 +551,12 @@ describe('independent body metrics screens', () => {
       const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
       const returnButton = Array.from(
         harness.routeNativeElement!.querySelectorAll<HTMLButtonElement>(`${selector} button`),
-      ).find((button) => button.textContent?.includes('Voltar'))!;
+      ).find(
+        (button) =>
+          button.getAttribute('aria-label') ===
+          (returnUrl === '/' ? 'Voltar ao início' : 'Voltar ao histórico'),
+      )!;
+      expect(returnButton).toBeDefined();
       returnButton.click();
 
       expect(navigate).toHaveBeenCalledExactlyOnceWith([returnUrl]);

@@ -145,7 +145,7 @@ describe('BodyMetricsHistoryComponent', () => {
       paginator().nextPage();
       (fixture.nativeElement.querySelector('tr[mat-row]') as HTMLElement).click();
       for (const button of fixture.nativeElement.querySelectorAll(
-        'app-button button',
+        '.ic-body-metrics-history__actions button',
       ) as NodeListOf<HTMLButtonElement>)
         button.click();
       expect(openDialog).toHaveBeenCalledTimes(1);
@@ -376,9 +376,9 @@ describe('BodyMetricsHistoryComponent', () => {
 
   it('opens evolution from the header action even while history loads', () => {
     const button = Array.from(
-      fixture.nativeElement.querySelectorAll('app-button button') as NodeListOf<HTMLButtonElement>,
-    ).find((button) => button.textContent?.includes('Ver evolução'))!;
-    expect(button.textContent).toContain('Ver evolução');
+      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+    ).find((button) => button.getAttribute('aria-label') === 'Ver evolução')!;
+    expect(button).toBeDefined();
     button.click();
     expect(navigate).toHaveBeenCalledExactlyOnceWith(['/body-metrics/progress']);
   });
@@ -392,8 +392,9 @@ describe('BodyMetricsHistoryComponent', () => {
       fixture.detectChanges();
     }
     const button = Array.from(
-      fixture.nativeElement.querySelectorAll('app-button button') as NodeListOf<HTMLButtonElement>,
-    ).find((button) => button.textContent?.includes('Nova avaliação'))!;
+      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+    ).find((button) => button.getAttribute('aria-label') === 'Nova avaliação')!;
+    expect(button).toBeDefined();
     button.click();
     expect(navigate).toHaveBeenCalledExactlyOnceWith(['/body-metrics/create']);
   });

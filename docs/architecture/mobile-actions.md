@@ -39,13 +39,15 @@ As regras novas não se aplicam a tablet/desktop.
 
 ## Validação realizada
 
-- `npm.cmd run build`: aprovado. Permanecem os avisos NG8113 de imports de
+- `npm.cmd run build`: aprovado, sem avisos. Removidos os imports de
   ButtonComponent não utilizados em ProfileComponent e BodyMetricsLatestComponent.
-- `npm.cmd test -- --watch=false`: 309 aprovados e 25 falhas em 4 arquivos.
-  Uma cópia isolada com os estilos originais de HEAD reproduziu exatamente as
-  mesmas 25 falhas: testes de rotas, integração de edição, detalhes e histórico
-  ainda procuram ações por texto visível quando os templates usam ícones.
-  Esses testes não foram alterados nesta revisão visual.
+- `npm.cmd test -- --watch=false`: 334 testes aprovados em 40 arquivos.
+  Na validação inicial, 25 testes falhavam também com os estilos anteriores.
+  Os seletores de ações com ícones foram corrigidos para usar `aria-label`.
+  Isso revelou uma regressão no botão de retorno da edição: agora ele fica
+  desabilitado durante o salvamento, e o handler também bloqueia a navegação.
+  O teste verifica o bloqueio enquanto a requisição está pendente e a liberação
+  ao término, sem remover as verificações de envio duplicado e cancelamento.
 - Chrome headless com respostas de API simuladas: 10 rotas em 320, 390, 600,
   768 e 1440px, mais edição de perfil, edição de avaliação e diálogo de exclusão
   em cada largura (65 cenários). Checados overflow da página, alinhamento dos
