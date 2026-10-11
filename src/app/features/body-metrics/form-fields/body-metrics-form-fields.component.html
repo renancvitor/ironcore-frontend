@@ -1,0 +1,53 @@
+@if (section() === 'notes') {
+  <div
+    class="ic-metric-field ic-metric-field--notes"
+    [class.ic-metric-field--padded]="layout() === 'rows'"
+  >
+    <label for="notes">Observações</label>
+    <textarea
+      id="notes"
+      rows="4"
+      [formControl]="form().controls.notes"
+      placeholder="Ex.: avaliação realizada pela manhã, em jejum..."
+    ></textarea>
+  </div>
+} @else {
+  <div
+    class="ic-metric-fields"
+    [class.ic-metric-fields--main]="section() === 'main'"
+    [class.ic-metric-fields--rows]="layout() === 'rows'"
+  >
+    @for (field of fields; track field.name) {
+      <div class="ic-metric-field">
+        <label [for]="field.name">
+          {{ field.label }}
+          @if (field.required) {
+            <span aria-hidden="true">*</span>
+          }
+        </label>
+
+        <div class="ic-metric-field__control">
+          <div class="ic-metric-field__input-wrapper">
+            <input
+              [id]="field.name"
+              type="number"
+              inputmode="decimal"
+              step="any"
+              [formControl]="form().controls[field.name]"
+              [attr.aria-required]="field.required ? 'true' : null"
+              [attr.aria-invalid]="
+                form().controls[field.name].invalid && form().controls[field.name].touched
+              "
+              [attr.aria-describedby]="errorMessage(field.name) ? field.name + '-error' : null"
+            />
+            <span class="ic-metric-field__unit">{{ field.unit }}</span>
+          </div>
+
+          @if (errorMessage(field.name); as error) {
+            <p [id]="field.name + '-error'" class="ic-metric-field__error">{{ error }}</p>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}
