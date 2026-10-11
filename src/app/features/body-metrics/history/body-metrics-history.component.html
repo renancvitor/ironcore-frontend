@@ -6,11 +6,33 @@
     </div>
 
     <div class="ic-body-metrics-history__actions">
-      <app-button variant="secondary" (click)="openProgress()"> Ver evolução </app-button>
+      <button
+        matIconButton
+        type="button"
+        aria-label="Ver evolução"
+        matTooltip="Ver evolução"
+        [disabled]="deletingId() !== null"
+        (click)="openProgress()"
+      >
+        <mat-icon>show_chart</mat-icon>
+      </button>
 
-      <app-button variant="primary" (click)="openCreate()"> Nova avaliação </app-button>
+      <button
+        matIconButton
+        type="button"
+        aria-label="Nova avaliação"
+        matTooltip="Nova avaliação"
+        [disabled]="deletingId() !== null"
+        (click)="openCreate()"
+      >
+        <mat-icon>add</mat-icon>
+      </button>
     </div>
   </header>
+
+  @if (deletingId() !== null) {
+    <p role="status">Excluindo avaliação corporal. Aguarde para sair desta página.</p>
+  }
 
   @if (loading()) {
     <app-loading />
@@ -57,6 +79,26 @@
 
                 <td mat-cell *matCellDef="let metric">
                   {{ metric.notes || '—' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef aria-label="Ações"></th>
+
+                <td mat-cell *matCellDef="let metric" class="ic-body-metrics-history__actions-cell">
+                  <button
+                    matIconButton
+                    type="button"
+                    class="ic-body-metrics-history__delete-button"
+                    aria-label="Excluir avaliação corporal"
+                    matTooltip="Excluir avaliação"
+                    [disabled]="deletingId() === metric.id"
+                    (click)="$event.stopPropagation(); deleteBodyMetrics(metric.id)"
+                    (keydown.enter)="$event.stopPropagation()"
+                    (keydown.space)="$event.stopPropagation()"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
                 </td>
               </ng-container>
 

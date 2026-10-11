@@ -130,7 +130,7 @@ describe('BodyMetricsDetailComponent', () => {
     fixture.detectChanges();
     const edit = Array.from(
       fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
-    ).find((button) => button.textContent?.includes('Editar avaliação'))!;
+    ).find((button) => button.getAttribute('aria-label') === 'Editar avaliação')!;
     edit.click();
     fixture.detectChanges();
   }
@@ -209,6 +209,7 @@ describe('BodyMetricsDetailComponent', () => {
     );
     expect(buttons.every((button) => button.disabled)).toBe(true);
     buttons.forEach((button) => button.click());
+    fixture.componentInstance.backToHistory();
     fixture.nativeElement
       .querySelector('form')
       .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
@@ -217,6 +218,13 @@ describe('BodyMetricsDetailComponent', () => {
     expect(fixture.componentInstance.editing()).toBe(true);
     expect(success).not.toHaveBeenCalled();
     pending.complete();
+    fixture.detectChanges();
+    const back = fixture.nativeElement.querySelector(
+      'button[aria-label="Voltar ao histórico"]',
+    ) as HTMLButtonElement;
+    expect(back.disabled).toBe(false);
+    back.click();
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/body-metrics']);
   });
 
   it.each([
@@ -424,8 +432,8 @@ describe('BodyMetricsDetailComponent', () => {
       fixture.detectChanges();
       const button = Array.from(
         fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
-      ).find((button) => button.textContent?.includes(label))!;
-      expect(button.textContent).toContain(label);
+      ).find((button) => button.getAttribute('aria-label') === label)!;
+      expect(button).toBeDefined();
       button.click();
 
       expect(navigate).toHaveBeenCalledWith([destination]);

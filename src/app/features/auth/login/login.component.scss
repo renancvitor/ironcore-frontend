@@ -64,6 +64,10 @@
 }
 
 @include responsive.mobile {
+  .ic-login__form > app-button {
+    --ic-action-button-width: 100%;
+  }
+
   .ic-login {
     padding: var(--ic-space-3);
   }

@@ -1,4 +1,5 @@
 @use '@angular/material' as mat;
+@use '../../../../styles/responsive' as responsive;
 
 @mixin ironcore-button-material-overrides($text-color) {
   @include mat.button-overrides(
@@ -38,6 +39,21 @@
 
 .ic-button--full-width {
   width: 100%;
+}
+
+@include responsive.mobile {
+  .ic-button {
+    width: var(--ic-action-button-width, auto);
+    min-width: min(9rem, 100%);
+    min-height: 44px;
+    height: auto;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .ic-button--full-width {
+    width: 100%;
+  }
 }
 
 .ic-button--primary {

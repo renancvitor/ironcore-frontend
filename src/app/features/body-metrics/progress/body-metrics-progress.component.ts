@@ -2,6 +2,9 @@ import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { finalize, Observable, Subscription } from 'rxjs';
 
@@ -36,6 +39,9 @@ type BodyMetricsProgressView = BodyMetricsProgressChartType | 'CHANGES';
     EmptyStateComponent,
     BodyMetricsProgressChartComponent,
     BodyMetricsProgressChangesComponent,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
   ],
   templateUrl: './body-metrics-progress.component.html',
   styleUrl: './body-metrics-progress.component.scss',

@@ -7,14 +7,27 @@
 
     <div class="ic-body-metrics-detail__header-actions">
       @if (!editing()) {
-        <app-button type="button" variant="primary" [disabled]="loading()" (click)="startEdit()">
-          Editar avaliação
-        </app-button>
+        <button
+          matIconButton
+          type="button"
+          aria-label="Editar avaliação"
+          matTooltip="Editar avaliação"
+          (click)="startEdit()"
+        >
+          <mat-icon>edit</mat-icon>
+        </button>
       }
 
-      <app-button type="button" variant="secondary" [disabled]="saving()" (click)="backToHistory()">
-        Voltar ao histórico
-      </app-button>
+      <button
+        matIconButton
+        type="button"
+        aria-label="Voltar ao histórico"
+        matTooltip="Voltar ao histórico"
+        [disabled]="saving()"
+        (click)="backToHistory()"
+      >
+        <mat-icon>arrow_back</mat-icon>
+      </button>
     </div>
   </header>
 

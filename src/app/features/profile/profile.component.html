@@ -1,7 +1,19 @@
 <section class="ic-profile">
   <header class="ic-profile__header">
-    <h1>Perfil</h1>
-    <p>Gerencie os dados da sua conta e informações pessoais.</p>
+    <div>
+      <h1>Perfil</h1>
+      <p>Gerencie os dados da sua conta e informações pessoais.</p>
+    </div>
+
+    <button
+      matIconButton
+      type="button"
+      aria-label="Alterar senha"
+      matTooltip="Alterar senha"
+      (click)="changePassword()"
+    >
+      <mat-icon>lock_reset</mat-icon>
+    </button>
   </header>
 
   <section class="ic-profile__card">
@@ -21,6 +33,7 @@
               matIconButton
               type="button"
               aria-label="Salvar nickname"
+              matTooltip="Salvar"
               [disabled]="saving() || !canSave('nickname')"
               (click)="saveNickname()"
             >
@@ -31,6 +44,7 @@
               matIconButton
               type="button"
               aria-label="Cancelar edição do nickname"
+              matTooltip="Cancelar"
               [disabled]="saving()"
               (click)="cancelEdit()"
             >
@@ -47,6 +61,7 @@
               matIconButton
               type="button"
               aria-label="Editar nickname"
+              matTooltip="Editar nickname"
               (click)="startEdit('nickname')"
             >
               <mat-icon>edit</mat-icon>
@@ -70,6 +85,7 @@
                 matIconButton
                 type="button"
                 aria-label="Salvar nome"
+                matTooltip="Salvar"
                 [disabled]="saving() || !canSave('name')"
                 (click)="saveName()"
               >
@@ -80,6 +96,7 @@
                 matIconButton
                 type="button"
                 aria-label="Cancelar edição do nome"
+                matTooltip="Cancelar"
                 [disabled]="saving()"
                 (click)="cancelEdit()"
               >
@@ -94,6 +111,7 @@
                 matIconButton
                 type="button"
                 aria-label="Editar nome"
+                matTooltip="Editar nome"
                 (click)="startEdit('name')"
               >
                 <mat-icon>edit</mat-icon>
@@ -123,6 +141,7 @@
                 matIconButton
                 type="button"
                 aria-label="Salvar sexo"
+                matTooltip="Salvar"
                 [disabled]="saving() || !canSave('sex')"
                 (click)="saveSex()"
               >
@@ -133,6 +152,7 @@
                 matIconButton
                 type="button"
                 aria-label="Cancelar edição do sexo"
+                matTooltip="Cancelar"
                 [disabled]="saving()"
                 (click)="cancelEdit()"
               >
@@ -147,6 +167,7 @@
                 matIconButton
                 type="button"
                 aria-label="Editar sexo"
+                matTooltip="Editar sexo"
                 (click)="startEdit('sex')"
               >
                 <mat-icon>edit</mat-icon>
@@ -178,6 +199,7 @@
                 matIconButton
                 type="button"
                 aria-label="Salvar data de nascimento"
+                matTooltip="Salvar"
                 [disabled]="saving() || !canSave('birthDate')"
                 (click)="saveBirthDate()"
               >
@@ -188,6 +210,7 @@
                 matIconButton
                 type="button"
                 aria-label="Cancelar edição da data de nascimento"
+                matTooltip="Cancelar"
                 [disabled]="saving()"
                 (click)="cancelEdit()"
               >
@@ -202,6 +225,7 @@
                 matIconButton
                 type="button"
                 aria-label="Editar data de nascimento"
+                matTooltip="Editar data de nascimento"
                 (click)="startEdit('birthDate')"
               >
                 <mat-icon>edit</mat-icon>
@@ -212,8 +236,4 @@
       </div>
     }
   </section>
-
-  <app-button type="button" variant="primary" (click)="changePassword()">
-    Alterar senha
-  </app-button>
 </section>

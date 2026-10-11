@@ -10,16 +10,15 @@ import { Router } from '@angular/router';
 
 import { AuthStateService } from '../../core/auth/auth-state.service';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
-import { ButtonComponent } from '../../shared/components/button/button.component';
 import { InputComponent } from '../../shared/components/input/input.component';
 
 import { Person, EditableField, SexType } from './profile.models';
 import { ProfileService } from './profile.service';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-profile',
   imports: [
-    ButtonComponent,
     InputComponent,
     ReactiveFormsModule,
     MatButtonModule,
@@ -27,6 +26,7 @@ import { ProfileService } from './profile.service';
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
+    MatTooltipModule,
   ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',

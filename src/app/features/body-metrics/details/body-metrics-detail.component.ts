@@ -3,6 +3,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { BodyMetricsService } from '../body-metrics.service';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
@@ -24,6 +27,9 @@ import { BodyMetricsFormFieldsComponent } from '../form-fields/body-metrics-form
     DecimalPipe,
     ReactiveFormsModule,
     BodyMetricsFormFieldsComponent,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
   ],
   templateUrl: './body-metrics-detail.component.html',
   styleUrl: './body-metrics-detail.component.scss',
@@ -202,6 +208,10 @@ export class BodyMetricsDetailComponent implements OnInit {
   }
 
   backToHistory(): void {
+    if (this.saving()) {
+      return;
+    }
+
     void this.router.navigate(['/body-metrics']);
   }
 }

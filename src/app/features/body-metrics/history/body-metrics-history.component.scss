@@ -1,4 +1,5 @@
 @use '../../../../styles/responsive' as responsive;
+@use '../../../../styles/actions' as actions;
 
 :host {
   display: block;
@@ -87,6 +88,23 @@
   overflow-wrap: anywhere;
 }
 
+.mat-column-actions {
+  width: 64px;
+  text-align: center;
+}
+
+.ic-body-metrics-history__actions-cell {
+  text-align: center;
+}
+
+.ic-body-metrics-history__delete-button {
+  color: var(--ic-field-error);
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
 mat-paginator {
   border-top: var(--ic-border-width-default) solid var(--ic-border-soft);
   background: var(--ic-surface);
@@ -124,13 +142,11 @@ mat-paginator {
   }
 
   .ic-body-metrics-history__header {
-    flex-direction: column;
+    @include actions.header;
   }
 
   .ic-body-metrics-history__actions {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
+    @include actions.icons;
   }
 
   .ic-body-metrics-history__table th,
