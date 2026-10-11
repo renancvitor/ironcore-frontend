@@ -7,6 +7,7 @@ import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
+import { ToastService } from '../../../shared/components/toast/toast.service';
 import { GetBodyMetricsResponse } from '../body-metrics.models';
 import { BodyMetricsService } from '../body-metrics.service';
 import { BodyMetricsDetailComponent } from './body-metrics-detail.component';
@@ -15,6 +16,8 @@ registerLocaleData(localePt);
 
 describe('BodyMetricsDetailComponent', () => {
   const getById = vi.fn();
+  const update = vi.fn();
+  const success = vi.fn();
   const openDialog = vi.fn();
   const navigate = vi.fn();
   const route = {
@@ -51,6 +54,8 @@ describe('BodyMetricsDetailComponent', () => {
 
   beforeEach(async () => {
     getById.mockReset();
+    update.mockReset();
+    success.mockReset();
     openDialog.mockReset();
     navigate.mockReset();
     route.snapshot.paramMap = convertToParamMap({ id: '42' });
@@ -61,7 +66,8 @@ describe('BodyMetricsDetailComponent', () => {
     await TestBed.configureTestingModule({
       imports: [BodyMetricsDetailComponent],
       providers: [
-        { provide: BodyMetricsService, useValue: { getById } },
+        { provide: BodyMetricsService, useValue: { getById, update } },
+        { provide: ToastService, useValue: { success } },
         { provide: DialogService, useValue: { open: openDialog } },
         { provide: ActivatedRoute, useValue: route },
         { provide: Router, useValue: { navigate } },
@@ -115,6 +121,109 @@ describe('BodyMetricsDetailComponent', () => {
     expect(text).toContain('30/09/2026 08:30');
     expect(text).toContain('01/10/2026 10:15');
     expect(text).toContain('Após treino');
+  });
+
+  function openEditor(): void {
+    fixture.detectChanges();
+    request.next(response);
+    request.complete();
+    fixture.detectChanges();
+    const edit = Array.from(
+      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+    ).find((button) => button.textContent?.includes('Editar avaliação'))!;
+    edit.click();
+    fixture.detectChanges();
+  }
+
+  function fill(name: string, value: string): void {
+    const input = fixture.nativeElement.querySelector(`#${name}`) as HTMLInputElement;
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+  }
+
+  it('prefills shared controls and restores saved values after canceling an edit', () => {
+    openEditor();
+    const values = {
+      weightKg: response.weightKg,
+      heightCm: response.heightCm,
+      ...response.circumferences,
+    };
+    for (const [name, value] of Object.entries(values)) {
+      expect(fixture.nativeElement.querySelector(`#${name}`).value).toBe(String(value));
+    }
+    expect(fixture.nativeElement.querySelector('#notes').value).toBe(response.notes);
+    expect(fixture.nativeElement.querySelectorAll('input')).toHaveLength(11);
+    fill('weightKg', '90');
+    const cancel = Array.from(
+      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+    ).find((button) => button.textContent?.trim() === 'Cancelar')!;
+    cancel.click();
+    fixture.detectChanges();
+    expect(update).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.metric()?.weightKg).toBe(response.weightKg);
+    fixture.componentInstance.startEdit();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#weightKg').value).toBe('82.4');
+  });
+
+  it('sends shared field changes and displays the recalculated server response', () => {
+    const pending = new Subject<GetBodyMetricsResponse>();
+    update.mockReturnValue(pending.asObservable());
+    openEditor();
+    fill('weightKg', '80');
+    for (const name of Object.keys(response.circumferences!)) fill(name, '');
+    fill('notes', '');
+    fixture.nativeElement.querySelector('button[type="submit"]').click();
+    fixture.detectChanges();
+
+    expect(update).toHaveBeenCalledExactlyOnceWith(42, {
+      weightKg: 80,
+      heightCm: 178.5,
+      circumferences: null,
+      notes: null,
+    });
+    const inputs = fixture.nativeElement.querySelectorAll(
+      'input, textarea',
+    ) as NodeListOf<HTMLInputElement>;
+    expect(Array.from(inputs).every((input) => input.disabled)).toBe(true);
+    const saved = {
+      ...response,
+      weightKg: 80,
+      bmi: 25.1,
+      circumferences: null,
+      notes: null,
+      bodyFatPercentage: null,
+      fatMassKg: null,
+      leanMassKg: null,
+    };
+    pending.next(saved);
+    pending.complete();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.metric()).toEqual(saved);
+    expect(fixture.nativeElement.querySelector('input')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('25,1');
+    expect(success).toHaveBeenCalledOnce();
+  });
+
+  it('reenables shared controls and preserves edits when saving fails', () => {
+    const pending = new Subject<GetBodyMetricsResponse>();
+    update.mockReturnValue(pending.asObservable());
+    openEditor();
+    fill('notes', 'Manter observação');
+    fixture.nativeElement.querySelector('button[type="submit"]').click();
+    fixture.detectChanges();
+    pending.error(new HttpErrorResponse({ status: 500, error: { message: 'Falha ao salvar.' } }));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('#notes').value).toBe('Manter observação');
+    expect(fixture.nativeElement.querySelector('#notes').disabled).toBe(false);
+    expect(fixture.nativeElement.querySelector('#weightKg').disabled).toBe(false);
+    expect(fixture.componentInstance.editing()).toBe(true);
+    expect(openDialog).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Falha ao salvar.' }),
+    );
+    expect(success).not.toHaveBeenCalled();
   });
 
   it('handles absent optional indicators, circumferences, notes and update date', () => {
@@ -193,7 +302,9 @@ describe('BodyMetricsDetailComponent', () => {
     (from, destination, label) => {
       route.snapshot.queryParamMap = convertToParamMap(from ? { from } : {});
       fixture.detectChanges();
-      const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+      const button = Array.from(
+        fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+      ).find((button) => button.textContent?.includes(label))!;
       expect(button.textContent).toContain(label);
       button.click();
 

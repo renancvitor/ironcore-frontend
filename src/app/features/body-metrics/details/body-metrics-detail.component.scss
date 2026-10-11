@@ -27,6 +27,19 @@
   }
 }
 
+.ic-body-metrics-detail__header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ic-space-3);
+  flex-shrink: 0;
+}
+
+.ic-body-metrics-detail__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ic-space-5);
+}
+
 .ic-body-metrics-detail__summary {
   display: flex;
   flex-direction: column;
@@ -148,8 +161,19 @@
   }
 }
 
+.ic-body-metrics-detail__form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--ic-space-3);
+}
+
 @include responsive.tablet {
   .ic-body-metrics-detail {
+    gap: var(--ic-space-4);
+  }
+
+  .ic-body-metrics-detail__form {
     gap: var(--ic-space-4);
   }
 
@@ -164,6 +188,10 @@
     gap: var(--ic-space-3);
   }
 
+  .ic-body-metrics-detail__form {
+    gap: var(--ic-space-3);
+  }
+
   .ic-body-metrics-detail__grid {
     grid-template-columns: 1fr;
     gap: var(--ic-space-4);
@@ -171,6 +199,12 @@
 
   .ic-body-metrics-detail__header {
     flex-direction: column;
+  }
+
+  .ic-body-metrics-detail__header-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .ic-body-metrics-detail__field {
@@ -199,5 +233,10 @@
   .ic-body-metrics-detail__metadata {
     flex-direction: column;
     gap: var(--ic-space-2);
+  }
+
+  .ic-body-metrics-detail__form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
   }
 }
