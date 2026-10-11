@@ -192,6 +192,9 @@ describe('body metrics deletion with the real router', () => {
       router.setUpLocationChangeListener();
       await harness.navigateByUrl('/');
       http.expectOne(`${endpoint}/latest`).flush(metric);
+      http
+        .expectOne((request) => request.url === `${endpoint}/progress/changes`)
+        .flush({ changes: [] });
       await harness.navigateByUrl('/body-metrics');
       http.expectOne(endpoint).flush(page());
       harness.detectChanges();
@@ -250,6 +253,9 @@ describe('body metrics deletion with the real router', () => {
       expect(await router.navigateByUrl('/')).toBe(true);
       harness.detectChanges();
       http.expectOne(`${endpoint}/latest`).flush(outcome === 'success' ? remaining : metric);
+      http
+        .expectOne((request) => request.url === `${endpoint}/progress/changes`)
+        .flush({ changes: [] });
       expect(router.url).toBe('/');
     },
   );
@@ -263,7 +269,30 @@ describe('body metrics deletion with the real router', () => {
       const latest = http.expectOne(`${endpoint}/latest`);
       expect(latest.request.method).toBe('GET');
       latest.flush(latestMetric);
+      const summary = http.expectOne((request) => request.url === `${endpoint}/progress/changes`);
+      summary.flush({
+        startDate: summary.request.params.get('startDate'),
+        endDate: summary.request.params.get('endDate'),
+        changes: afterDeletion
+          ? []
+          : [
+              {
+                metric: 'WEIGHT_KG',
+                label: 'Peso',
+                unit: 'kg',
+                firstDate: '2026-10-01',
+                lastDate: '2026-10-08',
+                firstValue: 85,
+                lastValue: latestMetric.weightKg,
+                absoluteChange: -5,
+                percentageChange: -5.88,
+              },
+            ],
+      });
       harness.detectChanges();
+      expect(
+        harness.routeNativeElement!.querySelector('app-body-metrics-progress-card')!.textContent,
+      ).toContain(afterDeletion ? 'Sem dados suficientes' : '-5 kg');
       expect(
         harness.routeNativeElement!.querySelector('app-body-metrics-latest')!.textContent,
       ).toContain(String(latestMetric.weightKg));
@@ -442,6 +471,9 @@ describe('independent body metrics screens', () => {
       const latest = http.expectOne(`${endpoint}/latest`);
       if (afterCreation) latest.flush(metric);
       else latest.flush(null, { status: 404, statusText: 'Not Found' });
+      http
+        .expectOne((request) => request.url === `${endpoint}/progress/changes`)
+        .flush({ changes: [] });
       harness.detectChanges();
       if (afterCreation) {
         expect(

@@ -1,6 +1,57 @@
 <app-summary-card title="Evolução corporal">
-  <app-empty-state
-    icon="show_chart"
-    message="O acompanhamento da evolução corporal ainda não está disponível."
-  />
+  <p class="ic-body-metrics-progress-card__period">
+    Período: {{ period.startDate | date: 'dd/MM/yyyy' }} a {{ period.endDate | date: 'dd/MM/yyyy' }}
+  </p>
+  <div [attr.aria-busy]="loading()" aria-live="polite">
+    @if (loading()) {
+      <app-loading />
+    } @else if (error()) {
+      <p role="alert">Não foi possível carregar o resumo da evolução corporal.</p>
+      <app-button variant="secondary" (click)="loadProgress()">Tentar novamente</app-button>
+    } @else if (changes().length) {
+      <p class="ic-body-metrics-progress-card__help">
+        Variação entre o primeiro e o último valor válido de cada medida no período.
+      </p>
+      <dl class="ic-body-metrics-progress-card__metrics">
+        @for (change of changes(); track change.metric) {
+          <div>
+            <dt>{{ change.label }}</dt>
+            <dd>
+              <strong
+                >{{ change.absoluteChange > 0 ? '+' : ''
+                }}{{ change.absoluteChange | number: '1.0-2' }}
+                {{ change.unit === '%' ? 'p.p.' : change.unit }}</strong
+              >
+              <span class="ic-body-metrics-progress-card__relative">
+                Variação relativa: {{ change.percentageChange > 0 ? '+' : ''
+                }}{{ change.percentageChange | number: '1.0-2' }}%
+              </span>
+              <span class="ic-body-metrics-progress-card__dates">
+                <time [attr.datetime]="change.firstDate">{{
+                  change.firstDate | date: 'dd/MM/yyyy'
+                }}</time>
+                a
+                <time [attr.datetime]="change.lastDate">{{
+                  change.lastDate | date: 'dd/MM/yyyy'
+                }}</time>
+              </span>
+            </dd>
+          </div>
+        }
+      </dl>
+    } @else {
+      <app-empty-state
+        icon="show_chart"
+        message="Sem dados suficientes para este resumo no período. Peso e composição corporal precisam de pelo menos duas avaliações válidas por medida. Consulte outros períodos na evolução completa."
+      />
+    }
+  </div>
+  <a
+    summaryCardAction
+    class="ic-body-metrics-progress-card__details"
+    routerLink="/body-metrics/progress"
+    [queryParams]="{ from: 'home' }"
+  >
+    Ver evolução completa
+  </a>
 </app-summary-card>

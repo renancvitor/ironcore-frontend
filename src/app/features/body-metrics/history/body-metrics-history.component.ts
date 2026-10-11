@@ -69,7 +69,7 @@ export class BodyMetricsHistoryComponent {
       return;
     }
 
-    void this.router.navigate(['/body-metrics/progress']);
+    void this.router.navigate(['/body-metrics/progress'], { queryParams: { from: 'history' } });
   }
 
   openCreate(): void {

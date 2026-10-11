@@ -97,6 +97,32 @@ describe('body metrics editing across routes', () => {
         const latest = http.expectOne(`${endpoint}/latest`);
         expect(latest.request.method).toBe('GET');
         latest.flush(metric);
+        if (path === '/') {
+          const summary = http.expectOne((req) => req.url === `${endpoint}/progress/changes`);
+          const delta = metric.weightKg - 82;
+          summary.flush({
+            startDate: summary.request.params.get('startDate'),
+            endDate: summary.request.params.get('endDate'),
+            changes: [
+              {
+                metric: 'WEIGHT_KG',
+                label: 'Peso',
+                unit: 'kg',
+                firstDate: '2026-10-01',
+                lastDate: '2026-10-08',
+                firstValue: 82,
+                lastValue: metric.weightKg,
+                absoluteChange: delta,
+                percentageChange: (delta / 82) * 100,
+              },
+            ],
+          });
+          harness.detectChanges();
+          expect(
+            harness.routeNativeElement!.querySelector('app-body-metrics-progress-card')!
+              .textContent,
+          ).toContain(`${delta} kg`);
+        }
         harness.detectChanges();
         expect(
           harness.routeNativeElement?.querySelector('app-body-metrics-latest')?.textContent,

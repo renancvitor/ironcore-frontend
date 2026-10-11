@@ -8,9 +8,9 @@
     <button
       matIconButton
       type="button"
-      aria-label="Voltar ao histórico"
-      matTooltip="Voltar ao histórico"
-      (click)="backToHistory()"
+      [attr.aria-label]="backLabel"
+      [matTooltip]="backLabel"
+      (click)="back()"
     >
       <mat-icon>arrow_back</mat-icon>
     </button>

@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -49,6 +49,7 @@ type BodyMetricsProgressView = BodyMetricsProgressChartType | 'CHANGES';
 export class BodyMetricsProgressComponent implements OnInit {
   private readonly bodyMetricsService = inject(BodyMetricsService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   private request?: Subscription;
   private period = defaultProgressPeriod();
@@ -131,8 +132,16 @@ export class BodyMetricsProgressComponent implements OnInit {
     this.loadProgress();
   }
 
-  backToHistory(): void {
-    void this.router.navigate(['/body-metrics']);
+  get backLabel(): string {
+    return this.route.snapshot.queryParamMap.get('from') === 'home'
+      ? 'Voltar ao início'
+      : 'Voltar ao histórico';
+  }
+
+  back(): void {
+    const destination =
+      this.route.snapshot.queryParamMap.get('from') === 'home' ? '/' : '/body-metrics';
+    void this.router.navigate([destination]);
   }
 
   retry(): void {

@@ -31,6 +31,10 @@ export class BodyMetricsCreateComponent {
   readonly form = createBodyMetricsForm();
 
   createBodyMetrics(): void {
+    if (this.loading()) {
+      return;
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
