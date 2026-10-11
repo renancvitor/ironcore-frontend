@@ -70,13 +70,37 @@ describe('BodyMetricsService', () => {
     request.flush({ id: 10 });
   });
 
-  it('should delete body metrics by id', () => {
-    service.delete(10).subscribe();
+  it('completes deletion with a 204 No Content response', () => {
+    const next = vi.fn();
+    const complete = vi.fn();
+    service.delete(10).subscribe({ next, complete });
 
     const request = httpTestingController.expectOne(`${baseUrl}/10`);
 
     expect(request.request.method).toBe('DELETE');
-    request.flush(null);
+    expect(request.request.body).toBeNull();
+    expect(complete).not.toHaveBeenCalled();
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    expect(next).toHaveBeenCalledExactlyOnceWith(null);
+    expect(complete).toHaveBeenCalledOnce();
+  });
+
+  it('propagates HTTP errors from deletion', () => {
+    const error = vi.fn();
+    const next = vi.fn();
+    const complete = vi.fn();
+    service.delete(10).subscribe({ next, error, complete });
+    const request = httpTestingController.expectOne(`${baseUrl}/10`);
+    expect(request.request.method).toBe('DELETE');
+    request.flush(
+      { message: 'Falha ao excluir' },
+      { status: 500, statusText: 'Internal Server Error' },
+    );
+    expect(error).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ status: 500, error: { message: 'Falha ao excluir' } }),
+    );
+    expect(next).not.toHaveBeenCalled();
+    expect(complete).not.toHaveBeenCalled();
   });
 
   it('should list body metrics with the supplied pagination', () => {

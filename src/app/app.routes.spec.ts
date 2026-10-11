@@ -1,8 +1,16 @@
 import { provideHttpClient } from '@angular/common/http';
+import { Location } from '@angular/common';
+import { provideLocationMocks } from '@angular/common/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { MatDialogHarness } from '@angular/material/dialog/testing';
+import { MatDialog } from '@angular/material/dialog';
+import { MatButtonHarness } from '@angular/material/button/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { NavigationCancel, provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { filter, firstValueFrom, of } from 'rxjs';
+import { DialogService } from './shared/components/dialog/dialog.service';
 
 import { routes } from './app.routes';
 import { AuthStateService } from './core/auth/auth-state.service';
@@ -106,6 +114,242 @@ describe('application routes', () => {
     expect(index).toBeGreaterThanOrEqual(0);
     expect(index).toBeLessThan(children.findIndex((route) => route.path === 'body-metrics/:id'));
     expect(await children[index].loadComponent?.()).toBe(BodyMetricsCreateComponent);
+  });
+});
+
+describe('body metrics deletion with the real router', () => {
+  const endpoint = '/api/users/me/body-metrics';
+  const metric = {
+    id: 42,
+    personId: 1,
+    measuredAt: '2026-09-30T08:30:00',
+    weightKg: 82,
+    heightCm: 178,
+    bmi: 25.88,
+    circumferences: null,
+    bodyFatPercentage: null,
+    fatMassKg: null,
+    leanMassKg: null,
+    notes: 'Avaliação a excluir',
+    updatedAt: null,
+  };
+  const remaining = { ...metric, id: 41, weightKg: 79, notes: 'Avaliação preservada' };
+  const page = (content = [metric, remaining]) => ({
+    metrics: {
+      content,
+      page: 0,
+      size: 20,
+      totalElements: content.length,
+      totalPages: content.length ? 1 : 0,
+      last: true,
+    },
+  });
+  const success = vi.fn();
+
+  beforeEach(() => {
+    success.mockReset();
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter(routes),
+        provideLocationMocks(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_BASE_URL, useValue: '' },
+        { provide: ToastService, useValue: { success } },
+      ],
+    });
+  });
+
+  afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+  async function setup() {
+    TestBed.inject(AuthStateService).setUser({
+      userId: 1,
+      email: 'test@example.test',
+      nickname: 'Teste',
+      mustChangePassword: false,
+    });
+    return {
+      http: TestBed.inject(HttpTestingController),
+      router: TestBed.inject(Router),
+      harness: await RouterTestingHarness.create(),
+    };
+  }
+
+  function clickDelete(harness: RouterTestingHarness): void {
+    harness
+      .routeNativeElement!.querySelector<HTMLButtonElement>(
+        '.ic-body-metrics-history__delete-button',
+      )!
+      .click();
+  }
+
+  it.each(['success', 'error'] as const)(
+    'blocks navigation until DELETE finishes with %s',
+    async (outcome) => {
+      TestBed.overrideProvider(DialogService, { useValue: { open: () => of(true) } });
+      const { http, router, harness } = await setup();
+      router.setUpLocationChangeListener();
+      await harness.navigateByUrl('/');
+      http.expectOne(`${endpoint}/latest`).flush(metric);
+      await harness.navigateByUrl('/body-metrics');
+      http.expectOne(endpoint).flush(page());
+      harness.detectChanges();
+      clickDelete(harness);
+      const deletion = http.expectOne(`${endpoint}/42`);
+      expect(deletion.request.method).toBe('DELETE');
+      harness.detectChanges();
+      expect(harness.routeNativeElement!.querySelector('[role="status"]')?.textContent).toContain(
+        'Excluindo avaliação corporal',
+      );
+
+      harness
+        .routeNativeElement!.querySelector<HTMLButtonElement>(
+          'app-header button[aria-label="Abrir menu"]',
+        )!
+        .click();
+      harness.detectChanges();
+      for (const selector of [
+        'app-header a[href="/"]',
+        'app-header a[href="/profile"]',
+        'app-sidebar a[href="/body-metrics/progress"]',
+      ]) {
+        harness.routeNativeElement!.querySelector<HTMLAnchorElement>(selector)!.click();
+        await harness.fixture.whenStable();
+        expect(router.url).toBe('/body-metrics');
+        http.expectNone((request) => request.method === 'GET');
+      }
+      const location = TestBed.inject(Location);
+      const backCancelled = firstValueFrom(
+        router.events.pipe(filter((event) => event instanceof NavigationCancel)),
+      );
+      location.back();
+      await backCancelled;
+      await harness.fixture.whenStable();
+      expect(router.url).toBe('/body-metrics');
+      expect(location.path()).toBe('/body-metrics');
+      for (const destination of ['/', '/body-metrics/progress', '/body-metrics/42', '/login']) {
+        expect(await router.navigateByUrl(destination)).toBe(false);
+        expect(router.url).toBe('/body-metrics');
+      }
+      http.expectNone((request) => request.method === 'GET');
+
+      if (outcome === 'success') {
+        deletion.flush(null, { status: 204, statusText: 'No Content' });
+        http.expectOne(endpoint).flush(page([remaining]));
+      } else {
+        deletion.flush(
+          { message: 'Falha ao excluir' },
+          { status: 500, statusText: 'Internal Server Error' },
+        );
+      }
+      await harness.fixture.whenStable();
+      expect(router.url).toBe('/body-metrics');
+      expect(harness.routeNativeElement!.querySelector('app-body-metrics-history')).toBeTruthy();
+      http.expectNone((request) => request.method === 'GET');
+      expect(await router.navigateByUrl('/')).toBe(true);
+      harness.detectChanges();
+      http.expectOne(`${endpoint}/latest`).flush(outcome === 'success' ? remaining : metric);
+      expect(router.url).toBe('/');
+    },
+  );
+
+  it('confirms in the real dialog, deletes and refreshes previously visited dependent screens', async () => {
+    const { http, harness } = await setup();
+
+    async function visitDependentScreens(afterDeletion: boolean): Promise<void> {
+      const latestMetric = afterDeletion ? remaining : metric;
+      await harness.navigateByUrl('/');
+      const latest = http.expectOne(`${endpoint}/latest`);
+      expect(latest.request.method).toBe('GET');
+      latest.flush(latestMetric);
+      harness.detectChanges();
+      expect(
+        harness.routeNativeElement!.querySelector('app-body-metrics-latest')!.textContent,
+      ).toContain(String(latestMetric.weightKg));
+
+      await harness.navigateByUrl('/body-metrics/progress');
+      const progress = http.expectOne(
+        (request) => request.url === `${endpoint}/progress/body-composition`,
+      );
+      expect(progress.request.method).toBe('GET');
+      const startDate = progress.request.params.get('startDate')!;
+      const endDate = progress.request.params.get('endDate')!;
+      progress.flush({
+        startDate,
+        endDate,
+        chartType: 'BODY_COMPOSITION',
+        series: [
+          {
+            metric: 'WEIGHT_KG',
+            label: 'Peso',
+            unit: 'kg',
+            points: [{ period: endDate.slice(0, 7), value: latestMetric.weightKg }],
+          },
+        ],
+      });
+      harness.detectChanges();
+      expect(
+        harness.routeNativeElement!.querySelector('app-body-metrics-progress-chart tbody')!
+          .textContent,
+      ).toContain(`${latestMetric.weightKg} kg`);
+      harness
+        .routeNativeElement!.querySelector<HTMLInputElement>('input[value="CHANGES"]')!
+        .click();
+      harness.detectChanges();
+      const comparison = http.expectOne(
+        (request) => request.url === `${endpoint}/progress/changes`,
+      );
+      expect(comparison.request.method).toBe('GET');
+      comparison.flush({
+        startDate,
+        endDate,
+        changes: [
+          {
+            metric: 'WEIGHT_KG',
+            label: 'Peso',
+            unit: 'kg',
+            firstDate: startDate,
+            lastDate: endDate,
+            firstValue: 85,
+            lastValue: latestMetric.weightKg,
+            absoluteChange: latestMetric.weightKg - 85,
+            percentageChange: -7,
+          },
+        ],
+      });
+      harness.detectChanges();
+      expect(
+        harness.routeNativeElement!.querySelector('app-body-metrics-progress-changes tbody')!
+          .textContent,
+      ).toContain(`${latestMetric.weightKg} kg`);
+    }
+
+    await visitDependentScreens(false);
+    await harness.navigateByUrl('/body-metrics');
+    http.expectOne(endpoint).flush(page());
+    harness.detectChanges();
+    clickDelete(harness);
+    const loader = TestbedHarnessEnvironment.documentRootLoader(harness.fixture);
+    const dialog = await loader.getHarness(MatDialogHarness);
+    expect(await dialog.getText()).toContain('Esta ação é permanente');
+    http.expectNone((request) => request.method === 'DELETE');
+    const confirm = await dialog.getHarness(MatButtonHarness.with({ text: 'Excluir' }));
+    const closed = firstValueFrom(TestBed.inject(MatDialog).openDialogs[0].afterClosed());
+    await confirm.click();
+    expect(await closed).toBe(true);
+    const deletion = http.expectOne(`${endpoint}/42`);
+    expect(deletion.request.method).toBe('DELETE');
+    deletion.flush(null, { status: 204, statusText: 'No Content' });
+    const reload = http.expectOne(endpoint);
+    expect(reload.request.method).toBe('GET');
+    reload.flush(page([remaining]));
+    harness.detectChanges();
+    expect(harness.routeNativeElement!.textContent).not.toContain(metric.notes);
+    expect(harness.routeNativeElement!.textContent).toContain(remaining.notes);
+    expect(success).toHaveBeenCalledExactlyOnceWith('Avaliação corporal excluída com sucesso.');
+    await visitDependentScreens(true);
+    expect(success).toHaveBeenCalledTimes(1);
   });
 });
 
