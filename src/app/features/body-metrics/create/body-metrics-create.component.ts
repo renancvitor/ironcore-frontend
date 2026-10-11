@@ -2,14 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { BodyMetricsService } from '../body-metrics.service';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
-import {
-  AbstractControl,
-  FormBuilder,
-  ReactiveFormsModule,
-  ValidationErrors,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { ToastService } from '../../../shared/components/toast/toast.service';
@@ -18,33 +11,12 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 
 import { CreateBodyMetricsRequest } from '../body-metrics.models';
 
-const optionalPositiveMax = (max: number): ValidatorFn => {
-  return (control: AbstractControl): ValidationErrors | null => {
-    const value = control.value;
-
-    if (value === null || value === '') {
-      return null;
-    }
-
-    if (typeof value !== 'number' || !Number.isFinite(value)) {
-      return { number: true };
-    }
-
-    if (value <= 0) {
-      return { positive: true };
-    }
-
-    if (value > max) {
-      return { max: true };
-    }
-
-    return null;
-  };
-};
+import { createBodyMetricsForm } from '../body-metrics.form';
+import { BodyMetricsFormFieldsComponent } from '../form-fields/body-metrics-form-fields.component';
 
 @Component({
   selector: 'app-body-metrics-create',
-  imports: [ReactiveFormsModule, ButtonComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, BodyMetricsFormFieldsComponent],
   templateUrl: './body-metrics-create.component.html',
   styleUrl: './body-metrics-create.component.scss',
 })
@@ -52,28 +24,11 @@ export class BodyMetricsCreateComponent {
   private readonly bodyMetricsService = inject(BodyMetricsService);
   private readonly dialogService = inject(DialogService);
   private readonly router = inject(Router);
-  private readonly formBuilder = inject(FormBuilder);
   private readonly toastService = inject(ToastService);
-  private readonly circumferenceValidators = [optionalPositiveMax(300)];
 
   readonly loading = signal(false);
 
-  readonly form = this.formBuilder.group({
-    weightKg: [null as number | null, [Validators.required, optionalPositiveMax(500)]],
-    heightCm: [null as number | null, [Validators.required, optionalPositiveMax(300)]],
-
-    neckCm: [null as number | null, this.circumferenceValidators],
-    chestCm: [null as number | null, this.circumferenceValidators],
-    shoulderCm: [null as number | null, this.circumferenceValidators],
-    armCm: [null as number | null, this.circumferenceValidators],
-    forearmCm: [null as number | null, this.circumferenceValidators],
-    waistCm: [null as number | null, this.circumferenceValidators],
-    hipCm: [null as number | null, this.circumferenceValidators],
-    thighCm: [null as number | null, this.circumferenceValidators],
-    calfCm: [null as number | null, this.circumferenceValidators],
-
-    notes: [''],
-  });
+  readonly form = createBodyMetricsForm();
 
   createBodyMetrics(): void {
     if (this.form.invalid) {
@@ -145,28 +100,6 @@ export class BodyMetricsCreateComponent {
         : null,
       notes: value.notes || null,
     };
-  }
-
-  circumferenceError(controlName: keyof typeof this.form.controls): string {
-    const control = this.form.controls[controlName];
-
-    if (!control.touched || !control.errors) {
-      return '';
-    }
-
-    if (control.hasError('positive')) {
-      return 'Informe uma medida maior que zero.';
-    }
-
-    if (control.hasError('max')) {
-      return 'A medida não pode ultrapassar 300 cm.';
-    }
-
-    if (control.hasError('number')) {
-      return 'Informe um valor válido.';
-    }
-
-    return '';
   }
 
   backToHistory(): void {
