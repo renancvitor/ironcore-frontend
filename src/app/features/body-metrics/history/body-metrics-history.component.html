@@ -60,6 +60,25 @@
                 </td>
               </ng-container>
 
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef aria-label="Ações"></th>
+
+                <td mat-cell *matCellDef="let metric" class="ic-body-metrics-history__actions-cell">
+                  <button
+                    matIconButton
+                    type="button"
+                    class="ic-body-metrics-history__delete-button"
+                    aria-label="Excluir avaliação corporal"
+                    [disabled]="deletingId() === metric.id"
+                    (click)="$event.stopPropagation(); deleteBodyMetrics(metric.id)"
+                    (keydown.enter)="$event.stopPropagation()"
+                    (keydown.space)="$event.stopPropagation()"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
 
               <tr

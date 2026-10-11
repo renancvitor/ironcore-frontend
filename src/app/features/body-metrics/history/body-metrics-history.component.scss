@@ -87,6 +87,23 @@
   overflow-wrap: anywhere;
 }
 
+.mat-column-actions {
+  width: 64px;
+  text-align: center;
+}
+
+.ic-body-metrics-history__actions-cell {
+  text-align: center;
+}
+
+.ic-body-metrics-history__delete-button {
+  color: var(--ic-field-error);
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
 mat-paginator {
   border-top: var(--ic-border-width-default) solid var(--ic-border-soft);
   background: var(--ic-surface);
