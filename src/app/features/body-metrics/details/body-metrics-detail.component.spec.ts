@@ -123,9 +123,9 @@ describe('BodyMetricsDetailComponent', () => {
     expect(text).toContain('Após treino');
   });
 
-  function openEditor(): void {
+  function openEditor(metric = response): void {
     fixture.detectChanges();
-    request.next(response);
+    request.next(metric);
     request.complete();
     fixture.detectChanges();
     const edit = Array.from(
@@ -141,6 +141,126 @@ describe('BodyMetricsDetailComponent', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     fixture.detectChanges();
   }
+
+  it.each([
+    ['weightKg', '', 'Informe o peso.'],
+    ['heightCm', '', 'Informe a altura.'],
+    ['weightKg', '501', '500 kg'],
+    ['heightCm', '301', '300 cm'],
+    ['neckCm', '0', 'maior que zero'],
+    ['waistCm', '-1', 'maior que zero'],
+    ['calfCm', '301', '300 cm'],
+  ])('blocks saving invalid %s (%s) and exposes the validation error', (name, value, message) => {
+    openEditor();
+    fill(name, value);
+    fixture.nativeElement.querySelector(`#${name}`).dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+    const save = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
+    save.click();
+    fixture.nativeElement
+      .querySelector('form')
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    expect(update).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector(`#${name}-error`).textContent).toContain(message);
+  });
+
+  it('adds partial circumferences to an evaluation with no optional data', () => {
+    const pending = new Subject<GetBodyMetricsResponse>();
+    update.mockReturnValue(pending);
+    openEditor({ ...response, circumferences: null, notes: null });
+    for (const name of Object.keys(response.circumferences!)) {
+      expect(fixture.nativeElement.querySelector(`#${name}`).value).toBe('');
+    }
+    expect(fixture.nativeElement.querySelector('#notes').value).toBe('');
+    fill('armCm', '32.5');
+    fill('notes', 'Correção da avaliação');
+    fixture.nativeElement.querySelector('button[type="submit"]').click();
+    expect(update).toHaveBeenCalledExactlyOnceWith(42, {
+      weightKg: response.weightKg,
+      heightCm: response.heightCm,
+      circumferences: {
+        neckCm: null,
+        chestCm: null,
+        shoulderCm: null,
+        armCm: 32.5,
+        forearmCm: null,
+        waistCm: null,
+        hipCm: null,
+        thighCm: null,
+        calfCm: null,
+      },
+      notes: 'Correção da avaliação',
+    });
+    pending.complete();
+  });
+
+  it('blocks duplicate submissions and cancel/return actions while saving', () => {
+    const pending = new Subject<GetBodyMetricsResponse>();
+    update.mockReturnValue(pending);
+    openEditor();
+    fill('weightKg', '81');
+    const save = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+    save.click();
+    fixture.detectChanges();
+    expect(save.textContent).toContain('Salvando...');
+    const buttons = Array.from(
+      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+    );
+    expect(buttons.every((button) => button.disabled)).toBe(true);
+    buttons.forEach((button) => button.click());
+    fixture.nativeElement
+      .querySelector('form')
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(navigate).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.editing()).toBe(true);
+    expect(success).not.toHaveBeenCalled();
+    pending.complete();
+  });
+
+  it.each([
+    [400, { message: 'Medidas incompatíveis.' }, 'Medidas incompatíveis.'],
+    [404, { message: 'Avaliação inexistente.' }, 'Avaliação inexistente.'],
+    [500, null, 'Não foi possível atualizar os dados corporais.'],
+  ])(
+    'preserves all values after HTTP %s and retries with the current form',
+    (status, error, message) => {
+      const pending = new Subject<GetBodyMetricsResponse>();
+      const retry = new Subject<GetBodyMetricsResponse>();
+      update.mockReturnValueOnce(pending).mockReturnValueOnce(retry);
+      openEditor();
+      fill('weightKg', '81');
+      fill('notes', 'Preservar');
+      fixture.nativeElement.querySelector('button[type="submit"]').click();
+      pending.error(new HttpErrorResponse({ status, error }));
+      fixture.detectChanges();
+      expect(openDialog).toHaveBeenCalledWith(expect.objectContaining({ message }));
+      expect(fixture.componentInstance.metric()).toEqual(response);
+      expect(navigate).not.toHaveBeenCalled();
+      expect(success).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.form.getRawValue()).toEqual({
+        weightKg: 81,
+        heightCm: response.heightCm,
+        ...response.circumferences,
+        notes: 'Preservar',
+      });
+      fill('weightKg', '80');
+      fixture.nativeElement.querySelector('button[type="submit"]').click();
+      expect(update).toHaveBeenLastCalledWith(42, {
+        weightKg: 80,
+        heightCm: response.heightCm,
+        circumferences: response.circumferences,
+        notes: 'Preservar',
+      });
+      retry.next({ ...response, weightKg: 80, notes: 'Preservar' });
+      retry.complete();
+      fixture.detectChanges();
+      expect(update).toHaveBeenCalledTimes(2);
+      expect(fixture.componentInstance.editing()).toBe(false);
+      expect(success).toHaveBeenCalledExactlyOnceWith('Dados corporais atualizados com sucesso.');
+    },
+  );
 
   it('prefills shared controls and restores saved values after canceling an edit', () => {
     openEditor();

@@ -305,9 +305,10 @@ describe('independent body metrics screens', () => {
       expect(harness.routeNativeElement?.querySelector(absent)).toBeNull();
 
       const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-      (
-        harness.routeNativeElement?.querySelector(`${selector} button`) as HTMLButtonElement
-      ).click();
+      const returnButton = Array.from(
+        harness.routeNativeElement!.querySelectorAll<HTMLButtonElement>(`${selector} button`),
+      ).find((button) => button.textContent?.includes('Voltar'))!;
+      returnButton.click();
 
       expect(navigate).toHaveBeenCalledExactlyOnceWith([returnUrl]);
       http.verify();
