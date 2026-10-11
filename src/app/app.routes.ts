@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { authGuard } from './core/guards/auth.guard';
+import { bodyMetricsHistoryGuard } from './features/body-metrics/history/body-metrics-history.guard';
 
 export const routes: Routes = [
   {
@@ -39,6 +40,7 @@ export const routes: Routes = [
       },
       {
         path: 'body-metrics',
+        canDeactivate: [bodyMetricsHistoryGuard],
         loadComponent: () =>
           import('./features/body-metrics/history/body-metrics-history.component').then(
             (m) => m.BodyMetricsHistoryComponent,

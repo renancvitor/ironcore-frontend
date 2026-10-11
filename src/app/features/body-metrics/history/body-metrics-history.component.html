@@ -12,6 +12,10 @@
     </div>
   </header>
 
+  @if (deletingId() !== null) {
+    <p role="status">Excluindo avaliação corporal. Aguarde para sair desta página.</p>
+  }
+
   @if (loading()) {
     <app-loading />
   } @else if (metrics(); as response) {

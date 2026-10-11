@@ -49,18 +49,34 @@ export class BodyMetricsHistoryComponent {
   }
 
   onPageChange(event: PageEvent): void {
+    if (this.deletingId() !== null) {
+      return;
+    }
+
     this.loadBodyMetricsHistory(event.pageIndex, event.pageSize);
   }
 
   openDetail(id: number): void {
+    if (this.deletingId() !== null) {
+      return;
+    }
+
     void this.router.navigate(['/body-metrics', id]);
   }
 
   openProgress(): void {
+    if (this.deletingId() !== null) {
+      return;
+    }
+
     void this.router.navigate(['/body-metrics/progress']);
   }
 
   openCreate(): void {
+    if (this.deletingId() !== null) {
+      return;
+    }
+
     void this.router.navigate(['/body-metrics/create']);
   }
 
@@ -124,6 +140,8 @@ export class BodyMetricsHistoryComponent {
           )
           .subscribe({
             next: () => {
+              this.metrics.set(null);
+
               this.toastService.success('Avaliação corporal excluída com sucesso.');
               this.loadBodyMetricsHistory();
             },
