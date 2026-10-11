@@ -1,3 +1,6 @@
+@use '../../../styles/responsive' as responsive;
+@use '../../../styles/actions' as actions;
+
 .ic-profile {
   display: flex;
   flex-direction: column;
@@ -91,18 +94,26 @@
   min-width: 0;
 }
 
-@media (max-width: 600px) {
+@include responsive.mobile {
   .ic-profile__field {
     grid-template-columns: minmax(0, 1fr);
     row-gap: var(--ic-space-2);
   }
 
   .ic-profile__field--editing .ic-profile__field-content {
-    flex-direction: column;
-    align-items: stretch;
+    flex-wrap: wrap;
+
+    > app-input,
+    > .ic-profile__control {
+      flex: 1 1 10rem;
+    }
+  }
+
+  .ic-profile__actions {
+    @include actions.icons;
   }
 
   .ic-profile__header {
-    flex-direction: column;
+    @include actions.header;
   }
 }

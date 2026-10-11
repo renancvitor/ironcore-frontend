@@ -1,4 +1,5 @@
 @use '../../../../styles/responsive' as responsive;
+@use '../../../../styles/actions' as actions;
 
 :host {
   display: block;
@@ -198,13 +199,11 @@
   }
 
   .ic-body-metrics-detail__header {
-    flex-direction: column;
+    @include actions.header;
   }
 
   .ic-body-metrics-detail__header-actions {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
+    @include actions.icons;
   }
 
   .ic-body-metrics-detail__field {
@@ -236,7 +235,6 @@
   }
 
   .ic-body-metrics-detail__form-actions {
-    flex-direction: column-reverse;
-    align-items: stretch;
+    @include actions.form;
   }
 }

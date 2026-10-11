@@ -64,6 +64,10 @@
 }
 
 @include responsive.mobile {
+  .ic-first-access__form > app-button {
+    --ic-action-button-width: 100%;
+  }
+
   .ic-first-access {
     padding: var(--ic-space-3);
   }

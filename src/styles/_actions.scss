@@ -1,0 +1,41 @@
+// Include inside responsive.mobile to preserve tablet and desktop layouts.
+@mixin header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--ic-space-3);
+
+  > :first-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+@mixin icons {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ic-space-2);
+  flex-shrink: 0;
+
+  > button,
+  > a {
+    flex-shrink: 0;
+  }
+}
+
+@mixin form {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: var(--ic-space-3);
+
+  > app-button {
+    flex: 1 1 9rem;
+    min-width: 0;
+    --ic-action-button-width: 100%;
+  }
+}
