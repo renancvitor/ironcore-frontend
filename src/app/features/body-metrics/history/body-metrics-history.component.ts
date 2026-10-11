@@ -6,6 +6,7 @@ import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { BodyMetricsService } from '../body-metrics.service';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
@@ -15,20 +16,19 @@ import { ListBodyMetricsResponse } from '../body-metrics.models';
 
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
-import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-body-metrics-history',
   imports: [
     MatTableModule,
     MatPaginatorModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
     LoadingComponent,
     EmptyStateComponent,
     DatePipe,
     DecimalPipe,
-    ButtonComponent,
-    MatButtonModule,
-    MatIconModule,
   ],
   templateUrl: './body-metrics-history.component.html',
   styleUrl: './body-metrics-history.component.scss',

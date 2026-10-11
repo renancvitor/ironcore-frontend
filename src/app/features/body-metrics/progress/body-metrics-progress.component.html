@@ -5,9 +5,15 @@
       <p>Acompanhe suas medidas ao longo do tempo.</p>
     </div>
 
-    <app-button type="button" variant="secondary" (click)="backToHistory()">
-      Voltar ao histórico
-    </app-button>
+    <button
+      matIconButton
+      type="button"
+      aria-label="Voltar ao histórico"
+      matTooltip="Voltar ao histórico"
+      (click)="backToHistory()"
+    >
+      <mat-icon>arrow_back</mat-icon>
+    </button>
   </header>
 
   <form class="ic-body-metrics-progress__filters" [formGroup]="form" (ngSubmit)="applyPeriod()">

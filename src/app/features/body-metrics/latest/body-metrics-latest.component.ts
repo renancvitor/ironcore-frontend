@@ -2,6 +2,9 @@ import { Component, inject, input, OnInit, signal, TemplateRef } from '@angular/
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { DatePipe, DecimalPipe, NgTemplateOutlet } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { BodyMetricsService } from '../body-metrics.service';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
@@ -12,7 +15,16 @@ import { LoadingComponent } from '../../../shared/components/loading/loading.com
 
 @Component({
   selector: 'app-body-metrics-latest',
-  imports: [ButtonComponent, LoadingComponent, DatePipe, DecimalPipe, NgTemplateOutlet],
+  imports: [
+    ButtonComponent,
+    LoadingComponent,
+    DatePipe,
+    DecimalPipe,
+    NgTemplateOutlet,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+  ],
   templateUrl: './body-metrics-latest.component.html',
   styleUrl: './body-metrics-latest.component.scss',
 })

@@ -6,9 +6,15 @@
         <p>Consulte todas as informações registradas na sua avaliação corporal mais recente.</p>
       </div>
 
-      <app-button type="button" variant="secondary" (click)="backToHome()">
-        Voltar para início
-      </app-button>
+      <button
+        matIconButton
+        type="button"
+        aria-label="Voltar ao início"
+        matTooltip="Voltar ao início"
+        (click)="backToHome()"
+      >
+        <mat-icon>arrow_back</mat-icon>
+      </button>
     </header>
   }
 

@@ -15,6 +15,7 @@ import { InputComponent } from '../../shared/components/input/input.component';
 
 import { Person, EditableField, SexType } from './profile.models';
 import { ProfileService } from './profile.service';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-profile',
@@ -27,6 +28,7 @@ import { ProfileService } from './profile.service';
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
+    MatTooltipModule,
   ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
