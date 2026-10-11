@@ -2,35 +2,41 @@
 
 ## Visão Geral
 
-O IronCore Frontend é uma aplicação Angular standalone. O bootstrap ocorre em `src/main.ts`; `app.config.ts` concentra os providers globais; e o componente raiz apenas hospeda o `router-outlet`.
+O IronCore Frontend é uma aplicação Angular standalone. O bootstrap ocorre em `src/main.ts`; `app.config.ts` concentra os providers globais; e `AppComponent` hospeda o `router-outlet` e o fundo visual compartilhado.
 
-A aplicação separa infraestrutura transversal em `core`, elementos reutilizáveis em `shared`, composição visual persistente em `layout` e fluxos funcionais em `features`. As features atualmente entregues pertencem aos contextos de autenticação, início e perfil.
+A aplicação separa infraestrutura transversal em `core`, elementos reutilizáveis em `shared`, composição visual persistente em `layout` e fluxos funcionais em `features`. As features atualmente entregues pertencem aos contextos de autenticação, avaliação corporal, início e perfil.
 
 ## Bootstrap e Providers
 
-`bootstrapApplication(App, appConfig)` inicia a aplicação. O `appConfig` registra:
+`bootstrapApplication(AppComponent, appConfig)` inicia a aplicação. O `appConfig` registra:
 
 - listeners globais de erro do navegador;
 - Router com as rotas de `app.routes.ts`;
 - `HttpClient`, URL base da API e interceptor pelo `provideCoreHttp()`;
+- inicialização de `ThemeService` e locale `pt-BR`, com os dados de locale registrados;
 - um `provideAppInitializer` que chama `AuthService.restoreSession()` na inicialização.
 
 ## Camadas e Responsabilidades
 
-| Área | Responsabilidade atual |
-| --- | --- |
-| `core/auth` | Contratos de autenticação, login, logout, restauração de sessão e estado reativo em memória. |
-| `core/http` | Provider do `HttpClient` e token `API_BASE_URL`. |
-| `core/interceptors` | Inclusão de cookies nas chamadas à API e limpeza de sessão em respostas `401`. |
-| `core/guards` | Guard reutilizável aplicado à área autenticada. |
-| `core/theme` | Estado e persistência da preferência de tema. |
-| `shared/components` | Componentes de interação e feedback sem regra de domínio. |
-| `layout` | Application shell, header e sidebar. |
-| `features/auth` | Páginas e fluxos de login e primeiro acesso. |
-| `features/home` | Página inicial da área autenticada. |
-| `features/profile` | Perfil, dados de `Person`, nickname e alteração de senha. |
+| Área                    | Responsabilidade atual                                                                       |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| `core/auth`             | Contratos de autenticação, login, logout, restauração de sessão e estado reativo em memória. |
+| `core/http`             | Provider do `HttpClient` e token `API_BASE_URL`.                                             |
+| `core/interceptors`     | Inclusão de cookies nas chamadas à API e limpeza de sessão em respostas `401`.               |
+| `core/guards`           | Guard reutilizável aplicado à área autenticada.                                              |
+| `core/theme`            | Estado e persistência da preferência de tema.                                                |
+| `shared/components`     | Componentes de interação e feedback sem regra de domínio.                                    |
+| `layout`                | Application shell, header e sidebar.                                                         |
+| `features/auth`         | Páginas e fluxos de login e primeiro acesso.                                                 |
+| `features/body-metrics` | Contratos, consultas, formulários, exclusão, evolução e comparativo de avaliações corporais. |
+| `features/home`         | Composição dos cards da página inicial, incluindo resumos da última avaliação e evolução.    |
+| `features/profile`      | Perfil, dados de `Person`, nickname e alteração de senha.                                    |
 
 Uma feature pode usar APIs públicas de `core` e elementos de `shared`, mas não deve acessar detalhes internos de outra feature. `shared` não deve depender de features e `core` não deve depender de `features` ou `layout`.
+
+A composição atual da Home utiliza a API pública de apresentação de `BodyMetricsLatestComponent`, por `contentTemplate`. O componente da feature mantém consulta e estados; o card define apenas o conteúdo resumido de sucesso. Essa reutilização não cria um segundo serviço ou carregamento de `/latest` na Home.
+
+O card de evolução usa `BodyMetricsService.getChanges` e `defaultProgressPeriod`, com estado local e uma consulta de `/progress/changes`. Ele seleciona peso e composição corporal da resposta, preserva diferenças e datas e oferece loading, empty state e retry. Não há outro serviço ou store para a Home, nem duplicação da página completa de evolução. Conteúdo, estados e decisões de produto estão em [Home e Cards-Resumo](../card-resume/README.md).
 
 ## Comunicação HTTP e Environments
 
@@ -38,10 +44,10 @@ Uma feature pode usar APIs públicas de `core` e elementos de `shared`, mas não
 
 O interceptor identifica chamadas para a API por origem e caminho. Somente essas chamadas recebem `withCredentials: true`; chamadas externas permanecem inalteradas. Em uma resposta `401`, o estado local é limpo e o erro continua no fluxo RxJS. Para chamadas que não sejam login, logout, primeiro acesso ou restauração de sessão, também há navegação para `/login`.
 
-| Arquivo | Uso | `apiBaseUrl` |
-| --- | --- | --- |
-| `src/environments/environment.ts` | configuração padrão e build de produção | vazio, para chamadas relativas à mesma origem |
-| `src/environments/environment.development.ts` | `ng serve` e build `development` | `http://localhost:8080` |
+| Arquivo                                       | Uso                                     | `apiBaseUrl`                                  |
+| --------------------------------------------- | --------------------------------------- | --------------------------------------------- |
+| `src/environments/environment.ts`             | configuração padrão e build de produção | vazio, para chamadas relativas à mesma origem |
+| `src/environments/environment.development.ts` | `ng serve` e build `development`        | `http://localhost:8080`                       |
 
 `angular.json` substitui o environment padrão pelo de desenvolvimento nessa configuração. Arquivos de environment não devem conter segredos.
 
@@ -60,7 +66,11 @@ O interceptor identifica chamadas para a API por origem e caminho. Somente essas
 
 ## Routing e Application Shell
 
-O routing possui as rotas públicas `/login` e `/first-access`. A rota raiz, composta por `AppShellComponent` e protegida por `authGuard`, contém as rotas-filhas para início, `/profile` e `/change-password`. O shell organiza header, sidebar, área de conteúdo com `.ic-container` e um `router-outlet` interno. Header e sidebar oferecem acesso ao perfil; o header também oferece logout e alternância de tema.
+O routing possui as rotas públicas `/login` e `/first-access`. A rota raiz, composta por `AppShellComponent` e protegida por `authGuard`, contém início, `/profile`, `/change-password` e as rotas de avaliação corporal. Os componentes de rota usam `loadComponent` para carregamento sob demanda. O shell organiza header, sidebar, área de conteúdo com `.ic-container` e um `router-outlet` interno. Header e sidebar oferecem acesso ao perfil e histórico corporal; a sidebar também oferece evolução. O header oferece logout e preferência de tema.
+
+A avaliação corporal possui `/body-metrics`, `/body-metrics/latest`, `/body-metrics/progress`, `/body-metrics/create` e `/body-metrics/:id`, com rotas estáticas antes de `:id`. A edição ocorre dentro do detalhe. `bodyMetricsHistoryGuard` impede saída do histórico enquanto há exclusão pendente. O provider de `MatPaginatorIntl` em português pertence ao AppShell e é compartilhado com suas páginas carregadas sob demanda.
+
+A Home acessa a evolução com `from=home`, e o histórico com `from=history`, na query string de `/body-metrics/progress`. A página lê a origem atual da URL: `home` retorna para `/`; histórico, origem inválida/ausente e acesso direto retornam para `/body-metrics`. A sidebar acessa a rota sem origem, restaurando o fallback inclusive na mesma página. Label e tooltip do botão de retorno acompanham esse contexto. A origem não altera os contratos HTTP, período ou visão inicial e não cria uma segunda tela.
 
 Login envia `POST /api/auth/login`, atualiza o estado de sessão e navega para o início após sucesso. Quando recebe `401` com a mensagem `Troca de senha inicial obrigatória.`, a tela navega para `/first-access` com o e-mail informado. O primeiro acesso envia `POST /api/users/change-initial-password` e retorna para `/login` após sucesso. Essas rotas públicas não possuem redirecionamento automático quando já existe sessão autenticada.
 
@@ -70,7 +80,9 @@ O logout é acionado no header por `POST /api/auth/logout`. Após sucesso, o est
 
 ## Tema, Responsividade e Componentes Compartilhados
 
-Os tokens e temas SCSS centralizam paleta, cores semânticas, espaçamentos, bordas, foco e tipografia. Há suporte a temas claro (`data-theme='light'`) e escuro (padrão), com integração ao Angular Material. `ThemeService` aplica o tema no elemento raiz e persiste a escolha no `localStorage` pela chave `Ironcore-theme`; o toggle no header realiza a alternância. A estratégia responsiva centraliza os breakpoints mobile (`até 600px`), tablet (`601px–960px`) e desktop (`a partir de 961px`), além do container com largura máxima de `1200px`.
+Os tokens e temas SCSS centralizam paleta, cores semânticas, espaçamentos, bordas, foco e tipografia. Há temas claro (`data-theme='light'`) e escuro, com integração ao Angular Material. `ThemeService` oferece preferências `light`, `dark` e `system`, persistidas no `localStorage` pela chave `Ironcore-theme`; o header permite alterná-las. Sem escolha explícita de claro/escuro, a aplicação acompanha `prefers-color-scheme`, usando escuro como fallback quando essa informação não está disponível. O script em `index.html` aplica o tema antes do bootstrap e permanece alinhado à inicialização do serviço. Mudanças do sistema são acompanhadas enquanto a preferência é `system`.
+
+A estratégia responsiva centraliza os breakpoints mobile (`até 600px`), tablet (`601px–960px`) e desktop (`a partir de 961px`), além do container com largura máxima de `1200px`. Os mixins de `_actions.scss` organizam cabeçalhos, grupos de ícones e rodapés de formulário no mobile, conforme [Disposição de ações no mobile](mobile-actions.md). Ícones de ações preservam `aria-label` e tooltips; gráficos e tabelas corporais permitem rolagem horizontal quando necessária.
 
 Os componentes base entregues são:
 
@@ -80,8 +92,16 @@ Os componentes base entregues são:
 - `DialogComponent` e `DialogService` para confirmações;
 - `ToastComponent` e `ToastService` para sucesso, erro, aviso e informação.
 
+`SummaryCardComponent` pertence à composição da Home. `BodyMetricsFormFieldsComponent`, a factory do formulário e seus validadores pertencem ao domínio da feature e são reutilizados por cadastro e edição, sem mover regras corporais para `shared`.
+
+## Estado das Avaliações Corporais
+
+`BodyMetricsService` centraliza a comunicação HTTP e não mantém cache ou store global de avaliações. As páginas usam signals locais. Cadastro navega para o detalhe; edição substitui os dados pela resposta do PUT; exclusão limpa e recarrega o histórico. As demais consultas são refeitas ao visitar as telas novamente, comportamento protegido por testes de integração entre rotas.
+
+Evolução e comparativo compartilham um período aplicado e cancelam requisições anteriores ao mudar a consulta ou destruir a página. Gráficos usam SVG e transformações de apresentação; indicadores, agregação mensal e variações permanecem sob responsabilidade do backend. Os fluxos e contratos estão descritos em [Avaliação corporal](../body-metrics/README.md).
+
 ## Recortes Atuais
 
-Não fazem parte do estado atual: métricas corporais, catálogo de exercícios, planejamento ou execução de treinos, deploy ou publicação de artefatos. A regra de troca obrigatória de senha é direcionada pela resposta do login; o `authGuard` verifica somente a existência de usuário no estado local.
+Não fazem parte do estado atual: catálogo de exercícios, planejamento ou execução de treinos, deploy ou publicação de artefatos. O card de treinos na Home ainda não possui integração; última avaliação e resumo de evolução usam dados reais do backend. O fluxo de avaliação corporal não tem sincronização entre abas ou guard de saída para cadastro/edição. A regra de troca obrigatória de senha é direcionada pela resposta do login; o `authGuard` verifica somente a existência de usuário no estado local.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

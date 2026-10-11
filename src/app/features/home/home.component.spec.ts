@@ -27,6 +27,9 @@ describe('HomeComponent', () => {
     TestBed.inject(HttpTestingController)
       .expectOne('/api/users/me/body-metrics/latest')
       .flush(null, { status: 404, statusText: 'Not Found' });
+    TestBed.inject(HttpTestingController)
+      .expectOne((request) => request.url === '/api/users/me/body-metrics/progress/changes')
+      .flush({ startDate: '2026-05-01', endDate: '2026-10-11', changes: [] });
     fixture.detectChanges();
   });
 
@@ -37,7 +40,7 @@ describe('HomeComponent', () => {
     TestBed.inject(HttpTestingController).verify();
   });
 
-  it('renders the three summary cards in order without additional requests', () => {
+  it('renders the three summary cards and links to the full progress page', () => {
     const element = fixture.nativeElement as HTMLElement;
     expect(
       Array.from(element.querySelectorAll('.ic-summary-card__header h2'), (title) =>
@@ -49,10 +52,6 @@ describe('HomeComponent', () => {
         'app-in-progress-workouts-card',
         'O resumo dos treinos em andamento ainda não está disponível.',
       ],
-      [
-        'app-body-metrics-progress-card',
-        'O acompanhamento da evolução corporal ainda não está disponível.',
-      ],
     ]) {
       const card = element.querySelector(selector)!;
       expect(card.querySelector('app-summary-card')).toBeTruthy();
@@ -60,6 +59,11 @@ describe('HomeComponent', () => {
       expect(card.querySelector('a, button, app-loading')).toBeNull();
       expect(card.querySelector('footer')?.matches(':empty')).toBe(true);
     }
+    const progress = element.querySelector('app-body-metrics-progress-card')!;
+    expect(progress.textContent).toContain('Sem dados suficientes para este resumo no período.');
+    expect(progress.querySelector('footer a')?.getAttribute('href')).toBe(
+      '/body-metrics/progress?from=home',
+    );
     TestBed.inject(HttpTestingController).verify();
   });
 });

@@ -9,11 +9,11 @@
 | Perfil                                               | Alterar senha; editar, salvar e cancelar campos                 | Cabeçalho com ação à direita; edição com quebra conforme espaço; ícones permanecem agrupados.         |
 | Alterar senha                                        | Salvar e cancelar                                               | Distribuição flexível, com duas ações por linha quando couberem.                                      |
 | Histórico corporal                                   | Evolução, nova avaliação, excluir, paginação e linhas clicáveis | Cabeçalho horizontal à direita; ações da tabela e paginação preservadas.                              |
-| Última avaliação                                     | Voltar ao histórico                                             | Ação na coluna direita do cabeçalho.                                                                  |
+| Última avaliação                                     | Voltar ao início                                                | Ação na coluna direita do cabeçalho.                                                                  |
 | Detalhes/edição de avaliação                         | Editar, voltar, salvar e cancelar                               | Cabeçalho horizontal; rodapé com quebra conforme espaço.                                              |
 | Criar avaliação                                      | Salvar e cancelar                                               | Mesmo padrão de rodapé da edição.                                                                     |
-| Evolução corporal                                    | Voltar, aplicar período, tipos de visão e tentar novamente      | Cabeçalho à direita; datas e opções flexíveis; aplicar e tentar novamente alinhados à direita.        |
-| Home e seus três cards                               | Link de detalhes e rodapé compartilhado                         | Preservados: rodapé já usa flex com wrap e alinhamento à direita. Os outros dois cards não têm ações. |
+| Evolução corporal                                    | Voltar conforme a origem, aplicar período, tipos de visão e tentar novamente | Cabeçalho à direita; retorno à Home ou histórico; datas e opções flexíveis; aplicar e tentar novamente alinhados à direita. |
+| Home e seus três cards                               | Links de detalhes e evolução completa, retry do resumo de evolução e rodapé compartilhado | Rodapé compartilhado com flex, wrap e alinhamento à direita. O card de treinos não tem ações. |
 | Cabeçalho global                                     | Menu, início, tema, sair e perfil                               | Preservado: grupo de ações horizontal já adequado.                                                    |
 | Sidebar/app-shell                                    | Links, grupo expansível e navegação                             | Preservados: navegação vertical tem função própria.                                                   |
 | Dialog                                               | Confirmar e cancelar, inclusive diálogos de ação única          | Mesmo padrão dos rodapés, sem inversão visual da ordem do DOM.                                        |
@@ -59,3 +59,5 @@ As regras novas não se aplicam a tablet/desktop.
 Os scripts, logs e screenshots da verificação local estão em `dist/`
 (diretório ignorado pelo Git). A verificação do navegador não usa dados reais
 nem envia alterações ao backend.
+
+<p align="right"><a href="README.md">Voltar para arquitetura</a></p>

@@ -1,4 +1,60 @@
+@use '../../../../../styles/responsive' as responsive;
+
 :host {
   display: block;
   min-width: 0;
+}
+
+.ic-body-metrics-progress-card__period,
+.ic-body-metrics-progress-card__help {
+  margin: 0 0 var(--ic-space-4);
+  color: var(--ic-text-secondary);
+  font-size: var(--ic-font-size-sm);
+}
+
+.ic-body-metrics-progress-card__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ic-space-5);
+  margin: 0;
+
+  dt {
+    color: var(--ic-text-secondary);
+  }
+  dd {
+    margin: var(--ic-space-2) 0 0;
+    color: var(--ic-text-primary);
+  }
+  strong {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+}
+
+.ic-body-metrics-progress-card__relative,
+.ic-body-metrics-progress-card__dates {
+  display: block;
+  margin-top: var(--ic-space-2);
+  font-size: var(--ic-font-size-sm);
+  color: var(--ic-text-secondary);
+}
+
+.ic-body-metrics-progress-card__details {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ic-navigation);
+  border-radius: var(--ic-radius-md);
+  text-underline-offset: 0.2em;
+  &:focus-visible {
+    outline: var(--ic-focus-ring-width) solid var(--ic-primary);
+    outline-offset: var(--ic-focus-ring-offset);
+  }
+}
+
+@include responsive.mobile {
+  .ic-body-metrics-progress-card__metrics {
+    grid-template-columns: 1fr;
+    gap: var(--ic-space-3);
+  }
 }

@@ -76,19 +76,22 @@ O desenvolvimento do projeto busca consolidar habilidades como:
 
 <h2 id="status-atual-do-projeto" align="center">Status Atual do Projeto</h2>
 
-O <b>IronCore Frontend</b> evoluiu da foundation técnica e visual inicial para os primeiros fluxos funcionais de autenticação e conta. A aplicação possui rotas públicas e protegidas, sessão baseada em cookie, telas de login, primeiro acesso e perfil, além de manter a infraestrutura visual e de comunicação HTTP estabelecida anteriormente.
+O <b>IronCore Frontend</b> possui fluxos funcionais de autenticação, conta e avaliação corporal. A aplicação integra sessão baseada em cookie, login, primeiro acesso, perfil e gerenciamento de avaliações corporais, incluindo histórico, resumo, evolução e comparativo, sobre a infraestrutura visual e HTTP estabelecida anteriormente.
 
 ### Já existe no projeto
 
 - Aplicação Angular 21 configurada com TypeScript e SCSS.
-- Rotas públicas para login e primeiro acesso, e rotas protegidas para início, perfil e alteração de senha.
+- Rotas públicas para login e primeiro acesso, e rotas protegidas carregadas sob demanda para início, perfil, alteração de senha e avaliação corporal.
 - Provider HTTP com URL base configurável por environment.
 - Fluxos de login, primeiro acesso, logout e restauração de sessão pelo contrato real da API.
 - Estado do usuário autenticado em memória, interceptor com `withCredentials` para a API e `authGuard` aplicado às rotas protegidas.
 - Perfil com dados separados de `User` e `Person`, edição de nickname e dados pessoais, e alteração de senha.
-- Angular Material, design tokens, alternância persistente entre temas claro e escuro e breakpoints responsivos centralizados.
+- Avaliação corporal com cadastro, histórico paginado, detalhe, última avaliação, edição, exclusão, evolução e comparativo integrados ao backend.
+- Home com resumo da última avaliação corporal e resumo real de evolução corporal por período, com acesso à página completa e retorno contextual; o card de treinos permanece sem integração.
+- Angular Material, design tokens, preferência persistente de tema claro, escuro ou do sistema e breakpoints responsivos centralizados.
 - Componentes compartilhados de botão, input, loading, empty state, diálogo de confirmação e toast.
-- Application shell com header, sidebar, acesso ao perfil, logout, alternância de tema, container de conteúdo e `router-outlet` interno.
+- Application shell com header, sidebar, acesso ao perfil e avaliação corporal, logout, preferência de tema, container de conteúdo e `router-outlet` interno.
+- Actions mobile compartilhadas, ícones com labels acessíveis e tooltips, além de gráficos e tabelas com rolagem horizontal quando necessária.
 - Configuração de build de produção e desenvolvimento.
 - Estrutura de testes unitários baseada em Vitest.
 - CI no GitHub Actions para build e testes em `main`.
@@ -97,8 +100,9 @@ O <b>IronCore Frontend</b> evoluiu da foundation técnica e visual inicial para 
 
 ### Planejado para as próximas etapas
 
-- Telas para métricas corporais, catálogo de exercícios e planejamento de treinos.
-- Registro e histórico de sessões executadas e visualizações de evolução física.
+- Telas para catálogo de exercícios e planejamento de treinos.
+- Registro e histórico de sessões executadas e visualizações de progresso de treino.
+- Integração do card de treinos na Home.
 - Evolução dos testes para os novos fluxos de domínio e de interface.
 - Documentação técnica complementar conforme novas estruturas e decisões forem implementadas.
 
@@ -145,7 +149,7 @@ Essa integração seguirá os seguintes princípios:
 - não expor detalhes técnicos desnecessários ao usuário;
 - não armazenar credenciais, tokens ou dados sensíveis de forma insegura no navegador.
 
-Os mecanismos implementados de comunicação HTTP, sessão e proteção de rotas estão documentados em [Arquitetura](docs/architecture/README.md). O tratamento global de erros HTTP ainda não foi implementado.
+Os mecanismos implementados de comunicação HTTP, sessão e proteção de rotas estão documentados em [Arquitetura](docs/architecture/README.md). O interceptor trata globalmente respostas `401`; os demais erros dos fluxos são apresentados pelas telas. Os contratos utilizados nas avaliações corporais estão em [Avaliação corporal](docs/body-metrics/README.md).
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -158,9 +162,13 @@ A documentação técnica registra a arquitetura efetivamente implementada e sep
 - [Índice da documentação técnica](docs/README.md)
 - [Arquitetura](docs/architecture/README.md)
 - [Estrutura do projeto](docs/project-structure/README.md)
+- [Home e Cards-Resumo](docs/card-resume/README.md)
+- [Avaliação corporal](docs/body-metrics/README.md)
+- [Disposição de ações no mobile](docs/architecture/mobile-actions.md)
 - [Histórico de releases](docs/releases/README.md)
 - [v0.1.0 — Foundation técnica e visual](docs/releases/v0.1.0/README.md)
 - [v0.2.0 — Autenticação, sessão e conta](docs/releases/v0.2.0/README.md)
+- [v0.3.0 — Body Metrics](docs/releases/v0.3.0/README.md)
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -184,7 +192,7 @@ O escopo inicial da interface acompanha a evolução incremental do IronCore e s
 ### Evoluções planejadas após o MVP
 
 - Registro e histórico de sessões de treino executadas.
-- Visualizações de progresso físico e de treino.
+- Visualizações de treino.
 - Recursos de planejamento de treino apoiados por IA, quando disponibilizados pelo backend.
 - Evoluções de acessibilidade, responsividade e experiência de uso baseadas nos fluxos implementados.
 
@@ -194,7 +202,7 @@ O escopo inicial da interface acompanha a evolução incremental do IronCore e s
 
 <h2 id="funcionalidades-planejadas" align="center">Funcionalidades Planejadas</h2>
 
-As funcionalidades abaixo representam o escopo funcional planejado para a interface. A implementação será feita de forma incremental e não devem ser interpretadas como recursos já disponíveis.
+As funcionalidades abaixo representam o escopo funcional da interface. Entregas existentes são identificadas por versão; os demais itens continuam planejados e não devem ser interpretados como recursos disponíveis.
 
 ### Acesso e sessão
 
@@ -204,8 +212,8 @@ As funcionalidades abaixo representam o escopo funcional planejado para a interf
 ### Pessoa e evolução física
 
 - Consulta e atualização dos dados da pessoa autenticada foram entregues na `v0.2.0`.
-- Cadastro, edição, exclusão e consulta de métricas corporais.
-- Consulta de histórico e progresso de métricas.
+- Cadastro, edição, exclusão, histórico paginado, detalhe e resumo da última avaliação corporal foram entregues na `v0.3.0`.
+- Evolução das medidas, comparativo por período e resumo de evolução na Home foram entregues na `v0.3.0`, reutilizando a página completa com retorno conforme a origem de acesso.
 
 ### Catálogo de exercícios
 
@@ -237,9 +245,9 @@ As funcionalidades abaixo representam o escopo funcional planejado para a interf
 
 <h2 id="testes-automatizados" align="center">Testes Automatizados</h2>
 
-O projeto possui testes unitários com Vitest para a foundation e para os fluxos de autenticação e conta: infraestrutura de autenticação e HTTP, rotas, layout, tema, perfil e componentes compartilhados. À medida que novos fluxos forem implementados, os testes deverão proteger comportamentos relevantes de componentes, serviços e integração com os contratos HTTP.
+O projeto possui testes com Vitest para a foundation e os fluxos de autenticação, conta e avaliação corporal: infraestrutura HTTP, rotas, layout, tema, perfil, componentes compartilhados, formulários e apresentação de gráficos/comparativo. Testes de integração entre rotas verificam novas consultas após cadastro, edição e exclusão. Os testes HTTP usam respostas simuladas e não alteram dados de uma API real.
 
-Os testes futuros devem cobrir, quando aplicável:
+Os testes protegem, quando aplicável:
 
 - estados de carregamento, sucesso, vazio e erro;
 - validações de interface;
@@ -272,19 +280,20 @@ A estrutura atual é a base criada pelo Angular CLI, estendida com infraestrutur
 src/
  ├── app/
  │    ├── core/           # autenticação, tema, HTTP, interceptor e guard globais
- │    ├── features/       # autenticação, início e perfil
+ │    ├── features/       # autenticação, avaliação corporal, início e perfil
  │    ├── layout/         # application shell, header e sidebar
  │    ├── shared/         # componentes reutilizáveis de interação e feedback
  │    ├── app.config.ts   # providers globais da aplicação
- │    ├── app.html        # template raiz
+ │    ├── app.component.html # template raiz
  │    ├── app.routes.ts   # rotas públicas e área protegida do shell
- │    ├── app.scss        # estilos do componente raiz
- │    ├── app.spec.ts     # teste inicial do componente raiz
- │    └── app.ts          # componente raiz
+ │    ├── app.routes.spec.ts # testes de rotas e integração entre telas
+ │    ├── app.component.scss # estilos do componente raiz
+ │    ├── app.component.spec.ts # testes do componente raiz
+ │    └── app.component.ts # componente raiz
  ├── environments/        # URL base não sensível por ambiente
  ├── index.html           # página HTML principal
  ├── main.ts              # bootstrap da aplicação
- ├── styles/              # palette, tokens, tema Material e responsividade
+ ├── styles/              # palette, tokens, tema Material, responsividade e actions
  └── styles.scss          # estilos globais
 
 public/                   # assets estáticos, quando necessários

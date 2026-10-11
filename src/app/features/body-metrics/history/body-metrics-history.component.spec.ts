@@ -380,7 +380,9 @@ describe('BodyMetricsHistoryComponent', () => {
     ).find((button) => button.getAttribute('aria-label') === 'Ver evolução')!;
     expect(button).toBeDefined();
     button.click();
-    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/body-metrics/progress']);
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/body-metrics/progress'], {
+      queryParams: { from: 'history' },
+    });
   });
 
   it.each(['loading', 'empty'] as const)('opens creation from the %s history', (state) => {

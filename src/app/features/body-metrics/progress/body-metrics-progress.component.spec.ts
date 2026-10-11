@@ -5,6 +5,7 @@ import {
   TestRequest,
 } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { API_BASE_URL } from '../../../core/http/api-base-url.token';
 import { BodyMetricsProgressChartType as Type } from '../body-metrics.models';
@@ -28,6 +29,7 @@ describe('BodyMetricsProgressComponent', () => {
     TestBed.configureTestingModule({
       imports: [BodyMetricsProgressComponent],
       providers: [
+        provideRouter([]),
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: API_BASE_URL, useValue: '' },

@@ -221,6 +221,34 @@ describe('BodyMetricsCreateComponent', () => {
     expect(success).toHaveBeenCalledExactlyOnceWith('Avaliação corporal cadastrada com sucesso.');
   });
 
+  it.each(['handler', 'submit event'])(
+    'blocks reentry through %s while POST is pending',
+    async (entry) => {
+      fillRequired();
+      submit();
+      const request = http.expectOne(endpoint);
+
+      if (entry === 'handler') {
+        fixture.componentInstance.createBodyMetrics();
+      } else {
+        fixture.nativeElement
+          .querySelector('form')
+          .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      }
+
+      http.expectNone(endpoint);
+      expect(fixture.componentInstance.loading()).toBe(true);
+      expect(navigate).not.toHaveBeenCalled();
+      expect(success).not.toHaveBeenCalled();
+
+      request.flush({ id: 42 });
+      await fixture.whenStable();
+      expect(fixture.componentInstance.loading()).toBe(false);
+      expect(navigate).toHaveBeenCalledExactlyOnceWith(['/body-metrics', 42]);
+      expect(success).toHaveBeenCalledExactlyOnceWith('Avaliação corporal cadastrada com sucesso.');
+    },
+  );
+
   it('waits for successful detail navigation before showing the success toast', async () => {
     let finishNavigation!: (value: boolean) => void;
     navigate.mockReturnValue(
