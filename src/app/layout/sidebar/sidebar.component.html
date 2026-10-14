@@ -44,4 +44,16 @@
       Evolução
     </a>
   </mat-expansion-panel>
+
+  <a
+    routerLink="/exercises"
+    routerLinkActive="ic-sidebar__link--active"
+    [routerLinkActiveOptions]="{ exact: true }"
+    class="ic-sidebar__link"
+  >
+    <span class="ic-sidebar__link-content">
+      <mat-icon>fitness_center</mat-icon>
+      <span>Catálogo de exercícios</span>
+    </span>
+  </a>
 </nav>

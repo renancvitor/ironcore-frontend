@@ -74,6 +74,20 @@ export const routes: Routes = [
             (m) => m.BodyMetricsDetailComponent,
           ),
       },
+      {
+        path: 'exercises',
+        loadComponent: () =>
+          import('./features/exercise/catalog/exercise-catalog.component').then(
+            (m) => m.ExerciseCatalogComponent,
+          ),
+      },
+      {
+        path: 'exercise/:id',
+        loadComponent: () =>
+          import('./features/exercise/catalog/detail/exercise-detail.component').then(
+            (m) => m.ExerciseDetailComponent,
+          ),
+      },
     ],
   },
 ];
