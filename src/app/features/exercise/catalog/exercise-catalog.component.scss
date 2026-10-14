@@ -27,6 +27,51 @@
   }
 }
 
+.ic-exercise-catalog__filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ic-space-4);
+
+  padding: var(--ic-space-5);
+
+  background: var(--ic-surface);
+  border: var(--ic-border-width-default) solid var(--ic-border-soft);
+  border-radius: var(--ic-radius-md);
+}
+
+.ic-exercise-catalog__filters-header {
+  h2 {
+    margin: 0;
+    color: var(--ic-text-primary);
+    font-size: 1.125rem;
+  }
+
+  p {
+    margin: var(--ic-space-1) 0 0;
+    color: var(--ic-text-secondary);
+  }
+}
+
+.ic-exercise-catalog__filters-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ic-space-4);
+  align-items: start;
+}
+
+.ic-exercise-catalog__filters-grid app-input,
+.ic-exercise-catalog__filters-grid mat-form-field {
+  width: 100%;
+  min-width: 0;
+}
+
+.ic-exercise-catalog__filters-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ic-space-3);
+}
+
 .ic-exercise-catalog__card {
   overflow: hidden;
 
@@ -101,7 +146,8 @@
   cursor: pointer;
 }
 
-.ic-exercise-catalog__row:hover {
+.ic-exercise-catalog__row:hover,
+.ic-exercise-catalog__row:focus-visible {
   background: var(--ic-surface-elevated);
 }
 
@@ -114,6 +160,14 @@ mat-paginator {
   .ic-exercise-catalog {
     gap: var(--ic-space-4);
   }
+
+  .ic-exercise-catalog__filters {
+    padding: var(--ic-space-4);
+  }
+
+  .ic-exercise-catalog__filters-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @include responsive.mobile {
@@ -123,6 +177,25 @@ mat-paginator {
 
   .ic-exercise-catalog__header {
     flex-direction: column;
+  }
+
+  .ic-exercise-catalog__filters {
+    gap: var(--ic-space-3);
+    padding: var(--ic-space-3);
+  }
+
+  .ic-exercise-catalog__filters-grid {
+    grid-template-columns: 1fr;
+    gap: var(--ic-space-3);
+  }
+
+  .ic-exercise-catalog__filters-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .ic-exercise-catalog__filters-actions app-button {
+    width: 100%;
   }
 
   .ic-exercise-catalog__table th,

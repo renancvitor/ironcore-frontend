@@ -65,6 +65,11 @@ export interface ListExercisesResponse {
 }
 
 export interface ListExercisesRequest {
+  activityTypeIds?: number[];
+  equipmentTypeIds?: number[];
+  muscleGroupIds?: number[];
+  muscleSubgroupIds?: number[];
+  targetRoles?: TargetRole[];
   name?: string;
   activityTypeId?: number;
   equipmentTypeId?: number;

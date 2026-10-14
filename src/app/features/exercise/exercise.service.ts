@@ -87,6 +87,18 @@ export class ExerciseService {
       params = params.set('targetRole', request.targetRole);
     }
 
+    for (const key of [
+      'activityTypeIds',
+      'equipmentTypeIds',
+      'muscleGroupIds',
+      'muscleSubgroupIds',
+      'targetRoles',
+    ] as const) {
+      for (const value of new Set<string | number>(request?.[key] ?? [])) {
+        params = params.append(key, value);
+      }
+    }
+
     return this.http.get<ListExercisesResponse>(`${this.baseUrl}/exercises`, {
       params,
     });

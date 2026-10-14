@@ -58,6 +58,39 @@ describe('ExerciseService', () => {
 
   afterEach(() => http.verify());
 
+  it('should repeat plural parameters and remove duplicates', () => {
+    service
+      .list(0, 20, {
+        activityTypeIds: [1, 2],
+        equipmentTypeIds: [2, 3, 2],
+        muscleGroupIds: [4, 5],
+        muscleSubgroupIds: [6, 7],
+        targetRoles: ['PRIMARY', 'SECONDARY', 'PRIMARY'],
+      })
+      .subscribe();
+    const request = http.expectOne((req) => req.url === `${baseUrl}/exercises`);
+    expect(request.request.params.getAll('activityTypeIds')).toEqual(['1', '2']);
+    expect(request.request.params.getAll('equipmentTypeIds')).toEqual(['2', '3']);
+    expect(request.request.params.getAll('muscleGroupIds')).toEqual(['4', '5']);
+    expect(request.request.params.getAll('muscleSubgroupIds')).toEqual(['6', '7']);
+    expect(request.request.params.getAll('targetRoles')).toEqual(['PRIMARY', 'SECONDARY']);
+    expect(request.request.params.has('equipmentTypeId')).toBe(false);
+    request.flush(emptyList);
+  });
+
+  it('should omit empty plural filters', () => {
+    service
+      .list(undefined, undefined, {
+        activityTypeIds: [],
+        equipmentTypeIds: [],
+        muscleGroupIds: [],
+        muscleSubgroupIds: [],
+        targetRoles: [],
+      })
+      .subscribe();
+    http.expectOne(`${baseUrl}/exercises`).flush(emptyList);
+  });
+
   it.each([
     ['getActivityTypes', 'activity-types', [activityType]],
     ['getEquipmentTypes', 'equipment-types', [equipmentType]],

@@ -6,6 +6,158 @@
     </div>
   </header>
 
+  <form class="ic-exercise-catalog__filters" [formGroup]="filtersForm" (ngSubmit)="applyFilters()">
+    <header class="ic-exercise-catalog__filters-header">
+      <div>
+        <h2>Filtros</h2>
+        <p>Combine os critérios para encontrar exercícios específicos.</p>
+      </div>
+    </header>
+
+    <div class="ic-exercise-catalog__filters-grid">
+      <app-input
+        id="exercise-name"
+        label="Nome"
+        placeholder="Buscar por nome"
+        type="text"
+        formControlName="name"
+      />
+
+      <mat-form-field appearance="outline">
+        <mat-label>Tipo de atividade</mat-label>
+
+        <mat-select multiple placeholder="Todos" formControlName="activityTypeIds">
+          @for (activityType of activityTypes(); track activityType.id) {
+            <mat-option [value]="activityType.id">
+              {{ activityType.name }}
+            </mat-option>
+          }
+        </mat-select>
+        @if (filtersForm.controls.activityTypeIds.value.length > 0) {
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Limpar tipos de atividade"
+            matTooltip="Limpar tipos de atividade"
+            (click)="clearFilter('activityTypeIds', $event)"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Equipamento</mat-label>
+
+        <mat-select multiple placeholder="Todos" formControlName="equipmentTypeIds">
+          @for (equipmentType of equipmentTypes(); track equipmentType.id) {
+            <mat-option [value]="equipmentType.id">
+              {{ equipmentType.name }}
+            </mat-option>
+          }
+        </mat-select>
+        @if (filtersForm.controls.equipmentTypeIds.value.length > 0) {
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Limpar equipamentos"
+            matTooltip="Limpar equipamentos"
+            (click)="clearFilter('equipmentTypeIds', $event)"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Grupo muscular</mat-label>
+
+        <mat-select
+          multiple
+          placeholder="Todos"
+          formControlName="muscleGroupIds"
+          (selectionChange)="onMuscleGroupChange()"
+        >
+          @for (muscleGroup of muscleGroups(); track muscleGroup.id) {
+            <mat-option [value]="muscleGroup.id">
+              {{ muscleGroup.name }}
+            </mat-option>
+          }
+        </mat-select>
+        @if (filtersForm.controls.muscleGroupIds.value.length > 0) {
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Limpar grupos musculares"
+            matTooltip="Limpar grupos musculares"
+            (click)="clearFilter('muscleGroupIds', $event)"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Subgrupo muscular</mat-label>
+
+        <mat-select multiple placeholder="Todos" formControlName="muscleSubgroupIds">
+          @for (muscleSubgroup of visibleMuscleSubgroups(); track muscleSubgroup.id) {
+            <mat-option [value]="muscleSubgroup.id">
+              {{ muscleSubgroup.name }}
+            </mat-option>
+          }
+        </mat-select>
+        @if (filtersForm.controls.muscleSubgroupIds.value.length > 0) {
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Limpar subgrupos musculares"
+            matTooltip="Limpar subgrupos musculares"
+            (click)="clearFilter('muscleSubgroupIds', $event)"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Papel muscular</mat-label>
+
+        <mat-select multiple placeholder="Todos" formControlName="targetRoles">
+          <mat-option value="PRIMARY">Primário</mat-option>
+          <mat-option value="SECONDARY">Secundário</mat-option>
+          <mat-option value="STABILIZER">Estabilizador</mat-option>
+        </mat-select>
+        @if (filtersForm.controls.targetRoles.value.length > 0) {
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Limpar papéis musculares"
+            matTooltip="Limpar papéis musculares"
+            (click)="clearFilter('targetRoles', $event)"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+    </div>
+
+    <div class="ic-exercise-catalog__filters-actions">
+      <app-button type="button" variant="secondary" [disabled]="loading()" (click)="clearFilters()">
+        Limpar filtros
+      </app-button>
+
+      <app-button type="submit" variant="primary" [disabled]="loading()">
+        Aplicar filtros
+      </app-button>
+    </div>
+  </form>
+
   @if (loading()) {
     <app-loading />
   } @else if (exercises(); as response) {

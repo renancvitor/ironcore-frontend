@@ -1,20 +1,51 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableModule } from '@angular/material/table';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { ExerciseService } from '../exercise.service';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
 
-import { ListExercisesResponse } from '../exercise.models';
+import {
+  ActivityTypeItemResponse,
+  EquipmentTypeItemResponse,
+  ListExercisesRequest,
+  ListExercisesResponse,
+  MuscleGroupItemResponse,
+  MuscleSubgroupItemResponse,
+  TargetRole,
+} from '../exercise.models';
 
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { InputComponent } from '../../../shared/components/input/input.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+
+import { ExerciseCatalogMode } from './exercise-catalog.types';
 
 @Component({
   selector: 'app-exercise-catalog',
-  imports: [MatPaginatorModule, MatTableModule, LoadingComponent, EmptyStateComponent],
+  imports: [
+    ReactiveFormsModule,
+    MatPaginatorModule,
+    MatTableModule,
+    LoadingComponent,
+    EmptyStateComponent,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    InputComponent,
+    ButtonComponent,
+  ],
   templateUrl: './exercise-catalog.component.html',
   styleUrl: './exercise-catalog.component.scss',
 })
@@ -25,6 +56,13 @@ export class ExerciseCatalogComponent {
 
   readonly exercises = signal<ListExercisesResponse | null>(null);
   readonly loading = signal(false);
+  readonly mode = input<ExerciseCatalogMode>('browse');
+  readonly activityTypes = signal<ActivityTypeItemResponse[]>([]);
+  readonly equipmentTypes = signal<EquipmentTypeItemResponse[]>([]);
+  readonly muscleGroups = signal<MuscleGroupItemResponse[]>([]);
+  readonly muscleSubgroups = signal<MuscleSubgroupItemResponse[]>([]);
+
+  readonly visibleMuscleSubgroups = signal<MuscleSubgroupItemResponse[]>([]);
 
   readonly displayedColumns = [
     'name',
@@ -35,8 +73,18 @@ export class ExerciseCatalogComponent {
     'suggestedRestSeconds',
   ];
 
+  readonly filtersForm = new FormGroup({
+    name: new FormControl('', { nonNullable: true }),
+    activityTypeIds: new FormControl<number[]>([], { nonNullable: true }),
+    equipmentTypeIds: new FormControl<number[]>([], { nonNullable: true }),
+    muscleGroupIds: new FormControl<number[]>([], { nonNullable: true }),
+    muscleSubgroupIds: new FormControl<number[]>([], { nonNullable: true }),
+    targetRoles: new FormControl<TargetRole[]>([], { nonNullable: true }),
+  });
+
   constructor() {
     this.loadExercises();
+    this.loadFilterCatalogs();
   }
 
   onPageChange(event: PageEvent): void {
@@ -51,7 +99,7 @@ export class ExerciseCatalogComponent {
     this.loading.set(true);
 
     this.exerciseService
-      .list(page, size)
+      .list(page, size, this.buildFiltersRequest())
       .pipe(
         finalize(() => {
           this.loading.set(false);
@@ -76,5 +124,93 @@ export class ExerciseCatalogComponent {
             });
         },
       });
+  }
+
+  private loadFilterCatalogs(): void {
+    this.exerciseService.getActivityTypes().subscribe({
+      next: (response) => {
+        this.activityTypes.set(response);
+      },
+    });
+
+    this.exerciseService.getEquipmentTypes().subscribe({
+      next: (response) => {
+        this.equipmentTypes.set(response);
+      },
+    });
+
+    this.exerciseService.getMuscleGroups().subscribe({
+      next: (response) => {
+        this.muscleGroups.set(response);
+      },
+    });
+
+    this.loadMuscleSubgroups();
+  }
+
+  private buildFiltersRequest(): ListExercisesRequest {
+    const filters = this.filtersForm.getRawValue();
+
+    const name = filters.name.trim();
+
+    return {
+      name: name || undefined,
+      activityTypeIds: filters.activityTypeIds,
+      equipmentTypeIds: filters.equipmentTypeIds,
+      muscleGroupIds: filters.muscleGroupIds,
+      muscleSubgroupIds: filters.muscleSubgroupIds,
+      targetRoles: filters.targetRoles,
+    };
+  }
+
+  private loadMuscleSubgroups(muscleGroupId?: number): void {
+    this.exerciseService.getMuscleSubgroups(muscleGroupId).subscribe({
+      next: (response) => {
+        this.muscleSubgroups.set(response);
+        this.updateVisibleMuscleSubgroups();
+      },
+    });
+  }
+
+  applyFilters(): void {
+    const size = this.exercises()?.exercises.size;
+
+    this.loadExercises(0, size);
+  }
+
+  clearFilters(): void {
+    this.filtersForm.reset({
+      name: '',
+      activityTypeIds: [],
+      equipmentTypeIds: [],
+      muscleGroupIds: [],
+      muscleSubgroupIds: [],
+      targetRoles: [],
+    });
+
+    this.loadMuscleSubgroups();
+    this.loadExercises(0, this.exercises()?.exercises.size);
+  }
+
+  onMuscleGroupChange(): void {
+    this.filtersForm.controls.muscleSubgroupIds.setValue([]);
+    this.updateVisibleMuscleSubgroups();
+  }
+
+  clearFilter(field: Exclude<keyof typeof this.filtersForm.controls, 'name'>, event: Event): void {
+    event.stopPropagation();
+    this.filtersForm.controls[field].setValue([]);
+    if (field === 'muscleGroupIds') {
+      this.onMuscleGroupChange();
+    }
+  }
+
+  private updateVisibleMuscleSubgroups(): void {
+    const groups = this.filtersForm.controls.muscleGroupIds.value;
+    this.visibleMuscleSubgroups.set(
+      this.muscleSubgroups().filter(
+        (subgroup) => groups.length === 0 || groups.includes(subgroup.muscleGroupId),
+      ),
+    );
   }
 }
