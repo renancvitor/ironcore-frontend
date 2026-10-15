@@ -82,7 +82,7 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'exercise/:id',
+        path: 'exercises/:id',
         loadComponent: () =>
           import('./features/exercise/catalog/detail/exercise-detail.component').then(
             (m) => m.ExerciseDetailComponent,

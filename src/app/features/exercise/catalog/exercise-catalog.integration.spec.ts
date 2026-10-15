@@ -126,7 +126,7 @@ describe('Exercise catalog HTTP integration', () => {
       .componentInstance as MatPaginator;
     expect([paginator.length, paginator.pageIndex, paginator.pageSize]).toEqual([45, 0, 20]);
     fixture.nativeElement.querySelector('.ic-exercise-catalog__row').click();
-    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/exercise', 10]);
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/exercises', 10]);
   });
 
   it('submits all filters through the form and paginates with applied values', () => {
@@ -210,10 +210,10 @@ describe('Exercise catalog HTTP integration', () => {
     expect(text).toContain('—');
     const row = fixture.nativeElement.querySelector('.ic-exercise-catalog__row');
     row.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    expect(navigate).toHaveBeenCalledWith(['/exercise', 10]);
+    expect(navigate).toHaveBeenCalledWith(['/exercises', 10]);
     navigate.mockClear();
     row.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
-    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/exercise', 10]);
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/exercises', 10]);
   });
 
   it.each(catalogs)('reports and recovers from a failed %s request', (path, field, data, label) => {
