@@ -74,6 +74,12 @@ describe('HeaderComponent', () => {
     expect(link.getAttribute('href')).toBe('/body-metrics');
   });
 
+  it('should expose the exercises link with its responsive class', () => {
+    const link = fixture.nativeElement.querySelector('a.ic-header__exercises') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('/exercises');
+    expect(link.getAttribute('aria-label')).toBe('Catálogo de exercícios');
+  });
+
   it('should log out and redirect to login after the request succeeds', () => {
     const result = new Subject<void>();
     logout.mockReturnValue(result);

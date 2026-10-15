@@ -1,0 +1,278 @@
+<section class="ic-exercise-catalog">
+  <header class="ic-exercise-catalog__header">
+    <div>
+      <h1>Catálogo de exercícios</h1>
+      <p>Consulte os exercícios disponíveis</p>
+    </div>
+  </header>
+
+  <form class="ic-exercise-catalog__filters" [formGroup]="filtersForm" (ngSubmit)="applyFilters()">
+    <header class="ic-exercise-catalog__filters-header">
+      <div>
+        <h2>Filtros</h2>
+        <p>Combine os critérios para encontrar exercícios específicos.</p>
+      </div>
+    </header>
+
+    @if (catalogsLoading()) {
+      <p role="status">Carregando opções dos filtros…</p>
+    }
+    @if (catalogErrorMessages().length > 0) {
+      <div role="alert">
+        @for (message of catalogErrorMessages(); track message) {
+          <p>{{ message }}</p>
+        }
+        <app-button
+          type="button"
+          variant="secondary"
+          [disabled]="catalogsLoading()"
+          (click)="loadFilterCatalogs()"
+        >
+          Tentar carregar filtros novamente
+        </app-button>
+      </div>
+    }
+
+    <div class="ic-exercise-catalog__filters-grid">
+      <app-input
+        id="exercise-name"
+        label="Nome"
+        placeholder="Buscar por nome"
+        type="text"
+        formControlName="name"
+      />
+
+      <mat-form-field appearance="outline">
+        <mat-label>Tipo de atividade</mat-label>
+
+        <mat-select multiple placeholder="Todos" formControlName="activityTypeIds">
+          @for (activityType of activityTypes(); track activityType.id) {
+            <mat-option [value]="activityType.id">
+              {{ activityType.name }}
+            </mat-option>
+          }
+        </mat-select>
+        @if (filtersForm.controls.activityTypeIds.value.length > 0) {
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Limpar tipos de atividade"
+            matTooltip="Limpar tipos de atividade"
+            (click)="clearFilter('activityTypeIds', $event)"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Equipamento</mat-label>
+
+        <mat-select multiple placeholder="Todos" formControlName="equipmentTypeIds">
+          @for (equipmentType of equipmentTypes(); track equipmentType.id) {
+            <mat-option [value]="equipmentType.id">
+              {{ equipmentType.name }}
+            </mat-option>
+          }
+        </mat-select>
+        @if (filtersForm.controls.equipmentTypeIds.value.length > 0) {
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Limpar equipamentos"
+            matTooltip="Limpar equipamentos"
+            (click)="clearFilter('equipmentTypeIds', $event)"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Grupo muscular</mat-label>
+
+        <mat-select
+          multiple
+          placeholder="Todos"
+          formControlName="muscleGroupIds"
+          (selectionChange)="onMuscleGroupChange()"
+        >
+          @for (muscleGroup of muscleGroups(); track muscleGroup.id) {
+            <mat-option [value]="muscleGroup.id">
+              {{ muscleGroup.name }}
+            </mat-option>
+          }
+        </mat-select>
+        @if (filtersForm.controls.muscleGroupIds.value.length > 0) {
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Limpar grupos musculares"
+            matTooltip="Limpar grupos musculares"
+            (click)="clearFilter('muscleGroupIds', $event)"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Subgrupo muscular</mat-label>
+
+        <mat-select multiple placeholder="Todos" formControlName="muscleSubgroupIds">
+          @for (muscleSubgroup of visibleMuscleSubgroups(); track muscleSubgroup.id) {
+            <mat-option [value]="muscleSubgroup.id">
+              {{ muscleSubgroup.name }}
+            </mat-option>
+          }
+        </mat-select>
+        @if (filtersForm.controls.muscleSubgroupIds.value.length > 0) {
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Limpar subgrupos musculares"
+            matTooltip="Limpar subgrupos musculares"
+            (click)="clearFilter('muscleSubgroupIds', $event)"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Papel muscular</mat-label>
+
+        <mat-select multiple placeholder="Todos" formControlName="targetRoles">
+          <mat-option value="PRIMARY">Primário</mat-option>
+          <mat-option value="SECONDARY">Secundário</mat-option>
+          <mat-option value="STABILIZER">Estabilizador</mat-option>
+        </mat-select>
+        @if (filtersForm.controls.targetRoles.value.length > 0) {
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Limpar papéis musculares"
+            matTooltip="Limpar papéis musculares"
+            (click)="clearFilter('targetRoles', $event)"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+    </div>
+
+    <div class="ic-exercise-catalog__filters-actions">
+      <app-button type="button" variant="secondary" [disabled]="loading()" (click)="clearFilters()">
+        Limpar filtros
+      </app-button>
+
+      <app-button type="submit" variant="primary" [disabled]="loading()">
+        Aplicar filtros
+      </app-button>
+    </div>
+  </form>
+
+  @if (loading()) {
+    <app-loading />
+  } @else if (exercises(); as response) {
+    @if (response.exercises.totalElements === 0) {
+      <app-empty-state icon="fitness_center" message="Nenhum exercício encontrado." />
+    } @else {
+      <section class="ic-exercise-catalog__card" aria-label="Catálogo de exercícios">
+        @if (response.exercises.content.length === 0) {
+          <app-empty-state
+            icon="fitness_center"
+            message="Nenhum exercício disponível nesta página."
+          />
+        } @else {
+          <div class="ic-exercise-catalog__table-container">
+            <table
+              mat-table
+              [dataSource]="response.exercises.content"
+              class="ic-exercise-catalog__table"
+            >
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Exercício</th>
+
+                <td mat-cell *matCellDef="let exercise">
+                  {{ exercise.name }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="activityType">
+                <th mat-header-cell *matHeaderCellDef>Atividade</th>
+
+                <td mat-cell *matCellDef="let exercise">
+                  {{ exercise.activityType.name }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="equipmentType">
+                <th mat-header-cell *matHeaderCellDef>Equipamento</th>
+
+                <td mat-cell *matCellDef="let exercise">
+                  {{ exercise.equipmentType.name }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="unilateral">
+                <th mat-header-cell *matHeaderCellDef>Unilateral</th>
+
+                <td mat-cell *matCellDef="let exercise">
+                  {{ exercise.unilateral ? 'Sim' : 'Não' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="compound">
+                <th mat-header-cell *matHeaderCellDef>Composto</th>
+
+                <td mat-cell *matCellDef="let exercise">
+                  {{ exercise.compound ? 'Sim' : 'Não' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="suggestedRestSeconds">
+                <th mat-header-cell *matHeaderCellDef>Descanso sugerido</th>
+
+                <td mat-cell *matCellDef="let exercise">
+                  @if (exercise.suggestedRestSeconds !== null) {
+                    {{ exercise.suggestedRestSeconds }} s
+                  } @else {
+                    —
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+
+              <tr
+                mat-row
+                *matRowDef="let row; columns: displayedColumns"
+                class="ic-exercise-catalog__row"
+                tabindex="0"
+                (click)="openExercise(row.id)"
+                (keydown.enter)="openExercise(row.id)"
+                (keydown.space)="openExercise(row.id)"
+              ></tr>
+            </table>
+          </div>
+        }
+
+        <mat-paginator
+          [length]="response.exercises.totalElements"
+          [pageIndex]="response.exercises.page"
+          [pageSize]="response.exercises.size"
+          [pageSizeOptions]="[10, 20, 50, 100]"
+          [showFirstLastButtons]="true"
+          aria-label="Paginação do catálogo de exercícios"
+          (page)="onPageChange($event)"
+        />
+      </section>
+    }
+  }
+</section>

@@ -1,0 +1,128 @@
+<section class="ic-exercise-detail">
+  <header class="ic-exercise-detail__header">
+    <div>
+      <h1>Detalhes do exercício</h1>
+      <p>Consulte as informações e os grupos musculares relacionados ao exercício</p>
+    </div>
+
+    <div class="ic-exercise-detail__header-actions">
+      <button
+        matIconButton
+        type="button"
+        aria-label="Voltar ao catálogo de exercícios"
+        matTooltip="Voltar ao catálogo"
+        (click)="backToExercises()"
+      >
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <app-loading />
+  } @else if (exercise(); as exercise) {
+    <div class="ic-exercise-detail__grid">
+      <section class="ic-exercise-detail__card" aria-labelledby="exercise-general-title">
+        <header class="ic-exercise-detail__card-header">
+          <h2 id="exercise-general-title">Informações gerais</h2>
+        </header>
+
+        <div class="ic-exercise-detail__fields">
+          <div class="ic-exercise-detail__field">
+            <span class="ic-exercise-detail__label">Situação</span>
+            <span class="ic-exercise-detail__value">{{
+              exercise.active ? 'Ativo' : 'Inativo'
+            }}</span>
+          </div>
+          <div class="ic-exercise-detail__field">
+            <span class="ic-exercise-detail__label">Exercício</span>
+            <span class="ic-exercise-detail__value">
+              {{ exercise.name }}
+            </span>
+          </div>
+
+          <div class="ic-exercise-detail__field">
+            <span class="ic-exercise-detail__label">Atividade</span>
+            <span class="ic-exercise-detail__value">
+              {{ exercise.activityType.name }}
+            </span>
+          </div>
+
+          <div class="ic-exercise-detail__field">
+            <span class="ic-exercise-detail__label">Equipamento</span>
+            <span class="ic-exercise-detail__value">
+              {{ exercise.equipmentType.name }}
+            </span>
+          </div>
+
+          <div class="ic-exercise-detail__field">
+            <span class="ic-exercise-detail__label">Unilateral</span>
+            <span class="ic-exercise-detail__value">
+              {{ exercise.unilateral ? 'Sim' : 'Não' }}
+            </span>
+          </div>
+
+          <div class="ic-exercise-detail__field">
+            <span class="ic-exercise-detail__label">Composto</span>
+            <span class="ic-exercise-detail__value">
+              {{ exercise.compound ? 'Sim' : 'Não' }}
+            </span>
+          </div>
+
+          <div class="ic-exercise-detail__field">
+            <span class="ic-exercise-detail__label">Descanso sugerido</span>
+            <span class="ic-exercise-detail__value">
+              @if (exercise.suggestedRestSeconds !== null) {
+                {{ exercise.suggestedRestSeconds }} s
+              } @else {
+                —
+              }
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section class="ic-exercise-detail__card" aria-labelledby="exercise-targets-title">
+        <header class="ic-exercise-detail__card-header">
+          <h2 id="exercise-targets-title">Músculos trabalhados</h2>
+        </header>
+
+        @if (groupsLoading()) {
+          <p class="ic-exercise-detail__empty" role="status">Carregando grupos musculares…</p>
+        }
+        @if (groupsError()) {
+          <div class="ic-exercise-detail__empty" role="alert">
+            <p>Não foi possível carregar os grupos musculares.</p>
+            <button matButton type="button" (click)="loadMuscleGroups()">Tentar novamente</button>
+          </div>
+        }
+        @if (exercise.muscleTargets.length > 0) {
+          <div class="ic-exercise-detail__targets">
+            @for (target of exercise.muscleTargets; track target.muscleSubgroup.id) {
+              <div class="ic-exercise-detail__target">
+                <div>
+                  <span class="ic-exercise-detail__target-name">{{
+                    target.muscleSubgroup.name
+                  }}</span>
+                  @if (!groupsLoading() && !groupsError()) {
+                    <span class="ic-exercise-detail__target-group">{{
+                      muscleGroupName(target.muscleSubgroup.muscleGroupId)
+                    }}</span>
+                  }
+                </div>
+
+                <span class="ic-exercise-detail__target-role" [attr.data-role]="target.targetRole">
+                  {{ targetRoleLabel(target.targetRole) }}
+                </span>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="ic-exercise-detail__empty">
+            Nenhum músculo alvo foi relacionado a este exercício.
+          </div>
+        }
+      </section>
+    </div>
+  }
+</section>

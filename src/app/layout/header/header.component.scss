@@ -34,7 +34,8 @@
     gap: var(--ic-space-2);
   }
 
-  .ic-header__body-metrics {
+  .ic-header__body-metrics,
+  .ic-header__exercises {
     display: none;
   }
 }
