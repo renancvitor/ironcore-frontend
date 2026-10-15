@@ -61,19 +61,28 @@ describe('ExerciseService', () => {
   it('should repeat plural parameters and remove duplicates', () => {
     service
       .list(0, 20, {
+        name: 'Supino & halteres',
         activityTypeIds: [1, 2],
         equipmentTypeIds: [2, 3, 2],
         muscleGroupIds: [4, 5],
         muscleSubgroupIds: [6, 7],
-        targetRoles: ['PRIMARY', 'SECONDARY', 'PRIMARY'],
+        targetRoles: ['PRIMARY', 'SECONDARY', 'STABILIZER', 'PRIMARY'],
       })
       .subscribe();
     const request = http.expectOne((req) => req.url === `${baseUrl}/exercises`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('page')).toBe('0');
+    expect(request.request.params.get('size')).toBe('20');
+    expect(request.request.params.get('name')).toBe('Supino & halteres');
     expect(request.request.params.getAll('activityTypeIds')).toEqual(['1', '2']);
     expect(request.request.params.getAll('equipmentTypeIds')).toEqual(['2', '3']);
     expect(request.request.params.getAll('muscleGroupIds')).toEqual(['4', '5']);
     expect(request.request.params.getAll('muscleSubgroupIds')).toEqual(['6', '7']);
-    expect(request.request.params.getAll('targetRoles')).toEqual(['PRIMARY', 'SECONDARY']);
+    expect(request.request.params.getAll('targetRoles')).toEqual([
+      'PRIMARY',
+      'SECONDARY',
+      'STABILIZER',
+    ]);
     expect(request.request.params.has('equipmentTypeId')).toBe(false);
     request.flush(emptyList);
   });

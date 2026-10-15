@@ -29,6 +29,12 @@
 
         <div class="ic-exercise-detail__fields">
           <div class="ic-exercise-detail__field">
+            <span class="ic-exercise-detail__label">Situação</span>
+            <span class="ic-exercise-detail__value">{{
+              exercise.active ? 'Ativo' : 'Inativo'
+            }}</span>
+          </div>
+          <div class="ic-exercise-detail__field">
             <span class="ic-exercise-detail__label">Exercício</span>
             <span class="ic-exercise-detail__value">
               {{ exercise.name }}
@@ -81,15 +87,31 @@
           <h2 id="exercise-targets-title">Músculos trabalhados</h2>
         </header>
 
+        @if (groupsLoading()) {
+          <p class="ic-exercise-detail__empty" role="status">Carregando grupos musculares…</p>
+        }
+        @if (groupsError()) {
+          <div class="ic-exercise-detail__empty" role="alert">
+            <p>Não foi possível carregar os grupos musculares.</p>
+            <button matButton type="button" (click)="loadMuscleGroups()">Tentar novamente</button>
+          </div>
+        }
         @if (exercise.muscleTargets.length > 0) {
           <div class="ic-exercise-detail__targets">
             @for (target of exercise.muscleTargets; track target.muscleSubgroup.id) {
               <div class="ic-exercise-detail__target">
-                <span class="ic-exercise-detail__target-name">
-                  {{ target.muscleSubgroup.name }}
-                </span>
+                <div>
+                  <span class="ic-exercise-detail__target-name">{{
+                    target.muscleSubgroup.name
+                  }}</span>
+                  @if (!groupsLoading() && !groupsError()) {
+                    <span class="ic-exercise-detail__target-group">{{
+                      muscleGroupName(target.muscleSubgroup.muscleGroupId)
+                    }}</span>
+                  }
+                </div>
 
-                <span class="ic-exercise-detail__target-role">
+                <span class="ic-exercise-detail__target-role" [attr.data-role]="target.targetRole">
                   {{ targetRoleLabel(target.targetRole) }}
                 </span>
               </div>

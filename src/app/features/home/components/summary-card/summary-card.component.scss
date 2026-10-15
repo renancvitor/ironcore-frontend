@@ -31,7 +31,7 @@
 
 .ic-summary-card__content {
   flex: 1;
-  padding: var(--ic-space-5);
+  padding: var(--ic-space-4) var(--ic-space-5);
 }
 
 .ic-summary-card__footer {
@@ -39,7 +39,7 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--ic-space-3);
-  padding: 0 var(--ic-space-5) var(--ic-space-5);
+  padding: 0 var(--ic-space-5) var(--ic-space-4);
 
   &:empty {
     display: none;

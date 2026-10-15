@@ -28,8 +28,18 @@ import { ChangePasswordComponent } from './features/profile/change-password/chan
 import { ProfileComponent } from './features/profile/profile.component';
 import { AppShellComponent } from './layout/app-shell/app-shell.component';
 import { ToastService } from './shared/components/toast/toast.service';
+import { ExerciseCatalogComponent } from './features/exercise/catalog/exercise-catalog.component';
+import { ExerciseDetailComponent } from './features/exercise/catalog/detail/exercise-detail.component';
 
 describe('application routes', () => {
+  it('lazy loads the exercise catalog and detail inside the protected shell', async () => {
+    const shell = routes.find((route) => route.path === '')!;
+    expect(shell.canActivate).toEqual([authGuard]);
+    const catalog = shell.children!.find((route) => route.path === 'exercises');
+    const detail = shell.children!.find((route) => route.path === 'exercise/:id');
+    expect(await catalog?.loadComponent?.()).toBe(ExerciseCatalogComponent);
+    expect(await detail?.loadComponent?.()).toBe(ExerciseDetailComponent);
+  });
   it('should load login as a public route', async () => {
     const loginRoute = routes.find((route) => route.path === 'login');
 

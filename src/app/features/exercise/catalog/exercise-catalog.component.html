@@ -14,6 +14,25 @@
       </div>
     </header>
 
+    @if (catalogsLoading()) {
+      <p role="status">Carregando opções dos filtros…</p>
+    }
+    @if (catalogErrorMessages().length > 0) {
+      <div role="alert">
+        @for (message of catalogErrorMessages(); track message) {
+          <p>{{ message }}</p>
+        }
+        <app-button
+          type="button"
+          variant="secondary"
+          [disabled]="catalogsLoading()"
+          (click)="loadFilterCatalogs()"
+        >
+          Tentar carregar filtros novamente
+        </app-button>
+      </div>
+    }
+
     <div class="ic-exercise-catalog__filters-grid">
       <app-input
         id="exercise-name"

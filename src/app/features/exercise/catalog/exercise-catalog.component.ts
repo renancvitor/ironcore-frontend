@@ -1,6 +1,7 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, inject, input, signal, WritableSignal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableModule } from '@angular/material/table';
@@ -29,6 +30,7 @@ import { InputComponent } from '../../../shared/components/input/input.component
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 import { ExerciseCatalogMode } from './exercise-catalog.types';
+import { ExerciseCatalogStateService } from './exercise-catalog-state.service';
 
 @Component({
   selector: 'app-exercise-catalog',
@@ -53,6 +55,11 @@ export class ExerciseCatalogComponent {
   private readonly exerciseService = inject(ExerciseService);
   private readonly dialogService = inject(DialogService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly catalogState = inject(ExerciseCatalogStateService);
+  readonly catalogErrors = signal<Record<string, string>>({});
+  readonly catalogsLoading = signal(false);
+  private pendingCatalogs = 0;
 
   readonly exercises = signal<ListExercisesResponse | null>(null);
   readonly loading = signal(false);
@@ -83,7 +90,11 @@ export class ExerciseCatalogComponent {
   });
 
   constructor() {
-    this.loadExercises();
+    this.filtersForm.patchValue({
+      ...this.catalogState.filters,
+      name: this.catalogState.filters.name ?? '',
+    });
+    this.loadExercises(this.catalogState.page, this.catalogState.size);
     this.loadFilterCatalogs();
   }
 
@@ -99,8 +110,9 @@ export class ExerciseCatalogComponent {
     this.loading.set(true);
 
     this.exerciseService
-      .list(page, size, this.buildFiltersRequest())
+      .list(page, size, this.catalogState.filters)
       .pipe(
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.loading.set(false);
         }),
@@ -108,6 +120,8 @@ export class ExerciseCatalogComponent {
       .subscribe({
         next: (response) => {
           this.exercises.set(response);
+          this.catalogState.page = response.exercises.page;
+          this.catalogState.size = response.exercises.size;
         },
 
         error: (error) => {
@@ -126,26 +140,70 @@ export class ExerciseCatalogComponent {
       });
   }
 
-  private loadFilterCatalogs(): void {
-    this.exerciseService.getActivityTypes().subscribe({
-      next: (response) => {
-        this.activityTypes.set(response);
-      },
-    });
+  loadFilterCatalogs(): void {
+    if (this.catalogsLoading()) return;
+    this.loadCatalog(
+      'activityTypeIds',
+      'tipos de atividade',
+      this.exerciseService.getActivityTypes(),
+      this.activityTypes,
+    );
+    this.loadCatalog(
+      'equipmentTypeIds',
+      'equipamentos',
+      this.exerciseService.getEquipmentTypes(),
+      this.equipmentTypes,
+    );
+    this.loadCatalog(
+      'muscleGroupIds',
+      'grupos musculares',
+      this.exerciseService.getMuscleGroups(),
+      this.muscleGroups,
+    );
+    this.loadCatalog(
+      'muscleSubgroupIds',
+      'subgrupos musculares',
+      this.exerciseService.getMuscleSubgroups(),
+      this.muscleSubgroups,
+    );
+  }
 
-    this.exerciseService.getEquipmentTypes().subscribe({
-      next: (response) => {
-        this.equipmentTypes.set(response);
-      },
-    });
+  catalogErrorMessages(): string[] {
+    return Object.values(this.catalogErrors());
+  }
 
-    this.exerciseService.getMuscleGroups().subscribe({
-      next: (response) => {
-        this.muscleGroups.set(response);
-      },
-    });
-
-    this.loadMuscleSubgroups();
+  private loadCatalog<T>(
+    field: 'activityTypeIds' | 'equipmentTypeIds' | 'muscleGroupIds' | 'muscleSubgroupIds',
+    label: string,
+    request: Observable<T[]>,
+    destination: WritableSignal<T[]>,
+  ): void {
+    const control = this.filtersForm.controls[field];
+    control.disable({ emitEvent: false });
+    this.pendingCatalogs++;
+    this.catalogsLoading.set(true);
+    request
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.catalogsLoading.set(--this.pendingCatalogs > 0)),
+      )
+      .subscribe({
+        next: (response) => {
+          destination.set(response);
+          control.enable({ emitEvent: false });
+          this.catalogErrors.update((errors) => {
+            const updated = { ...errors };
+            delete updated[field];
+            return updated;
+          });
+          this.updateVisibleMuscleSubgroups();
+        },
+        error: () =>
+          this.catalogErrors.update((errors) => ({
+            ...errors,
+            [field]: `Não foi possível carregar ${label}.`,
+          })),
+      });
   }
 
   private buildFiltersRequest(): ListExercisesRequest {
@@ -163,22 +221,16 @@ export class ExerciseCatalogComponent {
     };
   }
 
-  private loadMuscleSubgroups(muscleGroupId?: number): void {
-    this.exerciseService.getMuscleSubgroups(muscleGroupId).subscribe({
-      next: (response) => {
-        this.muscleSubgroups.set(response);
-        this.updateVisibleMuscleSubgroups();
-      },
-    });
-  }
-
   applyFilters(): void {
+    if (this.loading()) return;
+    this.catalogState.filters = this.buildFiltersRequest();
     const size = this.exercises()?.exercises.size;
 
     this.loadExercises(0, size);
   }
 
   clearFilters(): void {
+    if (this.loading()) return;
     this.filtersForm.reset({
       name: '',
       activityTypeIds: [],
@@ -188,7 +240,8 @@ export class ExerciseCatalogComponent {
       targetRoles: [],
     });
 
-    this.loadMuscleSubgroups();
+    this.updateVisibleMuscleSubgroups();
+    this.catalogState.filters = this.buildFiltersRequest();
     this.loadExercises(0, this.exercises()?.exercises.size);
   }
 

@@ -16,6 +16,7 @@ describe('SidebarComponent', () => {
         provideRouter([
           { path: 'body-metrics', component: SidebarComponent },
           { path: 'body-metrics/progress', component: SidebarComponent },
+          { path: 'exercises', component: SidebarComponent },
         ]),
       ],
     }).compileComponents();
@@ -33,6 +34,16 @@ describe('SidebarComponent', () => {
     const nav = fixture.nativeElement.querySelector('.ic-sidebar') as HTMLElement;
 
     expect(nav).toBeTruthy();
+  });
+
+  it('opens the exercise catalog from the sidebar and highlights its link', async () => {
+    const link = fixture.nativeElement.querySelector('a[href="/exercises"]') as HTMLAnchorElement;
+    expect(link.textContent).toContain('Catálogo de exercícios');
+    link.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(TestBed.inject(Router).url).toBe('/exercises');
+    expect(link.classList.contains('ic-sidebar__link--active')).toBe(true);
   });
 
   it('should render the profile navigation link', () => {
