@@ -5,7 +5,7 @@ Este documento descreve a organização principal do IronCore Frontend.
 O projeto usa Angular standalone e mantém responsabilidades transversais e visuais separadas:
 
 - `core`: autenticação, tema, HTTP, interceptor e guard globais.
-- `features`: páginas e fluxos funcionais de autenticação, avaliação corporal, início e perfil.
+- `features`: páginas e fluxos funcionais de autenticação, avaliação corporal, exercícios, início e perfil.
 - `shared`: componentes reutilizáveis de interação e feedback.
 - `layout`: application shell e estrutura visual persistente.
 
@@ -35,6 +35,8 @@ docs
 │   └── README.md
 ├── card-resume
 │   └── README.md
+├── exercises
+│   └── README.md
 ├── project-structure
 │   └── README.md
 └── releases
@@ -43,7 +45,9 @@ docs
     │    └── README.md
     ├── v0.2.0
     │    └── README.md
-    └── v0.3.0
+    ├── v0.3.0
+    │    └── README.md
+    └── v0.4.0
         └── README.md
 ```
 
@@ -82,6 +86,15 @@ src/app
 │   │       ├── body-metrics-progress-chart.utils.ts
 │   │       ├── chart
 │   │       └── changes
+│   ├── exercise
+│   │   ├── exercise.models.ts
+│   │   ├── exercise.service.ts
+│   │   └── catalog
+│   │       ├── exercise-catalog.component.ts
+│   │       ├── exercise-catalog.component.html
+│   │       ├── exercise-catalog.component.scss
+│   │       ├── exercise-catalog-state.service.ts
+│   │       └── detail
 │   ├── home
 │   │   └── components
 │   │       ├── body-metrics-latest-card
@@ -154,6 +167,13 @@ src/app
 │   │       ├── body-metrics-progress-navigation.integration.spec.ts
 │   │       ├── chart
 │   │       └── changes
+│   ├── exercise
+│   │   ├── exercise.service.spec.ts
+│   │   └── catalog
+│   │       ├── exercise-catalog.component.spec.ts
+│   │       ├── exercise-catalog.integration.spec.ts
+│   │       └── detail
+│   │           └── exercise-detail.component.spec.ts
 │   ├── home
 │   └── profile
 ├── layout
@@ -174,6 +194,8 @@ src/app
 
 `app.routes.spec.ts` inclui integração de cadastro e exclusão com o Router e consultas HTTP simuladas. A integração de edição fica na feature; `progress/body-metrics-progress-navigation.integration.spec.ts` verifica o retorno contextual da evolução. Componentes de gráficos, comparativo, campos e cards possuem testes próximos às suas implementações, incluindo o resumo real de evolução na Home. Os testes do frontend não operam uma API real.
 
+Na feature de exercícios, os testes verificam contratos HTTP, formulário, filtros aplicados, paginação, restauração do contexto, dependência entre grupo e subgrupo, estados e detalhe com músculos-alvo. `exercise-catalog.integration.spec.ts` integra componente, formulário, paginator e serviço com respostas HTTP simuladas. Rotas, header e sidebar também verificam o acesso ao catálogo.
+
 ## Regra de Leitura
 
 - `core` contém infraestrutura única e transversal, sem regras de uma tela ou domínio.
@@ -183,8 +205,9 @@ src/app
 - A Home compõe a API pública de apresentação de `BodyMetricsLatestComponent` por `contentTemplate`; consulta e estados permanecem na feature de avaliação corporal.
 - `BodyMetricsProgressCardComponent` usa o serviço e o período padrão de avaliação corporal para consultar `/progress/changes`. O card mantém estado local e abre a mesma página de evolução com `from=home`; o histórico usa `from=history`. A página completa concentra o retorno contextual e o fallback para histórico.
 - Serviço, modelos, formulário, campos e transformações corporais permanecem em `features/body-metrics`. Responsabilidades e contratos estão em [Avaliação corporal](../body-metrics/README.md).
+- Serviço, modelos, estado da busca e telas do catálogo permanecem em `features/exercise`. `ExerciseCatalogStateService` guarda filtros aplicados e paginação em memória; as respostas HTTP pertencem às telas. Responsabilidades e contratos estão em [Catálogo de Exercícios](../exercises/README.md).
 - O AppShell fornece a configuração compartilhada do paginator em português. `_actions.scss` concentra a disposição mobile de ações, conforme [Disposição de ações no mobile](../architecture/mobile-actions.md).
-- As rotas públicas são `/login` e `/first-access`. A área protegida monta o application shell e contém início, perfil, alteração de senha e avaliação corporal, com componentes carregados sob demanda.
+- As rotas públicas são `/login` e `/first-access`. A área protegida monta o application shell e contém início, perfil, alteração de senha, avaliação corporal e as rotas `/exercises` e `/exercises/:id`, com componentes carregados sob demanda.
 - [Home e Cards-Resumo](../card-resume/README.md) reúne o comportamento entregue e identifica separadamente as diretrizes de produto para integrações futuras. Releases preservam registros históricos próprios.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

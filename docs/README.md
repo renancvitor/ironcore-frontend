@@ -16,10 +16,12 @@ Os documentos descrevem estruturas já implementadas. Convenções e evoluções
 
 - [Home e Cards-Resumo](card-resume/README.md): composição, conteúdo, estados, navegação e diretrizes de produto para os cards da Home.
 - [Avaliação corporal](body-metrics/README.md): contratos, histórico, detalhe, resumos na Home, cadastro, edição, exclusão, evolução, comparativo e navegação contextual.
+- [Catálogo de Exercícios](exercises/README.md): contratos, classificações auxiliares, busca, filtros combinados, paginação, contexto de navegação, detalhe e músculos-alvo.
 
 ### Releases
 
 - [Releases](releases/README.md): índice histórico das releases técnicas.
+- [v0.4.0](releases/v0.4.0/README.md): Exercise Catalog, com documentação preparada para o pre-release.
 - [v0.3.0](releases/v0.3.0/README.md): Body Metrics.
 - [v0.2.0](releases/v0.2.0/README.md): autenticação, sessão e conta.
 - [v0.1.0](releases/v0.1.0/README.md): foundation técnica e visual inicial do frontend.
@@ -27,7 +29,7 @@ Os documentos descrevem estruturas já implementadas. Convenções e evoluções
 ## Observações
 
 - A documentação usa termos técnicos em inglês quando eles representam código, diretórios, ferramentas ou conceitos comuns no desenvolvimento frontend.
-- Autenticação, conta e avaliação corporal estão implementados. Catálogo de exercícios, planejamento e execução de treinos continuam como evoluções planejadas da interface.
+- Autenticação, conta, avaliação corporal e catálogo de exercícios estão implementados. Planejamento e execução de treinos continuam como evoluções planejadas da interface.
 - Releases anteriores preservam a história do projeto e não devem ser reescritas para refletir o estado atual.
 
 <p align="right"><a href="../README.md">Voltar para a documentação principal</a></p>
