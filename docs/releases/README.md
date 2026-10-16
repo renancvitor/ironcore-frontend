@@ -8,7 +8,8 @@ Cada release possui seu próprio `README.md` para facilitar navegação direta p
 
 | Release  | Documento                                                     | Status                 |
 | -------- | ------------------------------------------------------------- | ---------------------- |
-| `v0.3.0` | [Body Metrics](./v0.3.0/README.md)                            | Documentação preparada |
+| `v0.4.0` | [Exercise Catalog](./v0.4.0/README.md)                        | Documentação preparada |
+| `v0.3.0` | [Body Metrics](./v0.3.0/README.md)                            | Histórico              |
 | `v0.2.0` | [Autenticação, sessão e conta](./v0.2.0/README.md)            | Histórico              |
 | `v0.1.0` | [Foundation técnica e visual do frontend](./v0.1.0/README.md) | Histórico              |
 

@@ -103,7 +103,7 @@ export class ExerciseCatalogComponent {
   }
 
   openExercise(id: number): void {
-    void this.router.navigate(['/exercise', id]);
+    void this.router.navigate(['/exercises', id]);
   }
 
   private loadExercises(page?: number, size?: number): void {

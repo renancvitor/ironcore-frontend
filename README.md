@@ -76,21 +76,22 @@ O desenvolvimento do projeto busca consolidar habilidades como:
 
 <h2 id="status-atual-do-projeto" align="center">Status Atual do Projeto</h2>
 
-O <b>IronCore Frontend</b> possui fluxos funcionais de autenticação, conta e avaliação corporal. A aplicação integra sessão baseada em cookie, login, primeiro acesso, perfil e gerenciamento de avaliações corporais, incluindo histórico, resumo, evolução e comparativo, sobre a infraestrutura visual e HTTP estabelecida anteriormente.
+O <b>IronCore Frontend</b> possui fluxos funcionais de autenticação, conta, avaliação corporal e catálogo de exercícios. A aplicação integra sessão baseada em cookie, login, primeiro acesso, perfil, gerenciamento de avaliações corporais e consulta de exercícios com busca, filtros, paginação e detalhe, sobre a infraestrutura visual e HTTP estabelecida anteriormente.
 
 ### Já existe no projeto
 
 - Aplicação Angular 21 configurada com TypeScript e SCSS.
-- Rotas públicas para login e primeiro acesso, e rotas protegidas carregadas sob demanda para início, perfil, alteração de senha e avaliação corporal.
+- Rotas públicas para login e primeiro acesso, e rotas protegidas carregadas sob demanda para início, perfil, alteração de senha, avaliação corporal e exercícios.
 - Provider HTTP com URL base configurável por environment.
 - Fluxos de login, primeiro acesso, logout e restauração de sessão pelo contrato real da API.
 - Estado do usuário autenticado em memória, interceptor com `withCredentials` para a API e `authGuard` aplicado às rotas protegidas.
 - Perfil com dados separados de `User` e `Person`, edição de nickname e dados pessoais, e alteração de senha.
 - Avaliação corporal com cadastro, histórico paginado, detalhe, última avaliação, edição, exclusão, evolução e comparativo integrados ao backend.
+- Catálogo de exercícios com classificações auxiliares, busca por nome, filtros combinados, paginação, detalhe e apresentação de músculos-alvo e seus papéis.
 - Home com resumo da última avaliação corporal e resumo real de evolução corporal por período, com acesso à página completa e retorno contextual; o card de treinos permanece sem integração.
 - Angular Material, design tokens, preferência persistente de tema claro, escuro ou do sistema e breakpoints responsivos centralizados.
 - Componentes compartilhados de botão, input, loading, empty state, diálogo de confirmação e toast.
-- Application shell com header, sidebar, acesso ao perfil e avaliação corporal, logout, preferência de tema, container de conteúdo e `router-outlet` interno.
+- Application shell com header, sidebar, acesso ao perfil, avaliação corporal e exercícios, logout, preferência de tema, container de conteúdo e `router-outlet` interno.
 - Actions mobile compartilhadas, ícones com labels acessíveis e tooltips, além de gráficos e tabelas com rolagem horizontal quando necessária.
 - Configuração de build de produção e desenvolvimento.
 - Estrutura de testes unitários baseada em Vitest.
@@ -100,7 +101,7 @@ O <b>IronCore Frontend</b> possui fluxos funcionais de autenticação, conta e a
 
 ### Planejado para as próximas etapas
 
-- Telas para catálogo de exercícios e planejamento de treinos.
+- Telas para planejamento de treinos.
 - Registro e histórico de sessões executadas e visualizações de progresso de treino.
 - Integração do card de treinos na Home.
 - Evolução dos testes para os novos fluxos de domínio e de interface.
@@ -149,7 +150,7 @@ Essa integração seguirá os seguintes princípios:
 - não expor detalhes técnicos desnecessários ao usuário;
 - não armazenar credenciais, tokens ou dados sensíveis de forma insegura no navegador.
 
-Os mecanismos implementados de comunicação HTTP, sessão e proteção de rotas estão documentados em [Arquitetura](docs/architecture/README.md). O interceptor trata globalmente respostas `401`; os demais erros dos fluxos são apresentados pelas telas. Os contratos utilizados nas avaliações corporais estão em [Avaliação corporal](docs/body-metrics/README.md).
+Os mecanismos implementados de comunicação HTTP, sessão e proteção de rotas estão documentados em [Arquitetura](docs/architecture/README.md). O interceptor trata globalmente respostas `401`; os demais erros dos fluxos são apresentados pelas telas. Os contratos utilizados estão em [Avaliação corporal](docs/body-metrics/README.md) e [Catálogo de Exercícios](docs/exercises/README.md).
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -164,11 +165,13 @@ A documentação técnica registra a arquitetura efetivamente implementada e sep
 - [Estrutura do projeto](docs/project-structure/README.md)
 - [Home e Cards-Resumo](docs/card-resume/README.md)
 - [Avaliação corporal](docs/body-metrics/README.md)
+- [Catálogo de Exercícios](docs/exercises/README.md)
 - [Disposição de ações no mobile](docs/architecture/mobile-actions.md)
 - [Histórico de releases](docs/releases/README.md)
 - [v0.1.0 — Foundation técnica e visual](docs/releases/v0.1.0/README.md)
 - [v0.2.0 — Autenticação, sessão e conta](docs/releases/v0.2.0/README.md)
 - [v0.3.0 — Body Metrics](docs/releases/v0.3.0/README.md)
+- [v0.4.0 — Exercise Catalog](docs/releases/v0.4.0/README.md)
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -217,9 +220,9 @@ As funcionalidades abaixo representam o escopo funcional da interface. Entregas 
 
 ### Catálogo de exercícios
 
-- Listagem paginada de exercícios.
-- Filtros de busca e classificação disponibilizados pela API.
-- Consulta do detalhe de cada exercício e de seus músculos-alvo.
+- Listagem paginada, busca por nome e filtros combinados foram implementados na `v0.4.0`.
+- Classificações auxiliares e dependência entre grupo e subgrupo muscular foram integradas na `v0.4.0`.
+- Detalhe com classificações, músculos-alvo e seus papéis foi implementado na `v0.4.0`.
 
 ### Planejamento de treinos
 
@@ -245,7 +248,7 @@ As funcionalidades abaixo representam o escopo funcional da interface. Entregas 
 
 <h2 id="testes-automatizados" align="center">Testes Automatizados</h2>
 
-O projeto possui testes com Vitest para a foundation e os fluxos de autenticação, conta e avaliação corporal: infraestrutura HTTP, rotas, layout, tema, perfil, componentes compartilhados, formulários e apresentação de gráficos/comparativo. Testes de integração entre rotas verificam novas consultas após cadastro, edição e exclusão. Os testes HTTP usam respostas simuladas e não alteram dados de uma API real.
+O projeto possui testes com Vitest para a foundation e os fluxos de autenticação, conta, avaliação corporal e catálogo de exercícios: infraestrutura HTTP, rotas, layout, tema, perfil, componentes compartilhados, formulários, gráficos/comparativo, filtros, paginação e músculos-alvo. Testes de integração entre rotas verificam novas consultas após cadastro, edição e exclusão. Os testes HTTP usam respostas simuladas e não alteram dados de uma API real.
 
 Os testes protegem, quando aplicável:
 
@@ -280,7 +283,7 @@ A estrutura atual é a base criada pelo Angular CLI, estendida com infraestrutur
 src/
  ├── app/
  │    ├── core/           # autenticação, tema, HTTP, interceptor e guard globais
- │    ├── features/       # autenticação, avaliação corporal, início e perfil
+ │    ├── features/       # autenticação, avaliação corporal, exercícios, início e perfil
  │    ├── layout/         # application shell, header e sidebar
  │    ├── shared/         # componentes reutilizáveis de interação e feedback
  │    ├── app.config.ts   # providers globais da aplicação

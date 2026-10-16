@@ -36,7 +36,7 @@ describe('application routes', () => {
     const shell = routes.find((route) => route.path === '')!;
     expect(shell.canActivate).toEqual([authGuard]);
     const catalog = shell.children!.find((route) => route.path === 'exercises');
-    const detail = shell.children!.find((route) => route.path === 'exercise/:id');
+    const detail = shell.children!.find((route) => route.path === 'exercises/:id');
     expect(await catalog?.loadComponent?.()).toBe(ExerciseCatalogComponent);
     expect(await detail?.loadComponent?.()).toBe(ExerciseDetailComponent);
   });

@@ -4,7 +4,7 @@
 
 O IronCore Frontend é uma aplicação Angular standalone. O bootstrap ocorre em `src/main.ts`; `app.config.ts` concentra os providers globais; e `AppComponent` hospeda o `router-outlet` e o fundo visual compartilhado.
 
-A aplicação separa infraestrutura transversal em `core`, elementos reutilizáveis em `shared`, composição visual persistente em `layout` e fluxos funcionais em `features`. As features atualmente entregues pertencem aos contextos de autenticação, avaliação corporal, início e perfil.
+A aplicação separa infraestrutura transversal em `core`, elementos reutilizáveis em `shared`, composição visual persistente em `layout` e fluxos funcionais em `features`. As features atualmente entregues pertencem aos contextos de autenticação, avaliação corporal, exercícios, início e perfil.
 
 ## Bootstrap e Providers
 
@@ -18,19 +18,20 @@ A aplicação separa infraestrutura transversal em `core`, elementos reutilizáv
 
 ## Camadas e Responsabilidades
 
-| Área                    | Responsabilidade atual                                                                       |
-| ----------------------- | -------------------------------------------------------------------------------------------- |
-| `core/auth`             | Contratos de autenticação, login, logout, restauração de sessão e estado reativo em memória. |
-| `core/http`             | Provider do `HttpClient` e token `API_BASE_URL`.                                             |
-| `core/interceptors`     | Inclusão de cookies nas chamadas à API e limpeza de sessão em respostas `401`.               |
-| `core/guards`           | Guard reutilizável aplicado à área autenticada.                                              |
-| `core/theme`            | Estado e persistência da preferência de tema.                                                |
-| `shared/components`     | Componentes de interação e feedback sem regra de domínio.                                    |
-| `layout`                | Application shell, header e sidebar.                                                         |
-| `features/auth`         | Páginas e fluxos de login e primeiro acesso.                                                 |
-| `features/body-metrics` | Contratos, consultas, formulários, exclusão, evolução e comparativo de avaliações corporais. |
-| `features/home`         | Composição dos cards da página inicial, incluindo resumos da última avaliação e evolução.    |
-| `features/profile`      | Perfil, dados de `Person`, nickname e alteração de senha.                                    |
+| Área                    | Responsabilidade atual                                                                         |
+| ----------------------- | ---------------------------------------------------------------------------------------------- |
+| `core/auth`             | Contratos de autenticação, login, logout, restauração de sessão e estado reativo em memória.   |
+| `core/http`             | Provider do `HttpClient` e token `API_BASE_URL`.                                               |
+| `core/interceptors`     | Inclusão de cookies nas chamadas à API e limpeza de sessão em respostas `401`.                 |
+| `core/guards`           | Guard reutilizável aplicado à área autenticada.                                                |
+| `core/theme`            | Estado e persistência da preferência de tema.                                                  |
+| `shared/components`     | Componentes de interação e feedback sem regra de domínio.                                      |
+| `layout`                | Application shell, header e sidebar.                                                           |
+| `features/auth`         | Páginas e fluxos de login e primeiro acesso.                                                   |
+| `features/body-metrics` | Contratos, consultas, formulários, exclusão, evolução e comparativo de avaliações corporais.   |
+| `features/exercise`     | Contratos e consultas do catálogo, filtros, contexto de navegação e detalhe com músculos-alvo. |
+| `features/home`         | Composição dos cards da página inicial, incluindo resumos da última avaliação e evolução.      |
+| `features/profile`      | Perfil, dados de `Person`, nickname e alteração de senha.                                      |
 
 Uma feature pode usar APIs públicas de `core` e elementos de `shared`, mas não deve acessar detalhes internos de outra feature. `shared` não deve depender de features e `core` não deve depender de `features` ou `layout`.
 
@@ -66,9 +67,11 @@ O interceptor identifica chamadas para a API por origem e caminho. Somente essas
 
 ## Routing e Application Shell
 
-O routing possui as rotas públicas `/login` e `/first-access`. A rota raiz, composta por `AppShellComponent` e protegida por `authGuard`, contém início, `/profile`, `/change-password` e as rotas de avaliação corporal. Os componentes de rota usam `loadComponent` para carregamento sob demanda. O shell organiza header, sidebar, área de conteúdo com `.ic-container` e um `router-outlet` interno. Header e sidebar oferecem acesso ao perfil e histórico corporal; a sidebar também oferece evolução. O header oferece logout e preferência de tema.
+O routing possui as rotas públicas `/login` e `/first-access`. A rota raiz, composta por `AppShellComponent` e protegida por `authGuard`, contém início, `/profile`, `/change-password` e as rotas de avaliação corporal e exercícios. Os componentes de rota usam `loadComponent` para carregamento sob demanda. O shell organiza header, sidebar, área de conteúdo com `.ic-container` e um `router-outlet` interno. Header e sidebar oferecem acesso ao perfil, histórico corporal e catálogo de exercícios; a sidebar também oferece evolução. O header oferece logout e preferência de tema. No mobile, os atalhos de histórico e exercícios do header ficam ocultos, mantendo o acesso pela sidebar.
 
 A avaliação corporal possui `/body-metrics`, `/body-metrics/latest`, `/body-metrics/progress`, `/body-metrics/create` e `/body-metrics/:id`, com rotas estáticas antes de `:id`. A edição ocorre dentro do detalhe. `bodyMetricsHistoryGuard` impede saída do histórico enquanto há exclusão pendente. O provider de `MatPaginatorIntl` em português pertence ao AppShell e é compartilhado com suas páginas carregadas sob demanda.
+
+O catálogo usa `/exercises` e `/exercises/:id` na mesma área protegida. A listagem abre o detalhe por clique ou teclado, e o detalhe retorna ao catálogo com o contexto aplicado preservado em memória. As duas telas reutilizam serviços de HTTP, sessão e feedback existentes.
 
 A Home acessa a evolução com `from=home`, e o histórico com `from=history`, na query string de `/body-metrics/progress`. A página lê a origem atual da URL: `home` retorna para `/`; histórico, origem inválida/ausente e acesso direto retornam para `/body-metrics`. A sidebar acessa a rota sem origem, restaurando o fallback inclusive na mesma página. Label e tooltip do botão de retorno acompanham esse contexto. A origem não altera os contratos HTTP, período ou visão inicial e não cria uma segunda tela.
 
@@ -100,8 +103,16 @@ Os componentes base entregues são:
 
 Evolução e comparativo compartilham um período aplicado e cancelam requisições anteriores ao mudar a consulta ou destruir a página. Gráficos usam SVG e transformações de apresentação; indicadores, agregação mensal e variações permanecem sob responsabilidade do backend. Os fluxos e contratos estão descritos em [Avaliação corporal](../body-metrics/README.md).
 
+## Estado do Catálogo de Exercícios
+
+`ExerciseService` centraliza consultas de exercícios e classificações auxiliares em `/api/exercise-catalog`, sem cache de respostas. Listagem e detalhe mantêm dados e estados locais em signals. `ExerciseCatalogStateService`, fornecido na raiz, guarda os filtros aplicados, a página e o tamanho em memória: abrir um detalhe e voltar refaz a consulta com esse contexto; recarregar a aplicação reinicia a busca. Essa preservação é intencional e não acrescenta persistência em storage ou query string.
+
+O formulário mantém alterações pendentes separadas dos filtros aplicados. A paginação usa a busca aplicada; aplicar ou limpar todos os filtros reinicia na página zero. A dependência entre grupo e subgrupo organiza as opções visíveis no formulário, enquanto busca e filtragem dos exercícios permanecem no backend.
+
+As consultas auxiliares têm carregamento e recuperação próprios. No detalhe, o nome do grupo muscular é resolvido por consulta auxiliar independente; uma falha nessa consulta preserva os dados do exercício e permite retry. Os contratos, estados e a representação de papéis musculares estão em [Catálogo de Exercícios](../exercises/README.md).
+
 ## Recortes Atuais
 
-Não fazem parte do estado atual: catálogo de exercícios, planejamento ou execução de treinos, deploy ou publicação de artefatos. O card de treinos na Home ainda não possui integração; última avaliação e resumo de evolução usam dados reais do backend. O fluxo de avaliação corporal não tem sincronização entre abas ou guard de saída para cadastro/edição. A regra de troca obrigatória de senha é direcionada pela resposta do login; o `authGuard` verifica somente a existência de usuário no estado local.
+Não fazem parte do estado atual: planejamento ou execução de treinos, deploy ou publicação de artefatos. O card de treinos na Home ainda não possui integração; última avaliação e resumo de evolução usam dados reais do backend. O fluxo de avaliação corporal não tem sincronização entre abas ou guard de saída para cadastro/edição. A regra de troca obrigatória de senha é direcionada pela resposta do login; o `authGuard` verifica somente a existência de usuário no estado local.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

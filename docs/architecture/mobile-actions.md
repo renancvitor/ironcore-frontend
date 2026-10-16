@@ -2,24 +2,24 @@
 
 ## Inventário da revisão
 
-| Tela/componente                                      | Áreas revisadas                                                 | Resultado                                                                                             |
-| ---------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Login                                                | Enviar formulário                                               | Ação única ocupa a largura do formulário no mobile.                                                   |
-| Primeiro acesso                                      | Enviar formulário                                               | Mesmo padrão do login.                                                                                |
-| Perfil                                               | Alterar senha; editar, salvar e cancelar campos                 | Cabeçalho com ação à direita; edição com quebra conforme espaço; ícones permanecem agrupados.         |
-| Alterar senha                                        | Salvar e cancelar                                               | Distribuição flexível, com duas ações por linha quando couberem.                                      |
-| Histórico corporal                                   | Evolução, nova avaliação, excluir, paginação e linhas clicáveis | Cabeçalho horizontal à direita; ações da tabela e paginação preservadas.                              |
-| Última avaliação                                     | Voltar ao início                                                | Ação na coluna direita do cabeçalho.                                                                  |
-| Detalhes/edição de avaliação                         | Editar, voltar, salvar e cancelar                               | Cabeçalho horizontal; rodapé com quebra conforme espaço.                                              |
-| Criar avaliação                                      | Salvar e cancelar                                               | Mesmo padrão de rodapé da edição.                                                                     |
-| Evolução corporal                                    | Voltar conforme a origem, aplicar período, tipos de visão e tentar novamente | Cabeçalho à direita; retorno à Home ou histórico; datas e opções flexíveis; aplicar e tentar novamente alinhados à direita. |
-| Home e seus três cards                               | Links de detalhes e evolução completa, retry do resumo de evolução e rodapé compartilhado | Rodapé compartilhado com flex, wrap e alinhamento à direita. O card de treinos não tem ações. |
-| Cabeçalho global                                     | Menu, início, tema, sair e perfil                               | Preservado: grupo de ações horizontal já adequado.                                                    |
-| Sidebar/app-shell                                    | Links, grupo expansível e navegação                             | Preservados: navegação vertical tem função própria.                                                   |
-| Dialog                                               | Confirmar e cancelar, inclusive diálogos de ação única          | Mesmo padrão dos rodapés, sem inversão visual da ordem do DOM.                                        |
-| Button                                               | Largura, rótulos e alvo de toque                                | Largura contextual por variável CSS; mínimo de 44px de altura; texto pode quebrar.                    |
-| Input e campos corporais compartilhados              | Controles de formulário                                         | Preservados; não definem grupos de ações.                                                             |
-| Empty-state, loading, toast, gráficos e comparativos | Conteúdo e estados auxiliares                                   | Sem grupos de botões próprios a ajustar.                                                              |
+| Tela/componente                                      | Áreas revisadas                                                                           | Resultado                                                                                                                   |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Login                                                | Enviar formulário                                                                         | Ação única ocupa a largura do formulário no mobile.                                                                         |
+| Primeiro acesso                                      | Enviar formulário                                                                         | Mesmo padrão do login.                                                                                                      |
+| Perfil                                               | Alterar senha; editar, salvar e cancelar campos                                           | Cabeçalho com ação à direita; edição com quebra conforme espaço; ícones permanecem agrupados.                               |
+| Alterar senha                                        | Salvar e cancelar                                                                         | Distribuição flexível, com duas ações por linha quando couberem.                                                            |
+| Histórico corporal                                   | Evolução, nova avaliação, excluir, paginação e linhas clicáveis                           | Cabeçalho horizontal à direita; ações da tabela e paginação preservadas.                                                    |
+| Última avaliação                                     | Voltar ao início                                                                          | Ação na coluna direita do cabeçalho.                                                                                        |
+| Detalhes/edição de avaliação                         | Editar, voltar, salvar e cancelar                                                         | Cabeçalho horizontal; rodapé com quebra conforme espaço.                                                                    |
+| Criar avaliação                                      | Salvar e cancelar                                                                         | Mesmo padrão de rodapé da edição.                                                                                           |
+| Evolução corporal                                    | Voltar conforme a origem, aplicar período, tipos de visão e tentar novamente              | Cabeçalho à direita; retorno à Home ou histórico; datas e opções flexíveis; aplicar e tentar novamente alinhados à direita. |
+| Home e seus três cards                               | Links de detalhes e evolução completa, retry do resumo de evolução e rodapé compartilhado | Rodapé compartilhado com flex, wrap e alinhamento à direita. O card de treinos não tem ações.                               |
+| Cabeçalho global                                     | Menu, início, tema, sair e perfil                                                         | Preservado: grupo de ações horizontal já adequado.                                                                          |
+| Sidebar/app-shell                                    | Links, grupo expansível e navegação                                                       | Preservados: navegação vertical tem função própria.                                                                         |
+| Dialog                                               | Confirmar e cancelar, inclusive diálogos de ação única                                    | Mesmo padrão dos rodapés, sem inversão visual da ordem do DOM.                                                              |
+| Button                                               | Largura, rótulos e alvo de toque                                                          | Largura contextual por variável CSS; mínimo de 44px de altura; texto pode quebrar.                                          |
+| Input e campos corporais compartilhados              | Controles de formulário                                                                   | Preservados; não definem grupos de ações.                                                                                   |
+| Empty-state, loading, toast, gráficos e comparativos | Conteúdo e estados auxiliares                                                             | Sem grupos de botões próprios a ajustar.                                                                                    |
 
 ## Padrão adotado
 
@@ -38,6 +38,8 @@ Não há reordenação por CSS; a ordem visual e a de teclado seguem o DOM exist
 As regras novas não se aplicam a tablet/desktop.
 
 ## Validação realizada
+
+O registro abaixo corresponde à revisão original de ações mobile. A inclusão posterior do catálogo está descrita na seção seguinte; os números e cenários desta validação original não representam uma nova execução para exercícios.
 
 - `npm.cmd run build`: aprovado, sem avisos. Removidos os imports de
   ButtonComponent não utilizados em ProfileComponent e BodyMetricsLatestComponent.
@@ -59,5 +61,13 @@ As regras novas não se aplicam a tablet/desktop.
 Os scripts, logs e screenshots da verificação local estão em `dist/`
 (diretório ignorado pelo Git). A verificação do navegador não usa dados reais
 nem envia alterações ao backend.
+
+## Catálogo de Exercícios
+
+O catálogo reutiliza `actions.form` nas ações de aplicar e limpar filtros no mobile. Os filtros passam a uma coluna; a tabela mantém rolagem horizontal em seu próprio container. O detalhe usa `actions.header` e `actions.icons` para o retorno ao catálogo e dispõe seus cards em uma coluna no tablet/mobile.
+
+Ícones de limpeza e retorno possuem `aria-label` e tooltip. As linhas da listagem podem ser abertas por clique, Enter ou Space. O atalho de exercícios no header fica oculto no mobile, mantendo o acesso pela sidebar.
+
+Na revisão documental da `v0.4.0`, esses comportamentos foram conferidos nos templates e estilos existentes. O build e a suíte de testes passaram; não foi executada uma nova bateria visual em navegador. Os contratos, estados e testes da feature estão em [Catálogo de Exercícios](../exercises/README.md).
 
 <p align="right"><a href="README.md">Voltar para arquitetura</a></p>
