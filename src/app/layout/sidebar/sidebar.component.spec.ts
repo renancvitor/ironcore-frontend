@@ -17,6 +17,8 @@ describe('SidebarComponent', () => {
           { path: 'body-metrics', component: SidebarComponent },
           { path: 'body-metrics/progress', component: SidebarComponent },
           { path: 'exercises', component: SidebarComponent },
+          { path: 'workout-planning', component: SidebarComponent },
+          { path: 'workout-planning/:id', component: SidebarComponent },
         ]),
       ],
     }).compileComponents();
@@ -51,6 +53,21 @@ describe('SidebarComponent', () => {
 
     expect(link.textContent).toContain('Perfil');
     expect(link.getAttribute('href')).toBe('/profile');
+  });
+
+  it('opens Workout Planning and keeps its link active on the detail route', async () => {
+    const link = fixture.nativeElement.querySelector(
+      'a[href="/workout-planning"]',
+    ) as HTMLAnchorElement;
+    expect(link.textContent).toContain('Planejamento de treinos');
+    link.click();
+    await fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe('/workout-planning');
+    await TestBed.inject(Router).navigateByUrl('/workout-planning/9');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(link.classList.contains('ic-sidebar__link--active')).toBe(true);
+    expect(link.getAttribute('aria-current')).toBe('page');
   });
 
   it('should render the body metrics history link', () => {
