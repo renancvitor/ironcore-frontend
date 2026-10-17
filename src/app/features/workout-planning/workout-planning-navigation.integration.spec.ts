@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Routes } from '@angular/router';
+import { provideRouter, Router, Routes, RouteReuseStrategy } from '@angular/router';
+import { Location } from '@angular/common';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { firstValueFrom, of } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
@@ -22,6 +23,51 @@ import {
 } from './workout-planning.models';
 
 describe('Workout Planning navigation', () => {
+  it.each(['cancel', 'save'] as const)(
+    'clears edit=true after %s, replaces history and keeps other query params',
+    async (action) => {
+      await TestBed.configureTestingModule({
+        providers: [
+          provideRouter([{ path: 'workout-planning/:id', component: WorkoutCycleDetailComponent }]),
+          {
+            provide: WorkoutPlanningService,
+            useValue: {
+              getWorkoutCycleDetail: () => of(cycleDetail),
+              getTrainingGoals: () =>
+                of([{ id: 22, code: 'GOAL', name: cycleDetail.trainingGoal.name }]),
+              updateWorkoutCycle: () => of({ ...cycleDetail, trainingGoalId: 22 }),
+            },
+          },
+          { provide: ToastService, useValue: { success: vi.fn() } },
+        ],
+      }).compileComponents();
+      const harness = await RouterTestingHarness.create();
+      const component = await harness.navigateByUrl(
+        '/workout-planning/9?edit=true&source=catalog',
+        WorkoutCycleDetailComponent,
+      );
+      expect(component.editing()).toBe(true);
+      const location = TestBed.inject(Location);
+      const replace = vi.spyOn(location, 'replaceState');
+      const push = vi.spyOn(location, 'go');
+      if (action === 'cancel') component.cancelEdit();
+      else component.save();
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+      expect(TestBed.inject(Router).url).toBe('/workout-planning/9?source=catalog');
+      expect(component.editing()).toBe(false);
+      expect(replace).toHaveBeenCalledTimes(1);
+      expect(push).not.toHaveBeenCalled();
+      const refreshedUrl = TestBed.inject(Router).url;
+      vi.spyOn(TestBed.inject(RouteReuseStrategy), 'shouldReuseRoute').mockReturnValue(false);
+      await TestBed.inject(Router).navigateByUrl(refreshedUrl, { onSameUrlNavigation: 'reload' });
+      harness.detectChanges();
+      expect(
+        (harness.routeDebugElement!.componentInstance as WorkoutCycleDetailComponent).editing(),
+      ).toBe(false);
+    },
+  );
+
   it('creates, edits and confirms deletion with real routes and refreshes the preserved catalog', async () => {
     const featureRoutes = routes
       .find((route) => route.path === '' && route.children)!
