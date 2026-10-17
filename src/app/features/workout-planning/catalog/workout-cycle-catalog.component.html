@@ -1,0 +1,177 @@
+<section class="ic-workout-catalog">
+  <header class="ic-workout-catalog__header">
+    <div>
+      <h1>Planejamento de treinos</h1>
+      <p>Consulte seus ciclos de treino e sua composição.</p>
+    </div>
+  </header>
+
+  <form class="ic-workout-catalog__filters" [formGroup]="filtersForm" (ngSubmit)="applyFilters()">
+    <header class="ic-workout-catalog__filters-header">
+      <h2>Filtros</h2>
+      <p>Combine os critérios para encontrar ciclos de treino.</p>
+    </header>
+    @if (goalsLoading()) {
+      <p role="status">Carregando objetivos de treino…</p>
+    }
+    @if (goalsError()) {
+      <div role="alert">
+        <p>Não foi possível carregar os objetivos de treino.</p>
+        <app-button
+          type="button"
+          variant="secondary"
+          [disabled]="goalsLoading()"
+          (click)="loadTrainingGoals()"
+          >Tentar carregar objetivos novamente</app-button
+        >
+      </div>
+    }
+    <div class="ic-workout-catalog__filters-grid">
+      <app-input
+        id="cycle-name"
+        label="Nome"
+        placeholder="Buscar por nome"
+        formControlName="name"
+      />
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="workoutStatus">
+          <mat-option [value]="null">Todos</mat-option>
+          @for (status of statuses; track status) {
+            <mat-option [value]="status">{{ statusLabels[status] }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Objetivo de treino</mat-label>
+        <mat-select formControlName="trainingGoalId">
+          <mat-option [value]="null">Todos</mat-option>
+          @for (goal of trainingGoals(); track goal.id) {
+            <mat-option [value]="goal.id">{{ goal.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Período a partir de</mat-label>
+        <input matInput type="date" formControlName="startDate" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Período até</mat-label>
+        <input matInput type="date" formControlName="endDate" />
+      </mat-form-field>
+    </div>
+    <p class="ic-workout-catalog__hint">
+      O período considera ciclos que se sobrepõem ao intervalo informado.
+    </p>
+    <div class="ic-workout-catalog__filters-actions">
+      <app-button type="button" variant="secondary" [disabled]="loading()" (click)="clearFilters()"
+        >Limpar filtros</app-button
+      >
+      <app-button type="submit" [disabled]="loading()">Aplicar filtros</app-button>
+    </div>
+  </form>
+
+  @if (loading()) {
+    <app-loading />
+  } @else if (error()) {
+    <div role="alert">
+      <p>{{ error() }}</p>
+      <app-button type="button" (click)="loadCycles()">Tentar novamente</app-button>
+    </div>
+  } @else if (cycles(); as response) {
+    @if (response.cycles.totalElements === 0) {
+      <app-empty-state icon="event_note" message="Nenhum ciclo de treino encontrado." />
+    } @else {
+      <section class="ic-workout-catalog__card" aria-label="Ciclos de treino">
+        @if (response.cycles.content.length === 0) {
+          <app-empty-state icon="event_note" message="Nenhum ciclo disponível nesta página." />
+        } @else {
+          <div
+            class="ic-workout-catalog__table-container"
+            tabindex="0"
+            role="region"
+            aria-label="Tabela de ciclos de treino"
+          >
+            <table
+              mat-table
+              [dataSource]="response.cycles.content"
+              class="ic-workout-catalog__table"
+            >
+              <ng-container matColumnDef="name"
+                ><th mat-header-cell *matHeaderCellDef>Ciclo</th>
+                <td mat-cell *matCellDef="let cycle">{{ cycle.name }}</td></ng-container
+              >
+              <ng-container matColumnDef="status"
+                ><th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let cycle">
+                  {{ statusLabel(cycle.workoutStatus) }}
+                </td></ng-container
+              >
+              <ng-container matColumnDef="goal"
+                ><th mat-header-cell *matHeaderCellDef>Objetivo</th>
+                <td mat-cell *matCellDef="let cycle">
+                  {{ cycle.trainingGoal.name }}
+                </td></ng-container
+              >
+              <ng-container matColumnDef="startDate"
+                ><th mat-header-cell *matHeaderCellDef>Início</th>
+                <td mat-cell *matCellDef="let cycle">
+                  {{ (cycle.startDate | date: 'dd/MM/yyyy') ?? '—' }}
+                </td></ng-container
+              >
+              <ng-container matColumnDef="endDate"
+                ><th mat-header-cell *matHeaderCellDef>Fim</th>
+                <td mat-cell *matCellDef="let cycle">
+                  {{ (cycle.endDate | date: 'dd/MM/yyyy') ?? '—' }}
+                </td></ng-container
+              >
+              <ng-container matColumnDef="duration"
+                ><th mat-header-cell *matHeaderCellDef>Duração desejada</th>
+                <td mat-cell *matCellDef="let cycle">
+                  @if (cycle.desiredDurationMonths !== null) {
+                    {{ cycle.desiredDurationMonths }} mês(es)
+                  } @else {
+                    —
+                  }
+                </td></ng-container
+              >
+              <ng-container matColumnDef="actions"
+                ><th mat-header-cell *matHeaderCellDef>Detalhe</th>
+                <td mat-cell *matCellDef="let cycle">
+                  <button
+                    matIconButton
+                    type="button"
+                    [attr.aria-label]="'Ver ciclo ' + cycle.name"
+                    matTooltip="Ver detalhes"
+                    (click)="$event.stopPropagation(); openCycle(cycle.id)"
+                  >
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                </td></ng-container
+              >
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr
+                mat-row
+                *matRowDef="let row; columns: displayedColumns"
+                class="ic-workout-catalog__row"
+                tabindex="0"
+                (click)="openCycle(row.id)"
+                (keydown.enter)="openRowFromKeyboard($event, row.id)"
+                (keydown.space)="openRowFromKeyboard($event, row.id)"
+              ></tr>
+            </table>
+          </div>
+        }
+        <mat-paginator
+          [length]="response.cycles.totalElements"
+          [pageIndex]="response.cycles.page"
+          [pageSize]="response.cycles.size"
+          [pageSizeOptions]="[10, 20, 50, 100]"
+          [showFirstLastButtons]="true"
+          aria-label="Paginação dos ciclos de treino"
+          (page)="onPageChange($event)"
+        />
+      </section>
+    }
+  }
+</section>
