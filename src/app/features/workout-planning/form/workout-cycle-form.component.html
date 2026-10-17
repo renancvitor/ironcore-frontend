@@ -1,26 +1,36 @@
-<form [formGroup]="form" (ngSubmit)="submit()" [attr.aria-busy]="saving()">
-  <p>Nome e objetivo de treino são obrigatórios.</p>
+<form
+  class="ic-workout-cycle-form"
+  [formGroup]="form()"
+  (ngSubmit)="submit()"
+  [attr.aria-busy]="saving()"
+>
   @if (goalsLoading()) {
-    <p role="status">Carregando objetivos de treino…</p>
+    <p class="ic-workout-cycle-form__message" role="status">Carregando objetivos de treino…</p>
   }
   @if (goalsError()) {
     <div role="alert">
-      <p>Não foi possível carregar os objetivos de treino.</p>
-      <app-button type="button" variant="secondary" (click)="loadGoals()"
+      <p class="ic-workout-cycle-form__message">
+        Não foi possível carregar os objetivos de treino.
+      </p>
+      <app-button type="button" variant="secondary" (click)="retryGoals.emit()"
         >Tentar novamente</app-button
       >
     </div>
   } @else if (!goalsLoading() && goals().length === 0) {
-    <p role="status">Nenhum objetivo de treino ativo disponível.</p>
+    <p class="ic-workout-cycle-form__message" role="status">
+      Nenhum objetivo de treino ativo disponível.
+    </p>
   }
-  <div class="fields">
+  <div class="ic-workout-cycle-form__fields">
     <app-input
       id="workout-cycle-name"
       label="Nome"
       formControlName="name"
-      [error]="form.controls.name.touched && form.controls.name.invalid ? 'Informe o nome.' : ''"
+      [error]="
+        form().controls.name.touched && form().controls.name.invalid ? 'Informe o nome.' : ''
+      "
     />
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="outline" [hideRequiredMarker]="true">
       <mat-label>Objetivo de treino</mat-label>
       <mat-select formControlName="trainingGoalId" required>
         @if (currentGoalUnavailable()) {
@@ -39,17 +49,22 @@
       <input matInput type="number" min="1" step="1" formControlName="desiredDurationMonths" />
       <mat-error>Informe um número inteiro positivo de meses.</mat-error>
     </mat-form-field>
-    <mat-form-field appearance="outline" class="notes">
+    <mat-form-field appearance="outline" class="ic-workout-cycle-form__notes">
       <mat-label>Observações (opcional)</mat-label>
-      <textarea matInput rows="4" formControlName="notes"></textarea>
+      <textarea
+        class="ic-workout-cycle-form__textarea"
+        matInput
+        rows="4"
+        formControlName="notes"
+      ></textarea>
     </mat-form-field>
   </div>
   @if (currentGoalUnavailable()) {
-    <p role="status">
+    <p class="ic-workout-cycle-form__message" role="status">
       O objetivo atual está indisponível. Selecione um objetivo ativo para salvar.
     </p>
   }
-  <footer>
+  <footer class="ic-workout-cycle-form__actions">
     <app-button type="button" variant="secondary" [disabled]="saving()" (click)="cancelled.emit()"
       >Cancelar</app-button
     >

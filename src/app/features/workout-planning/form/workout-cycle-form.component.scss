@@ -5,46 +5,46 @@
   display: block;
   min-width: 0;
 }
-form {
+.ic-workout-cycle-form {
   padding: var(--ic-space-4);
-  border: 1px solid var(--ic-border-soft);
+  border: var(--ic-border-width-default) solid var(--ic-border-soft);
   border-radius: var(--ic-radius-md);
   background: var(--ic-surface);
 }
-p {
+.ic-workout-cycle-form__message {
   color: var(--ic-text-secondary);
   margin: 0 0 var(--ic-space-4);
 }
-.fields {
+.ic-workout-cycle-form__fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--ic-space-4);
 }
-app-input,
-mat-form-field {
+.ic-workout-cycle-form app-input,
+.ic-workout-cycle-form mat-form-field {
   width: 100%;
   min-width: 0;
 }
-.notes {
+.ic-workout-cycle-form__notes {
   grid-column: 1 / -1;
 }
-textarea {
+.ic-workout-cycle-form__textarea {
   resize: vertical;
 }
-footer {
+.ic-workout-cycle-form__actions {
   display: flex;
   justify-content: flex-end;
   gap: var(--ic-space-3);
   margin-top: var(--ic-space-4);
 }
 @include responsive.mobile {
-  form {
+  .ic-workout-cycle-form {
     padding: var(--ic-space-3);
   }
-  .fields {
+  .ic-workout-cycle-form__fields {
     grid-template-columns: 1fr;
   }
-  footer {
+  .ic-workout-cycle-form__actions {
     @include actions.form;
   }
 }

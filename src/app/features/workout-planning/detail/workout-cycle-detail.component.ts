@@ -10,11 +10,16 @@ import { LoadingComponent } from '../../../shared/components/loading/loading.com
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { WorkoutPlanningService } from '../workout-planning.service';
-import { GetWorkoutCycleDetailResponse } from '../workout-planning.models';
+import {
+  GetWorkoutCycleDetailResponse,
+  TrainingGoalResponse,
+  UpdateWorkoutCycleResponse,
+} from '../workout-planning.models';
 import { WEEK_DAY_LABELS, WORKOUT_STATUS_LABELS } from '../workout-planning.labels';
-import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { ToastService } from '../../../shared/components/toast/toast.service';
-import { WorkoutCycleFormComponent, WorkoutCycleSaved } from '../form/workout-cycle-form.component';
+import { WorkoutCycleFormComponent } from '../form/workout-cycle-form.component';
+import { DialogService } from '../../../shared/components/dialog/dialog.service';
+import { buildWorkoutCycleRequest, createWorkoutCycleForm } from '../workout-cycle.form';
 
 @Component({
   selector: 'app-workout-cycle-detail',
@@ -33,24 +38,24 @@ import { WorkoutCycleFormComponent, WorkoutCycleSaved } from '../form/workout-cy
   styleUrl: './workout-cycle-detail.component.scss',
 })
 export class WorkoutCycleDetailComponent implements OnInit {
-  private readonly service = inject(WorkoutPlanningService);
+  private readonly workoutPlanningService = inject(WorkoutPlanningService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly dialog = inject(DialogService);
-  private readonly toast = inject(ToastService);
+  private readonly toastService = inject(ToastService);
+  private readonly dialogService = inject(DialogService);
+  readonly goals = signal<TrainingGoalResponse[]>([]);
+  readonly goalsLoading = signal(false);
+  readonly goalsError = signal(false);
+  readonly form = createWorkoutCycleForm(this.goals);
   readonly cycle = signal<GetWorkoutCycleDetailResponse | null>(null);
   readonly loading = signal(false);
   readonly error = signal('');
   readonly editing = signal(false);
   readonly saving = signal(false);
-  readonly deleting = signal(false);
-  readonly confirmingDelete = signal(false);
-  readonly busy = computed(() => this.saving() || this.deleting() || this.confirmingDelete());
   readonly canEdit = computed(() =>
     ['NOT_STARTED', 'IN_PROGRESS'].includes(this.cycle()?.workoutStatus ?? ''),
   );
-  readonly canDelete = computed(() => this.cycle()?.workoutStatus === 'NOT_STARTED');
   readonly statusLabels = WORKOUT_STATUS_LABELS;
   readonly weekDayLabels = WEEK_DAY_LABELS;
 
@@ -59,7 +64,7 @@ export class WorkoutCycleDetailComponent implements OnInit {
   }
 
   loadCycle(): void {
-    if (this.loading() || this.busy()) return;
+    if (this.loading() || this.saving()) return;
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!Number.isSafeInteger(id) || id <= 0) {
       this.backToCycles();
@@ -67,91 +72,120 @@ export class WorkoutCycleDetailComponent implements OnInit {
     }
     this.loading.set(true);
     this.error.set('');
-    this.service
+    this.workoutPlanningService
       .getWorkoutCycleDetail(id)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => this.loading.set(false)),
       )
       .subscribe({
-        next: (cycle) => this.cycle.set(cycle),
+        next: (cycle) => {
+          this.cycle.set(cycle);
+          if (this.route.snapshot.queryParamMap?.get('edit') === 'true' && this.canEdit()) {
+            this.startEdit();
+          }
+        },
         error: (error) =>
           this.error.set(error.error?.message ?? 'Não foi possível carregar o ciclo de treino.'),
       });
   }
 
   backToCycles(): void {
-    if (this.busy()) return;
+    if (this.saving()) return;
     void this.router.navigate(['/workout-planning']);
   }
 
   startEdit(): void {
-    if (this.canEdit() && !this.busy() && !this.loading() && !this.error()) this.editing.set(true);
+    const cycle = this.cycle();
+    if (!cycle || !this.canEdit() || this.saving() || this.editing() || this.error()) return;
+    this.form.reset({
+      name: cycle.name,
+      trainingGoalId: cycle.trainingGoal.id,
+      desiredDurationMonths: cycle.desiredDurationMonths,
+      notes: cycle.notes ?? '',
+    });
+    this.editing.set(true);
+    this.loadGoals();
   }
 
-  onSaved({ response, trainingGoal }: WorkoutCycleSaved): void {
+  cancelEdit(): void {
+    if (!this.saving()) this.editing.set(false);
+  }
+
+  loadGoals(): void {
+    if (this.goalsLoading() || this.saving()) return;
+    this.goalsLoading.set(true);
+    this.goalsError.set(false);
+    this.form.controls.trainingGoalId.disable();
+    this.workoutPlanningService
+      .getTrainingGoals()
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.goalsLoading.set(false)),
+      )
+      .subscribe({
+        next: (goals) => {
+          this.goals.set(goals);
+          this.form.controls.trainingGoalId.enable();
+        },
+        error: () => this.goalsError.set(true),
+      });
+  }
+
+  save(): void {
+    const cycle = this.cycle();
+    if (
+      !cycle ||
+      !this.editing() ||
+      !this.canEdit() ||
+      this.saving() ||
+      this.goalsLoading() ||
+      this.goalsError()
+    )
+      return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+    const request = buildWorkoutCycleRequest(this.form);
+    this.saving.set(true);
+    this.form.disable();
+    this.workoutPlanningService
+      .updateWorkoutCycle(cycle.id, request)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => {
+          this.form.enable();
+          this.saving.set(false);
+        }),
+      )
+      .subscribe({
+        next: (response) => this.onSaved(response),
+        error: (error) =>
+          this.dialogService.open({
+            title: 'Não foi possível salvar o ciclo de treino',
+            message: error.error?.message ?? 'Tente novamente mais tarde.',
+            primaryAction: 'Ok',
+          }),
+      });
+  }
+
+  private onSaved(response: UpdateWorkoutCycleResponse): void {
+    const goal = this.goals().find((goal) => goal.id === response.trainingGoalId)!;
     this.cycle.update((current) =>
       current
         ? {
             ...current,
             name: response.name,
-            trainingGoal,
+            trainingGoal: { id: goal.id, name: goal.name },
             desiredDurationMonths: response.desiredDurationMonths,
             notes: response.notes,
             workoutStatus: response.workoutStatus,
-            ...('startDate' in response ? { startDate: response.startDate } : {}),
+            startDate: response.startDate,
           }
         : null,
     );
     this.editing.set(false);
-    this.toast.success('Ciclo de treino atualizado com sucesso.');
-  }
-
-  deleteCycle(): void {
-    const cycle = this.cycle();
-    if (
-      !cycle ||
-      !this.canDelete() ||
-      this.busy() ||
-      this.editing() ||
-      this.loading() ||
-      this.error()
-    )
-      return;
-    this.confirmingDelete.set(true);
-    this.dialog
-      .open({
-        title: 'Excluir ciclo de treino',
-        message: `Deseja excluir o ciclo “${cycle.name}”? Todos os dias e atividades deste ciclo serão excluídos. Esta ação não pode ser desfeita.`,
-        primaryAction: 'Excluir',
-        secondaryAction: 'Cancelar',
-      })
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => this.confirmingDelete.set(false)),
-      )
-      .subscribe((confirmed) => {
-        if (!confirmed) return;
-        this.deleting.set(true);
-        this.service
-          .deleteWorkoutCycle(cycle.id)
-          .pipe(
-            takeUntilDestroyed(this.destroyRef),
-            finalize(() => this.deleting.set(false)),
-          )
-          .subscribe({
-            next: () => {
-              void this.router.navigate(['/workout-planning']).then((navigated) => {
-                if (navigated) this.toast.success('Ciclo de treino excluído com sucesso.');
-              });
-            },
-            error: (error) =>
-              this.dialog.open({
-                title: 'Não foi possível excluir o ciclo de treino',
-                message: error.error?.message ?? 'Tente novamente mais tarde.',
-                primaryAction: 'Ok',
-              }),
-          });
-      });
+    this.toastService.success('Ciclo de treino atualizado com sucesso.');
   }
 }

@@ -4,7 +4,18 @@
       <h1>Planejamento de treinos</h1>
       <p>Consulte seus ciclos de treino e sua composição.</p>
     </div>
-    <app-button type="button" (click)="createCycle()">Novo ciclo</app-button>
+    <div class="ic-workout-catalog__header-actions">
+      <button
+        matIconButton
+        type="button"
+        matTooltip="Novo ciclo"
+        aria-label="Novo ciclo"
+        [disabled]="busy()"
+        (click)="createCycle()"
+      >
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
   </header>
 
   <form class="ic-workout-catalog__filters" [formGroup]="filtersForm" (ngSubmit)="applyFilters()">
@@ -65,13 +76,20 @@
       O período considera ciclos que se sobrepõem ao intervalo informado.
     </p>
     <div class="ic-workout-catalog__filters-actions">
-      <app-button type="button" variant="secondary" [disabled]="loading()" (click)="clearFilters()"
+      <app-button
+        type="button"
+        variant="secondary"
+        [disabled]="loading() || busy()"
+        (click)="clearFilters()"
         >Limpar filtros</app-button
       >
-      <app-button type="submit" [disabled]="loading()">Aplicar filtros</app-button>
+      <app-button type="submit" [disabled]="loading() || busy()">Aplicar filtros</app-button>
     </div>
   </form>
 
+  @if (deletingId() !== null) {
+    <p role="status">Excluindo ciclo de treino…</p>
+  }
   @if (loading()) {
     <app-loading />
   } @else if (error()) {
@@ -137,17 +155,37 @@
                 </td></ng-container
               >
               <ng-container matColumnDef="actions"
-                ><th mat-header-cell *matHeaderCellDef>Detalhe</th>
-                <td mat-cell *matCellDef="let cycle">
-                  <button
-                    matIconButton
-                    type="button"
-                    [attr.aria-label]="'Ver ciclo ' + cycle.name"
-                    matTooltip="Ver detalhes"
-                    (click)="$event.stopPropagation(); openCycle(cycle.id)"
-                  >
-                    <mat-icon>visibility</mat-icon>
-                  </button>
+                ><th mat-header-cell *matHeaderCellDef>Ações</th>
+                <td mat-cell *matCellDef="let cycle" class="ic-workout-catalog__actions-cell">
+                  @if (canEdit(cycle.workoutStatus)) {
+                    <button
+                      matIconButton
+                      type="button"
+                      [attr.aria-label]="'Editar ciclo ' + cycle.name"
+                      matTooltip="Editar ciclo"
+                      [disabled]="busy()"
+                      (click)="$event.stopPropagation(); editCycle(cycle)"
+                      (keydown.enter)="$event.stopPropagation()"
+                      (keydown.space)="$event.stopPropagation()"
+                    >
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                  }
+                  @if (cycle.workoutStatus === 'NOT_STARTED') {
+                    <button
+                      matIconButton
+                      type="button"
+                      class="ic-workout-catalog__delete"
+                      [attr.aria-label]="'Excluir ciclo ' + cycle.name"
+                      matTooltip="Excluir ciclo"
+                      [disabled]="busy()"
+                      (click)="$event.stopPropagation(); deleteCycle(cycle)"
+                      (keydown.enter)="$event.stopPropagation()"
+                      (keydown.space)="$event.stopPropagation()"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  }
                 </td></ng-container
               >
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
@@ -169,6 +207,7 @@
           [pageSize]="response.cycles.size"
           [pageSizeOptions]="[10, 20, 50, 100]"
           [showFirstLastButtons]="true"
+          [disabled]="busy()"
           aria-label="Paginação dos ciclos de treino"
           (page)="onPageChange($event)"
         />

@@ -12,11 +12,19 @@ import {
 import { cyclePage } from '../workout-planning.testing';
 import { WorkoutCycleCatalogComponent } from './workout-cycle-catalog.component';
 import { WorkoutCycleCatalogStateService } from './workout-cycle-catalog-state.service';
+import { DialogService } from '../../../shared/components/dialog/dialog.service';
+import { ToastService } from '../../../shared/components/toast/toast.service';
 
 describe('WorkoutCycleCatalogComponent', () => {
   let fixture: ComponentFixture<WorkoutCycleCatalogComponent>;
   let component: WorkoutCycleCatalogComponent;
-  const service = { listWorkoutCycles: vi.fn(), getTrainingGoals: vi.fn() };
+  const service = {
+    listWorkoutCycles: vi.fn(),
+    getTrainingGoals: vi.fn(),
+    deleteWorkoutCycle: vi.fn(),
+  };
+  const dialog = { open: vi.fn() };
+  const toast = { success: vi.fn() };
   const goals = [{ id: 22, code: 'BACKEND_CODE', name: 'Objetivo do backend' }];
   const filters = {
     name: 'Força',
@@ -27,11 +35,19 @@ describe('WorkoutCycleCatalogComponent', () => {
   };
 
   beforeEach(async () => {
+    dialog.open.mockReset().mockReturnValue(of(false));
+    toast.success.mockReset();
+    service.deleteWorkoutCycle.mockReset().mockReturnValue(of(undefined));
     service.listWorkoutCycles.mockReset().mockReturnValue(of(cyclePage()));
     service.getTrainingGoals.mockReset().mockReturnValue(of(goals));
     await TestBed.configureTestingModule({
       imports: [WorkoutCycleCatalogComponent],
-      providers: [provideRouter([]), { provide: WorkoutPlanningService, useValue: service }],
+      providers: [
+        provideRouter([]),
+        { provide: WorkoutPlanningService, useValue: service },
+        { provide: DialogService, useValue: dialog },
+        { provide: ToastService, useValue: toast },
+      ],
     }).compileComponents();
   });
 
@@ -213,7 +229,9 @@ describe('WorkoutCycleCatalogComponent', () => {
     button.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     button.click();
     expect(navigate).toHaveBeenCalledTimes(4);
-    expect(navigate).toHaveBeenLastCalledWith(['/workout-planning', 9]);
+    expect(navigate).toHaveBeenLastCalledWith(['/workout-planning', 9], {
+      queryParams: { edit: true },
+    });
   });
 
   it('cancels pending requests on destruction', async () => {
@@ -230,8 +248,132 @@ describe('WorkoutCycleCatalogComponent', () => {
   it('opens creation from the primary catalog action', async () => {
     await create();
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    fixture.nativeElement.querySelector('header app-button button').click();
+    const button = fixture.nativeElement.querySelector('button[aria-label="Novo ciclo"]');
+    expect(button.querySelector('mat-icon').textContent).toBe('add');
+    button.click();
     expect(navigate).toHaveBeenCalledExactlyOnceWith(['/workout-planning/create']);
+  });
+
+  it.each([
+    ['NOT_STARTED', ['edit', 'delete']],
+    ['IN_PROGRESS', ['edit']],
+    ['COMPLETED', []],
+    ['CANCELLED', []],
+  ] as const)('renders contextual actions for %s', async (status, icons) => {
+    const page = cyclePage();
+    page.cycles.content = [{ ...page.cycles.content[0], workoutStatus: status }];
+    service.listWorkoutCycles.mockReturnValue(of(page));
+    await create();
+    const cell = fixture.nativeElement.querySelector('td.mat-column-actions');
+    expect(
+      Array.from(cell.querySelectorAll('mat-icon') as NodeListOf<HTMLElement>).map((el) =>
+        el.textContent?.trim(),
+      ),
+    ).toEqual(icons);
+    expect(fixture.nativeElement.querySelector('th.mat-column-actions').textContent).toContain(
+      'Ações',
+    );
+    expect(fixture.nativeElement.textContent).not.toContain('visibility');
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
+    if (!icons.length) {
+      component.editCycle(page.cycles.content[0]);
+      component.deleteCycle(page.cycles.content[0]);
+      expect(navigate).not.toHaveBeenCalled();
+      expect(dialog.open).not.toHaveBeenCalled();
+    }
+  });
+
+  it.each([false, undefined])(
+    'does not delete or navigate when confirmation returns %s',
+    async (result) => {
+      const page = cyclePage();
+      page.cycles.content[0].workoutStatus = 'NOT_STARTED';
+      service.listWorkoutCycles.mockReturnValue(of(page));
+      dialog.open.mockReturnValue(of(result));
+      await create();
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
+      const button = fixture.nativeElement.querySelector('.ic-workout-catalog__delete');
+      for (const key of ['Enter', ' '])
+        button.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+      button.click();
+      expect(navigate).not.toHaveBeenCalled();
+      expect(dialog.open).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          message: expect.stringContaining(
+            'todos os dias de treino e atividades vinculadas também serão removidos',
+          ),
+          primaryAction: 'Excluir',
+          secondaryAction: 'Cancelar',
+        }),
+      );
+      expect(service.deleteWorkoutCycle).not.toHaveBeenCalled();
+      expect(component.busy()).toBe(false);
+    },
+  );
+
+  it('deletes once, blocks conflicting actions and refreshes applied filters and page with success feedback', async () => {
+    const page = cyclePage(1, 50);
+    page.cycles.content[0].workoutStatus = 'NOT_STARTED';
+    const state = TestBed.inject(WorkoutCycleCatalogStateService);
+    state.filters = filters;
+    state.page = 1;
+    state.size = 50;
+    service.listWorkoutCycles.mockReturnValue(of(page));
+    const confirmation = new Subject<boolean>();
+    const deletion = new Subject<void>();
+    dialog.open.mockReturnValue(confirmation);
+    service.deleteWorkoutCycle.mockReturnValue(deletion);
+    await create();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
+    fixture.nativeElement.querySelector('.ic-workout-catalog__delete').click();
+    component.deleteCycle(page.cycles.content[0]);
+    expect(dialog.open).toHaveBeenCalledTimes(1);
+    expect(service.deleteWorkoutCycle).not.toHaveBeenCalled();
+    confirmation.next(true);
+    confirmation.complete();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[aria-label="Novo ciclo"]').disabled).toBe(true);
+    component.openCycle(9);
+    component.createCycle();
+    component.editCycle(page.cycles.content[0]);
+    component.clearFilters();
+    component.applyFilters();
+    component.onPageChange({ pageIndex: 0, pageSize: 20, length: 120 });
+    expect(navigate).not.toHaveBeenCalled();
+    expect(service.deleteWorkoutCycle).toHaveBeenCalledExactlyOnceWith(9);
+    expect(fixture.nativeElement.textContent).toContain('Excluindo ciclo de treino');
+    service.listWorkoutCycles.mockReturnValue(
+      of({ cycles: { ...page.cycles, content: [page.cycles.content[1]] } }),
+    );
+    deletion.next();
+    deletion.complete();
+    fixture.detectChanges();
+    expect(component.busy()).toBe(false);
+    expect(service.listWorkoutCycles).toHaveBeenLastCalledWith(1, 50, filters);
+    expect(fixture.nativeElement.textContent).not.toContain('Força A');
+    expect(toast.success).toHaveBeenCalledExactlyOnceWith('Ciclo de treino excluído com sucesso.');
+  });
+
+  it('shows delete API errors, keeps the rows and does not navigate', async () => {
+    const page = cyclePage();
+    page.cycles.content[0].workoutStatus = 'NOT_STARTED';
+    service.listWorkoutCycles.mockReturnValue(of(page));
+    dialog.open.mockReturnValue(of(true));
+    service.deleteWorkoutCycle.mockReturnValue(
+      throwError(() => ({ error: { message: 'Operação bloqueada.' } })),
+    );
+    await create();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
+    fixture.nativeElement.querySelector('.ic-workout-catalog__delete').click();
+    fixture.detectChanges();
+    expect(dialog.open).toHaveBeenLastCalledWith(
+      expect.objectContaining({ message: 'Operação bloqueada.' }),
+    );
+    expect(component.busy()).toBe(false);
+    expect(navigate).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('Força A');
+    expect(service.listWorkoutCycles).toHaveBeenCalledTimes(1);
+    expect(toast.success).not.toHaveBeenCalled();
   });
 
   it.each([0, 21])(

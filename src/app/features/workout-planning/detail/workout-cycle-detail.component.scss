@@ -29,9 +29,6 @@
   display: flex;
   flex-shrink: 0;
 }
-.ic-workout-detail__delete:not(:disabled) {
-  color: var(--ic-button-danger-bg);
-}
 .ic-workout-detail__card {
   overflow: hidden;
   background: var(--ic-surface);
@@ -116,7 +113,7 @@
     list-style: none;
   }
   li {
-    border: 1px solid var(--ic-border-soft);
+    border: var(--ic-border-width-default) solid var(--ic-border-soft);
     border-radius: var(--ic-radius-md);
     padding: var(--ic-space-1) var(--ic-space-2);
   }

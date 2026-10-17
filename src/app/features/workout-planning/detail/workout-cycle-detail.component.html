@@ -12,23 +12,10 @@
             type="button"
             aria-label="Editar ciclo de treino"
             matTooltip="Editar ciclo"
-            [disabled]="busy()"
+            [disabled]="saving()"
             (click)="startEdit()"
           >
             <mat-icon>edit</mat-icon>
-          </button>
-        }
-        @if (canDelete()) {
-          <button
-            matIconButton
-            type="button"
-            class="ic-workout-detail__delete"
-            aria-label="Excluir ciclo de treino"
-            matTooltip="Excluir ciclo"
-            [disabled]="busy()"
-            (click)="deleteCycle()"
-          >
-            <mat-icon>delete</mat-icon>
           </button>
         }
       }
@@ -37,7 +24,7 @@
         type="button"
         aria-label="Voltar aos ciclos de treino"
         matTooltip="Voltar à listagem"
-        [disabled]="busy()"
+        [disabled]="saving()"
         (click)="backToCycles()"
       >
         <mat-icon>arrow_back</mat-icon>
@@ -52,15 +39,17 @@
       <app-button type="button" (click)="loadCycle()">Tentar novamente</app-button>
     </div>
   } @else if (cycle(); as cycle) {
-    @if (deleting()) {
-      <p role="status">Excluindo ciclo de treino…</p>
-    }
     @if (editing()) {
       <app-workout-cycle-form
         [cycle]="cycle"
-        (busy)="saving.set($event)"
-        (saved)="onSaved($event)"
-        (cancelled)="editing.set(false)"
+        [form]="form"
+        [goals]="goals()"
+        [saving]="saving()"
+        [goalsLoading]="goalsLoading()"
+        [goalsError]="goalsError()"
+        (retryGoals)="loadGoals()"
+        (submitted)="save()"
+        (cancelled)="cancelEdit()"
       />
     } @else {
       <section class="ic-workout-detail__card" aria-labelledby="cycle-general-title">

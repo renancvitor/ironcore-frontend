@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { of, Subject, throwError } from 'rxjs';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
@@ -7,7 +7,11 @@ import { ToastService } from '../../../shared/components/toast/toast.service';
 import { WorkoutPlanningService } from '../workout-planning.service';
 import { WorkoutCycleFormComponent } from '../form/workout-cycle-form.component';
 import { cycleDetail } from '../workout-planning.testing';
-import { WorkoutStatus } from '../workout-planning.models';
+import {
+  TrainingGoalResponse,
+  UpdateWorkoutCycleResponse,
+  WorkoutStatus,
+} from '../workout-planning.models';
 import { WorkoutCycleDetailComponent } from './workout-cycle-detail.component';
 
 describe('Workout cycle detail mutations', () => {
@@ -55,20 +59,19 @@ describe('Workout cycle detail mutations', () => {
   }
 
   it.each([
-    ['NOT_STARTED', true, true],
-    ['IN_PROGRESS', true, false],
-    ['COMPLETED', false, false],
-    ['CANCELLED', false, false],
-  ] as const)('shows permitted actions in %s', async (status, edit, remove) => {
+    ['NOT_STARTED', true],
+    ['IN_PROGRESS', true],
+    ['COMPLETED', false],
+    ['CANCELLED', false],
+  ] as const)('shows permitted actions in %s', async (status, edit) => {
     const component = await create(status);
     expect(!!fixture.nativeElement.querySelector('[aria-label="Editar ciclo de treino"]')).toBe(
       edit,
     );
     expect(!!fixture.nativeElement.querySelector('[aria-label="Excluir ciclo de treino"]')).toBe(
-      remove,
+      false,
     );
     component.startEdit();
-    component.deleteCycle();
     expect(component.editing()).toBe(edit);
     expect(service.deleteWorkoutCycle).not.toHaveBeenCalled();
   });
@@ -93,8 +96,8 @@ describe('Workout cycle detail mutations', () => {
     await fixture.whenStable();
     const editor = fixture.debugElement.query(By.directive(WorkoutCycleFormComponent))
       .componentInstance as WorkoutCycleFormComponent;
-    expect(editor.form.controls.name.value).toBe(cycleDetail.name);
-    editor.form.patchValue({
+    expect(editor.form().controls.name.value).toBe(cycleDetail.name);
+    editor.form().patchValue({
       name: 'Nome enviado',
       trainingGoalId: 35,
       desiredDurationMonths: null,
@@ -124,7 +127,7 @@ describe('Workout cycle detail mutations', () => {
     await fixture.whenStable();
     const editor = fixture.debugElement.query(By.directive(WorkoutCycleFormComponent))
       .componentInstance as WorkoutCycleFormComponent;
-    editor.form.controls.name.setValue('Rascunho');
+    editor.form().controls.name.setValue('Rascunho');
     editor.cancelled.emit();
     fixture.detectChanges();
     expect(component.cycle()?.name).toBe(cycleDetail.name);
@@ -132,74 +135,88 @@ describe('Workout cycle detail mutations', () => {
     expect(service.updateWorkoutCycle).not.toHaveBeenCalled();
   });
 
-  it.each([false, undefined])(
-    'does not delete when confirmation is cancelled: %s',
-    async (result) => {
-      const component = await create();
-      dialog.open.mockReturnValue(of(result));
-      fixture.nativeElement.querySelector('[aria-label="Excluir ciclo de treino"]').click();
-      expect(dialog.open).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: 'Excluir ciclo de treino',
-          primaryAction: 'Excluir',
-          secondaryAction: 'Cancelar',
-          message: expect.stringContaining('não pode ser desfeita'),
-        }),
-      );
-      expect(component.confirmingDelete()).toBe(false);
-      expect(service.deleteWorkoutCycle).not.toHaveBeenCalled();
-    },
-  );
-
-  it('waits for confirmation, prevents duplicate operations and navigates after real deletion', async () => {
-    const confirmation = new Subject<boolean>();
-    const request = new Subject<void>();
-    dialog.open.mockReturnValue(confirmation);
-    service.deleteWorkoutCycle.mockReturnValue(request);
+  it('blocks save while goals load and while an update is pending', async () => {
+    const goalsRequest = new Subject<TrainingGoalResponse[]>();
+    const updateRequest = new Subject<UpdateWorkoutCycleResponse>();
+    service.getTrainingGoals.mockReturnValue(goalsRequest);
+    service.updateWorkoutCycle.mockReturnValue(updateRequest);
     const component = await create();
-    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    component.deleteCycle();
-    component.deleteCycle();
     component.startEdit();
-    component.backToCycles();
-    expect(dialog.open).toHaveBeenCalledTimes(1);
-    expect(service.deleteWorkoutCycle).not.toHaveBeenCalled();
-    expect(navigate).not.toHaveBeenCalled();
-    confirmation.next(true);
-    confirmation.complete();
+    component.save();
+    expect(service.updateWorkoutCycle).not.toHaveBeenCalled();
+    expect(component.form.controls.trainingGoalId.disabled).toBe(true);
+    goalsRequest.next([{ id: 22, code: 'GOAL', name: 'Objetivo do backend' }]);
+    goalsRequest.complete();
+    component.form.patchValue({ desiredDurationMonths: null, notes: '' });
+    component.save();
+    component.save();
+    component.cancelEdit();
     fixture.detectChanges();
-    expect(service.deleteWorkoutCycle).toHaveBeenCalledExactlyOnceWith(9);
-    expect(fixture.nativeElement.textContent).toContain('Excluindo ciclo');
+    expect(service.updateWorkoutCycle).toHaveBeenCalledExactlyOnceWith(9, {
+      name: cycleDetail.name,
+      trainingGoalId: 22,
+      desiredDurationMonths: null,
+      notes: null,
+    });
+    expect(component.saving()).toBe(true);
+    expect(component.editing()).toBe(true);
+    expect(component.form.disabled).toBe(true);
     expect(
       fixture.nativeElement.querySelector('[aria-label="Voltar aos ciclos de treino"]').disabled,
     ).toBe(true);
-    request.next();
-    request.complete();
-    await fixture.whenStable();
-    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/workout-planning']);
-    expect(toast.success).toHaveBeenCalledWith('Ciclo de treino excluído com sucesso.');
+    updateRequest.next({
+      id: 9,
+      name: cycleDetail.name,
+      trainingGoalId: 22,
+      startDate: null,
+      workoutStatus: 'NOT_STARTED',
+      workoutOrigin: 'MANUAL',
+      desiredDurationMonths: null,
+      notes: null,
+      updatedAt: '',
+    });
+    updateRequest.complete();
+    fixture.detectChanges();
+    expect(component.saving()).toBe(false);
+    expect(component.form.enabled).toBe(true);
+    expect(component.cycle()?.notes).toBeNull();
+    expect(component.editing()).toBe(false);
   });
 
-  it('keeps the detail and shows backend errors on delete', async () => {
-    service.deleteWorkoutCycle.mockReturnValue(
-      throwError(() => ({
-        status: 422,
-        error: {
-          message: 'Não é permitido excluir ciclos de treino iniciados, concluídos ou cancelados.',
-        },
-      })),
+  it('keeps the editing draft and shows API errors', async () => {
+    service.updateWorkoutCycle.mockReturnValue(
+      throwError(() => ({ error: { message: 'Regra do backend.' } })),
     );
     const component = await create();
-    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
-    component.deleteCycle();
-    expect(dialog.open).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        message: 'Não é permitido excluir ciclos de treino iniciados, concluídos ou cancelados.',
-      }),
+    component.startEdit();
+    component.form.patchValue({ name: 'Rascunho', notes: 'Nota' });
+    component.save();
+    expect(dialog.open).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Regra do backend.' }),
     );
-    expect(component.cycle()?.id).toBe(9);
-    expect(component.busy()).toBe(false);
-    expect(navigate).not.toHaveBeenCalled();
+    expect(component.form.controls.name.value).toBe('Rascunho');
+    expect(component.form.enabled).toBe(true);
+    expect(component.editing()).toBe(true);
+    expect(component.saving()).toBe(false);
     expect(toast.success).not.toHaveBeenCalled();
+  });
+
+  it('retries goals errors and rejects an unavailable current goal', async () => {
+    service.getTrainingGoals
+      .mockReturnValueOnce(throwError(() => new Error('offline')))
+      .mockReturnValueOnce(of([]));
+    const component = await create();
+    component.startEdit();
+    fixture.detectChanges();
+    component.save();
+    expect(service.updateWorkoutCycle).not.toHaveBeenCalled();
+    fixture.nativeElement.querySelector('app-workout-cycle-form [role="alert"] button').click();
+    fixture.detectChanges();
+    component.save();
+    expect(component.goalsError()).toBe(false);
+    expect(component.form.controls.trainingGoalId.value).toBe(22);
+    expect(component.form.invalid).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('O objetivo atual está indisponível');
+    expect(service.updateWorkoutCycle).not.toHaveBeenCalled();
   });
 });

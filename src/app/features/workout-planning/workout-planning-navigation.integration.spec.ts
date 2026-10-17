@@ -101,7 +101,7 @@ describe('Workout Planning navigation', () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/workout-planning', WorkoutCycleCatalogComponent);
     harness
-      .routeNativeElement!.querySelector<HTMLButtonElement>('header app-button button')!
+      .routeNativeElement!.querySelector<HTMLButtonElement>('[aria-label="Novo ciclo"]')!
       .click();
     await harness.fixture.whenStable();
     harness.detectChanges();
@@ -110,7 +110,7 @@ describe('Workout Planning navigation', () => {
     );
     let editor = harness.routeDebugElement!.query(By.directive(WorkoutCycleFormComponent))
       .componentInstance as WorkoutCycleFormComponent;
-    editor.form.patchValue({ name: 'Ciclo criado', trainingGoalId: 22 });
+    editor.form().patchValue({ name: 'Ciclo criado', trainingGoalId: 22 });
     editor.submit();
     await harness.fixture.whenStable();
     harness.detectChanges();
@@ -128,7 +128,7 @@ describe('Workout Planning navigation', () => {
     await harness.fixture.whenStable();
     editor = harness.routeDebugElement!.query(By.directive(WorkoutCycleFormComponent))
       .componentInstance as WorkoutCycleFormComponent;
-    editor.form.controls.name.setValue('Ciclo editado');
+    editor.form().controls.name.setValue('Ciclo editado');
     editor.submit();
     await harness.fixture.whenStable();
     harness.detectChanges();
@@ -139,13 +139,25 @@ describe('Workout Planning navigation', () => {
     harness.detectChanges();
     expect(harness.routeNativeElement!.textContent).toContain('Ciclo editado');
     expect(service.listWorkoutCycles).toHaveBeenLastCalledWith(0, 50, { name: 'Ciclo' });
-    const catalog = harness.routeDebugElement!.componentInstance as WorkoutCycleCatalogComponent;
-    catalog.openCycle(16);
+    harness
+      .routeNativeElement!.querySelector<HTMLButtonElement>('td.mat-column-actions button')!
+      .click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(
+      harness.routeDebugElement!.query(By.directive(WorkoutCycleFormComponent)),
+    ).not.toBeNull();
+    editor = harness.routeDebugElement!.query(By.directive(WorkoutCycleFormComponent))
+      .componentInstance as WorkoutCycleFormComponent;
+    expect(editor.form().controls.name.value).toBe('Ciclo editado');
+    editor.cancelled.emit();
+    harness.detectChanges();
+    (harness.routeDebugElement!.componentInstance as WorkoutCycleDetailComponent).backToCycles();
     await harness.fixture.whenStable();
     harness.detectChanges();
     harness
       .routeNativeElement!.querySelector<HTMLButtonElement>(
-        '[aria-label="Excluir ciclo de treino"]',
+        'td.mat-column-actions button[aria-label="Excluir ciclo Ciclo editado"]',
       )!
       .click();
     harness.detectChanges();
