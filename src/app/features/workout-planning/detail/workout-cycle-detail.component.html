@@ -1,0 +1,161 @@
+<section class="ic-workout-detail">
+  <header class="ic-workout-detail__header">
+    <div>
+      <h1>Detalhes do ciclo de treino</h1>
+      <p>Consulte os dias, exercícios e prescrições do ciclo.</p>
+    </div>
+    <div class="ic-workout-detail__header-actions">
+      <button
+        matIconButton
+        type="button"
+        aria-label="Voltar aos ciclos de treino"
+        matTooltip="Voltar à listagem"
+        (click)="backToCycles()"
+      >
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+    </div>
+  </header>
+  @if (loading()) {
+    <app-loading />
+  } @else if (error()) {
+    <div role="alert">
+      <p>{{ error() }}</p>
+      <app-button type="button" (click)="loadCycle()">Tentar novamente</app-button>
+    </div>
+  } @else if (cycle(); as cycle) {
+    <section class="ic-workout-detail__card" aria-labelledby="cycle-general-title">
+      <header class="ic-workout-detail__card-header">
+        <h2 id="cycle-general-title">{{ cycle.name }}</h2>
+      </header>
+      <dl class="ic-workout-detail__fields">
+        <div>
+          <dt>Status</dt>
+          <dd>{{ statusLabels[cycle.workoutStatus] }}</dd>
+        </div>
+        <div>
+          <dt>Objetivo de treino</dt>
+          <dd>{{ cycle.trainingGoal.name }}</dd>
+        </div>
+        <div>
+          <dt>Duração desejada</dt>
+          <dd>
+            @if (cycle.desiredDurationMonths !== null) {
+              {{ cycle.desiredDurationMonths }} mês(es)
+            } @else {
+              —
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Início</dt>
+          <dd>{{ (cycle.startDate | date: 'dd/MM/yyyy') ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt>Fim</dt>
+          <dd>{{ (cycle.endDate | date: 'dd/MM/yyyy') ?? '—' }}</dd>
+        </div>
+      </dl>
+      @if (cycle.notes) {
+        <div class="ic-workout-detail__notes">
+          <h3>Observações</h3>
+          <p>{{ cycle.notes }}</p>
+        </div>
+      }
+    </section>
+    <section class="ic-workout-detail__days" aria-labelledby="cycle-days-title">
+      <h2 id="cycle-days-title">Dias de treino</h2>
+      @for (day of cycle.days; track day.id) {
+        <section class="ic-workout-detail__card" [attr.aria-labelledby]="'workout-day-' + day.id">
+          <header class="ic-workout-detail__card-header">
+            <h3 [id]="'workout-day-' + day.id">{{ day.title }}</h3>
+            <p>{{ weekDayLabels[day.weekDay] }}</p>
+          </header>
+          <ol class="ic-workout-detail__activities">
+            @for (activity of day.activities; track activity.id) {
+              <li class="ic-workout-detail__activity">
+                <h4>{{ activity.exercise.name }}</h4>
+                @if (activity.exercise.muscleGroups.length > 0) {
+                  <div class="ic-workout-detail__muscles">
+                    <span>Grupos musculares:</span>
+                    <ul>
+                      @for (group of activity.exercise.muscleGroups; track group.id) {
+                        <li>{{ group.name }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
+                <dl class="ic-workout-detail__prescription">
+                  @if (activity.sets !== null) {
+                    <div>
+                      <dt>Séries</dt>
+                      <dd>{{ activity.sets }}</dd>
+                    </div>
+                  }
+                  @if (activity.repRangeMin !== null) {
+                    <div>
+                      <dt>Repetições mínimas</dt>
+                      <dd>{{ activity.repRangeMin }}</dd>
+                    </div>
+                  }
+                  @if (activity.repRangeMax !== null) {
+                    <div>
+                      <dt>Repetições máximas</dt>
+                      <dd>{{ activity.repRangeMax }}</dd>
+                    </div>
+                  }
+                  @if (activity.targetLoadKg !== null) {
+                    <div>
+                      <dt>Carga alvo</dt>
+                      <dd>{{ activity.targetLoadKg | number: '1.0-2' }} kg</dd>
+                    </div>
+                  }
+                  @if (activity.targetLoadText) {
+                    <div>
+                      <dt>Orientação de carga</dt>
+                      <dd>{{ activity.targetLoadText }}</dd>
+                    </div>
+                  }
+                  @if (activity.durationMinutes !== null) {
+                    <div>
+                      <dt>Duração</dt>
+                      <dd>{{ activity.durationMinutes }} min</dd>
+                    </div>
+                  }
+                  @if (activity.distanceKm !== null) {
+                    <div>
+                      <dt>Distância</dt>
+                      <dd>{{ activity.distanceKm | number: '1.0-2' }} km</dd>
+                    </div>
+                  }
+                  @if (activity.intensityText) {
+                    <div>
+                      <dt>Intensidade</dt>
+                      <dd>{{ activity.intensityText }}</dd>
+                    </div>
+                  }
+                  @if (activity.restSeconds !== null) {
+                    <div>
+                      <dt>Descanso</dt>
+                      <dd>{{ activity.restSeconds }} s</dd>
+                    </div>
+                  }
+                </dl>
+                @if (activity.notes) {
+                  <div class="ic-workout-detail__notes">
+                    <h5>Observações da atividade</h5>
+                    <p>{{ activity.notes }}</p>
+                  </div>
+                }
+              </li>
+            } @empty {
+              <li class="ic-workout-detail__empty">Nenhuma atividade neste dia de treino.</li>
+            }
+          </ol>
+        </section>
+      } @empty {
+        <app-empty-state icon="event_note" message="Nenhum dia de treino neste ciclo." />
+      }
+    </section>
+  }
+</section>
