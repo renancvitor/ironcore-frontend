@@ -12,7 +12,7 @@
             type="button"
             aria-label="Editar ciclo de treino"
             matTooltip="Editar ciclo"
-            [disabled]="saving()"
+            [disabled]="saving() || dayBusy() || !!dayMode()"
             (click)="startEdit()"
           >
             <mat-icon>edit</mat-icon>
@@ -24,7 +24,7 @@
         type="button"
         aria-label="Voltar aos ciclos de treino"
         matTooltip="Voltar à listagem"
-        [disabled]="saving()"
+        [disabled]="saving() || dayBusy()"
         (click)="backToCycles()"
       >
         <mat-icon>arrow_back</mat-icon>
@@ -92,13 +92,87 @@
         }
       </section>
     }
-    <section class="ic-workout-detail__days" aria-labelledby="cycle-days-title">
-      <h2 id="cycle-days-title">Dias de treino</h2>
-      @for (day of cycle.days; track day.id) {
+    <section
+      class="ic-workout-detail__days"
+      aria-labelledby="cycle-days-title"
+      [attr.aria-busy]="daySaving() || daysLoading()"
+    >
+      <header class="ic-workout-detail__days-header">
+        <h2 id="cycle-days-title">Dias de treino</h2>
+        @if (canEdit()) {
+          <button
+            matIconButton
+            type="button"
+            aria-label="Adicionar dia de treino"
+            matTooltip="Adicionar dia"
+            [disabled]="editing() || dayBusy() || !!dayMode()"
+            (click)="openDayForm('create')"
+          >
+            <mat-icon>add</mat-icon>
+          </button>
+        }
+      </header>
+      @if (!canEdit()) {
+        <p class="ic-workout-detail__status" role="status">
+          Ciclos concluídos ou cancelados não permitem alterar dias de treino.
+        </p>
+      }
+      @if (daySaving() || daysLoading()) {
+        <p class="ic-workout-detail__status" role="status">Salvando e atualizando a composição…</p>
+      }
+      @if (dayMode(); as mode) {
+        <app-workout-day-form
+          [form]="dayForm"
+          [mode]="mode"
+          [day]="selectedDay()"
+          [days]="cycle.days"
+          [saving]="daySaving()"
+          (submitted)="saveDay()"
+          (cancelled)="cancelDayForm()"
+        />
+      }
+      @for (day of orderedDays(); track day.id) {
         <section class="ic-workout-detail__card" [attr.aria-labelledby]="'workout-day-' + day.id">
-          <header class="ic-workout-detail__card-header">
-            <h3 [id]="'workout-day-' + day.id">{{ day.title }}</h3>
-            <p>{{ weekDayLabels[day.weekDay] }}</p>
+          <header class="ic-workout-detail__card-header ic-workout-detail__day-header">
+            <div>
+              <h3 [id]="'workout-day-' + day.id">{{ day.title }}</h3>
+              <p>{{ weekDayLabels[day.weekDay] }}</p>
+            </div>
+            @if (canEdit()) {
+              <div class="ic-workout-detail__day-actions">
+                <button
+                  matIconButton
+                  type="button"
+                  [attr.aria-label]="'Editar dia ' + day.title"
+                  matTooltip="Editar dia"
+                  [disabled]="editing() || dayBusy() || !!dayMode()"
+                  (click)="openDayForm('edit', day)"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  matIconButton
+                  type="button"
+                  [attr.aria-label]="'Reordenar dia ' + day.title"
+                  matTooltip="Reordenar dia"
+                  [disabled]="editing() || dayBusy() || !!dayMode()"
+                  (click)="openDayForm('reorder', day)"
+                >
+                  <mat-icon>swap_vert</mat-icon>
+                </button>
+                <button
+                  matIconButton
+                  type="button"
+                  [attr.aria-label]="'Excluir dia ' + day.title"
+                  class="ic-workout-detail__delete"
+                  matTooltip="Excluir dia"
+                  [disabled]="editing() || dayBusy() || !!dayMode()"
+                  (click)="deleteDay(day)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            }
           </header>
           <ol class="ic-workout-detail__activities">
             @for (activity of day.activities; track activity.id) {

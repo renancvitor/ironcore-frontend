@@ -1,0 +1,47 @@
+@use '../../../../styles/responsive' as responsive;
+@use '../../../../styles/actions' as actions;
+
+:host {
+  display: block;
+  min-width: 0;
+}
+.ic-workout-day-form {
+  padding: var(--ic-space-4);
+  border: var(--ic-border-width-default) solid var(--ic-border-soft);
+  border-radius: var(--ic-radius-md);
+  background: var(--ic-surface);
+  h3 {
+    margin: 0 0 var(--ic-space-4);
+  }
+  p {
+    color: var(--ic-text-secondary);
+    overflow-wrap: anywhere;
+  }
+}
+.ic-workout-day-form__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ic-space-4);
+  app-input,
+  mat-form-field {
+    width: 100%;
+    min-width: 0;
+  }
+}
+.ic-workout-day-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ic-space-3);
+  margin-top: var(--ic-space-4);
+}
+@include responsive.mobile {
+  .ic-workout-day-form {
+    padding: var(--ic-space-3);
+  }
+  .ic-workout-day-form__fields {
+    grid-template-columns: 1fr;
+  }
+  .ic-workout-day-form__actions {
+    @include actions.form;
+  }
+}

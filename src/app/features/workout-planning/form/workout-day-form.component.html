@@ -1,0 +1,62 @@
+<form
+  class="ic-workout-day-form"
+  [formGroup]="form()"
+  (ngSubmit)="submit()"
+  [attr.aria-busy]="saving()"
+  aria-labelledby="workout-day-form-title"
+>
+  <h3 id="workout-day-form-title">
+    {{
+      mode() === 'create'
+        ? 'Adicionar dia de treino'
+        : mode() === 'edit'
+          ? 'Editar dia de treino'
+          : 'Reordenar dia de treino'
+    }}
+  </h3>
+  @if (day(); as day) {
+    <p>{{ day.title }} · {{ weekDayLabels[day.weekDay] }}</p>
+  }
+  <div class="ic-workout-day-form__fields">
+    @if (mode() !== 'reorder') {
+      <app-input
+        id="workout-day-title"
+        label="Título"
+        formControlName="title"
+        [error]="
+          form().controls.title.touched && form().controls.title.invalid ? 'Informe o título.' : ''
+        "
+      />
+    }
+    @if (mode() !== 'edit') {
+      <mat-form-field appearance="outline" [hideRequiredMarker]="true">
+        <mat-label>Dia da semana</mat-label>
+        <mat-select formControlName="weekDay" required (selectionChange)="changeWeekDay()">
+          @for (weekDay of weekDays; track weekDay) {
+            <mat-option [value]="weekDay">{{ weekDayLabels[weekDay] }}</mat-option>
+          }
+        </mat-select>
+        <mat-error>Selecione o dia da semana.</mat-error>
+      </mat-form-field>
+    }
+    @if (mode() === 'reorder') {
+      <mat-form-field appearance="outline" [hideRequiredMarker]="true">
+        <mat-label>Posição no dia</mat-label>
+        <mat-select formControlName="sortOrder" required>
+          @for (position of positions(); track position) {
+            <mat-option [value]="position">{{ position }}ª posição</mat-option>
+          }
+        </mat-select>
+        <mat-error>Selecione uma posição válida.</mat-error>
+      </mat-form-field>
+    }
+  </div>
+  <footer class="ic-workout-day-form__actions">
+    <app-button type="button" variant="secondary" [disabled]="saving()" (click)="cancelled.emit()"
+      >Cancelar</app-button
+    >
+    <app-button type="submit" [disabled]="saving()">{{
+      saving() ? 'Salvando...' : mode() === 'reorder' ? 'Salvar ordem' : 'Salvar dia'
+    }}</app-button>
+  </footer>
+</form>

@@ -69,7 +69,7 @@ describe('WorkoutCycleDetailComponent', () => {
     expect(fixture.nativeElement.querySelector('app-loading')).toBeNull();
   });
 
-  it('renders the full projection with server day, activity and muscle order', async () => {
+  it('renders days by weekDay and sortOrder, preserving activity and muscle order', async () => {
     await create();
     const text = fixture.nativeElement.textContent;
     for (const value of [
@@ -102,7 +102,7 @@ describe('WorkoutCycleDetailComponent', () => {
       Array.from(fixture.nativeElement.querySelectorAll(selector) as NodeListOf<HTMLElement>).map(
         (el) => el.textContent!.trim(),
       );
-    expect(titles('.ic-workout-detail__days h3')).toEqual(['Treino B', 'Treino A']);
+    expect(titles('.ic-workout-detail__days h3')).toEqual(['Treino A', 'Treino B']);
     expect(titles('h4')).toEqual(['Exercício B', 'Exercício A']);
     expect(titles('.ic-workout-detail__muscles li')).toEqual(['Peitoral', 'Tríceps']);
     expect(text).toContain('Nenhuma atividade neste dia de treino.');
