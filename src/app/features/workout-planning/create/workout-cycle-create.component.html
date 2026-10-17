@@ -1,0 +1,18 @@
+<section class="ic-workout-create">
+  <header class="ic-workout-create__header">
+    <h1 class="ic-workout-create__title">Novo ciclo de treino</h1>
+    <p class="ic-workout-create__description">
+      Defina o objetivo e as informações do seu ciclo de treino.
+    </p>
+  </header>
+  <app-workout-cycle-form
+    [form]="form"
+    [goals]="goals()"
+    [saving]="saving()"
+    [goalsLoading]="goalsLoading()"
+    [goalsError]="goalsError()"
+    (retryGoals)="loadGoals()"
+    (submitted)="createCycle()"
+    (cancelled)="cancel()"
+  />
+</section>

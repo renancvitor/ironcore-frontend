@@ -11,6 +11,10 @@
   gap: var(--ic-space-5);
 }
 .ic-workout-catalog__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--ic-space-4);
   h1 {
     margin: 0;
     color: var(--ic-text-primary);
@@ -28,6 +32,18 @@
   background: var(--ic-surface);
   border: var(--ic-border-width-default) solid var(--ic-border-soft);
   border-radius: var(--ic-radius-md);
+}
+.ic-workout-catalog__header-actions {
+  flex-shrink: 0;
+}
+.ic-workout-catalog__actions-cell {
+  white-space: nowrap;
+}
+.ic-workout-catalog__table .mat-column-actions {
+  text-align: center;
+}
+.ic-workout-catalog__delete:not(:disabled) {
+  color: var(--ic-button-danger-bg);
 }
 .ic-workout-catalog__filters-header {
   h2 {
@@ -114,6 +130,12 @@ mat-paginator {
   }
 }
 @include responsive.mobile {
+  .ic-workout-catalog__header-actions {
+    @include actions.icons;
+  }
+  .ic-workout-catalog__header {
+    @include actions.header;
+  }
   .ic-workout-catalog {
     gap: var(--ic-space-3);
   }

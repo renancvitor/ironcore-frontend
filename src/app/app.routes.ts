@@ -82,6 +82,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'workout-planning/create',
+        loadComponent: () =>
+          import('./features/workout-planning/create/workout-cycle-create.component').then(
+            (m) => m.WorkoutCycleCreateComponent,
+          ),
+      },
+      {
         path: 'workout-planning/:id',
         loadComponent: () =>
           import('./features/workout-planning/detail/workout-cycle-detail.component').then(

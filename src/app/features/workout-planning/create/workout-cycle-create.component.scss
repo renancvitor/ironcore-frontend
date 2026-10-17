@@ -1,0 +1,11 @@
+.ic-workout-create {
+  display: grid;
+  gap: var(--ic-space-5);
+  min-width: 0;
+}
+.ic-workout-create__title {
+  margin: 0;
+}
+.ic-workout-create__description {
+  color: var(--ic-text-secondary);
+}

@@ -8,11 +8,13 @@ import { WorkoutCycleDetailComponent } from './workout-cycle-detail.component';
 
 describe('WorkoutCycleDetailComponent', () => {
   let fixture: ComponentFixture<WorkoutCycleDetailComponent>;
-  const service = { getWorkoutCycleDetail: vi.fn() };
+  const service = { getWorkoutCycleDetail: vi.fn(), getTrainingGoals: vi.fn(() => of([])) };
   let routeId: string;
+  let editQuery: string;
 
   beforeEach(async () => {
     routeId = '9';
+    editQuery = '';
     service.getWorkoutCycleDetail.mockReset().mockReturnValue(of(cycleDetail));
     await TestBed.configureTestingModule({
       imports: [WorkoutCycleDetailComponent],
@@ -23,6 +25,9 @@ describe('WorkoutCycleDetailComponent', () => {
           provide: ActivatedRoute,
           useValue: {
             snapshot: {
+              get queryParamMap() {
+                return convertToParamMap({ edit: editQuery });
+              },
               get paramMap() {
                 return convertToParamMap({ id: routeId });
               },
@@ -38,6 +43,18 @@ describe('WorkoutCycleDetailComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
   }
+
+  it.each(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const)(
+    'opens list-requested editing only if allowed for %s',
+    async (status) => {
+      editQuery = 'true';
+      service.getWorkoutCycleDetail.mockReturnValue(of({ ...cycleDetail, workoutStatus: status }));
+      await create();
+      const allowed = status === 'NOT_STARTED' || status === 'IN_PROGRESS';
+      expect(fixture.componentInstance.editing()).toBe(allowed);
+      expect(!!fixture.nativeElement.querySelector('app-workout-cycle-form')).toBe(allowed);
+    },
+  );
 
   it('shows loading and ignores duplicate retry requests', async () => {
     const request = new Subject<GetWorkoutCycleDetailResponse>();

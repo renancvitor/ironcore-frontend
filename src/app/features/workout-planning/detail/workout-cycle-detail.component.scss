@@ -26,6 +26,7 @@
   }
 }
 .ic-workout-detail__header-actions {
+  display: flex;
   flex-shrink: 0;
 }
 .ic-workout-detail__card {
@@ -112,7 +113,7 @@
     list-style: none;
   }
   li {
-    border: 1px solid var(--ic-border-soft);
+    border: var(--ic-border-width-default) solid var(--ic-border-soft);
     border-radius: var(--ic-radius-md);
     padding: var(--ic-space-1) var(--ic-space-2);
   }

@@ -1,0 +1,50 @@
+@use '../../../../styles/responsive' as responsive;
+@use '../../../../styles/actions' as actions;
+
+:host {
+  display: block;
+  min-width: 0;
+}
+.ic-workout-cycle-form {
+  padding: var(--ic-space-4);
+  border: var(--ic-border-width-default) solid var(--ic-border-soft);
+  border-radius: var(--ic-radius-md);
+  background: var(--ic-surface);
+}
+.ic-workout-cycle-form__message {
+  color: var(--ic-text-secondary);
+  margin: 0 0 var(--ic-space-4);
+}
+.ic-workout-cycle-form__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ic-space-4);
+}
+.ic-workout-cycle-form app-input,
+.ic-workout-cycle-form mat-form-field {
+  width: 100%;
+  min-width: 0;
+}
+.ic-workout-cycle-form__notes {
+  grid-column: 1 / -1;
+}
+.ic-workout-cycle-form__textarea {
+  resize: vertical;
+}
+.ic-workout-cycle-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ic-space-3);
+  margin-top: var(--ic-space-4);
+}
+@include responsive.mobile {
+  .ic-workout-cycle-form {
+    padding: var(--ic-space-3);
+  }
+  .ic-workout-cycle-form__fields {
+    grid-template-columns: 1fr;
+  }
+  .ic-workout-cycle-form__actions {
+    @include actions.form;
+  }
+}
