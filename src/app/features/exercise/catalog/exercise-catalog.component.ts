@@ -1,4 +1,13 @@
-import { Component, DestroyRef, inject, input, signal, WritableSignal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  output,
+  signal,
+  WritableSignal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { finalize, Observable } from 'rxjs';
@@ -10,6 +19,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 import { ExerciseService } from '../exercise.service';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
@@ -19,6 +29,7 @@ import {
   EquipmentTypeItemResponse,
   ListExercisesRequest,
   ListExercisesResponse,
+  ListExercisesItemResponse,
   MuscleGroupItemResponse,
   MuscleSubgroupItemResponse,
   TargetRole,
@@ -36,6 +47,7 @@ import { ExerciseCatalogStateService } from './exercise-catalog-state.service';
   selector: 'app-exercise-catalog',
   imports: [
     ReactiveFormsModule,
+    MatCheckboxModule,
     MatPaginatorModule,
     MatTableModule,
     LoadingComponent,
@@ -64,6 +76,16 @@ export class ExerciseCatalogComponent {
   readonly exercises = signal<ListExercisesResponse | null>(null);
   readonly loading = signal(false);
   readonly mode = input<ExerciseCatalogMode>('browse');
+  readonly multiple = input(true);
+  readonly excludedExerciseIds = input<readonly number[]>([]);
+  readonly selectionConfirmed = output<ListExercisesItemResponse[]>();
+  readonly selectionCancelled = output<void>();
+  readonly selectedExercises = signal<ListExercisesItemResponse[]>([]);
+  readonly selectionError = signal('');
+  readonly selectedIds = computed(() => this.selectedExercises().map((exercise) => exercise.id));
+  readonly columns = computed(() =>
+    this.mode() === 'select' ? ['selection', ...this.displayedColumns] : this.displayedColumns,
+  );
   readonly activityTypes = signal<ActivityTypeItemResponse[]>([]);
   readonly equipmentTypes = signal<EquipmentTypeItemResponse[]>([]);
   readonly muscleGroups = signal<MuscleGroupItemResponse[]>([]);
@@ -99,15 +121,56 @@ export class ExerciseCatalogComponent {
   }
 
   onPageChange(event: PageEvent): void {
+    if (this.loading()) return;
     this.loadExercises(event.pageIndex, event.pageSize);
   }
 
   openExercise(id: number): void {
+    if (this.mode() === 'select') {
+      const exercise = this.exercises()?.exercises.content.find((item) => item.id === id);
+      if (exercise) this.toggleExercise(exercise);
+      return;
+    }
     void this.router.navigate(['/exercises', id]);
+  }
+
+  toggleExercise(exercise: ListExercisesItemResponse): void {
+    if (
+      this.mode() !== 'select' ||
+      this.loading() ||
+      this.excludedExerciseIds().includes(exercise.id)
+    )
+      return;
+    this.selectedExercises.update((selected) =>
+      selected.some((item) => item.id === exercise.id)
+        ? selected.filter((item) => item.id !== exercise.id)
+        : this.multiple()
+          ? [...selected, exercise]
+          : [exercise],
+    );
+  }
+
+  confirmSelection(): void {
+    if (this.mode() !== 'select' || this.loading() || this.selectionError()) return;
+    const selected = this.selectedExercises().filter(
+      (exercise) => !this.excludedExerciseIds().includes(exercise.id),
+    );
+    if (selected.length) this.selectionConfirmed.emit(selected);
+  }
+
+  retrySelection(): void {
+    if (!this.loading()) this.loadExercises(this.catalogState.page, this.catalogState.size);
+  }
+
+  openRowFromKeyboard(event: Event, id: number): void {
+    if (event.target !== event.currentTarget) return;
+    event.preventDefault();
+    this.openExercise(id);
   }
 
   private loadExercises(page?: number, size?: number): void {
     this.loading.set(true);
+    this.selectionError.set('');
 
     this.exerciseService
       .list(page, size, this.catalogState.filters)
@@ -126,6 +189,10 @@ export class ExerciseCatalogComponent {
 
         error: (error) => {
           const message = error.error?.message ?? 'Não foi possível carregar os exercícios.';
+          if (this.mode() === 'select') {
+            this.selectionError.set(message);
+            return;
+          }
 
           this.dialogService
             .open({

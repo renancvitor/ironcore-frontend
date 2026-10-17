@@ -6,6 +6,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { finalize, Observable } from 'rxjs';
+import { ExerciseCatalogComponent } from '../../exercise/catalog/exercise-catalog.component';
+import { ExerciseCatalogStateService } from '../../exercise/catalog/exercise-catalog-state.service';
+import { ListExercisesItemResponse } from '../../exercise/exercise.models';
+import { WorkoutActivityFormComponent } from '../form/workout-activity-form.component';
+import { WorkoutActivityOrderFormComponent } from '../form/workout-activity-order-form.component';
+import {
+  buildWorkoutActivityRequest,
+  createWorkoutActivityForm,
+  createWorkoutActivityOrderForm,
+} from '../workout-activity.form';
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
@@ -16,6 +26,8 @@ import {
   UpdateWorkoutCycleResponse,
   WorkoutDayDetailResponse,
   WeekDay,
+  WorkoutActivityDetailResponse,
+  ExerciseDetailResponse,
 } from '../workout-planning.models';
 import { WEEK_DAY_LABELS, WORKOUT_STATUS_LABELS } from '../workout-planning.labels';
 import { ToastService } from '../../../shared/components/toast/toast.service';
@@ -27,7 +39,11 @@ import { createWorkoutDayForm } from '../workout-day.form';
 
 @Component({
   selector: 'app-workout-cycle-detail',
+  providers: [ExerciseCatalogStateService],
   imports: [
+    WorkoutActivityOrderFormComponent,
+    ExerciseCatalogComponent,
+    WorkoutActivityFormComponent,
     DatePipe,
     DecimalPipe,
     MatButtonModule,
@@ -80,13 +96,255 @@ export class WorkoutCycleDetailComponent implements OnInit {
     () => this.daySaving() || this.daysLoading() || this.confirmingDelete(),
   );
   dayForm = createWorkoutDayForm('create', () => this.cycle()?.days ?? []);
+  readonly activityMode = signal<'select' | 'create' | 'edit' | 'reorder' | null>(null);
+  readonly activityDayId = signal<number | null>(null);
+  readonly activityDay = computed(
+    () => this.cycle()?.days.find((day) => day.id === this.activityDayId()) ?? null,
+  );
+  readonly selectedActivity = signal<WorkoutActivityDetailResponse | null>(null);
+  readonly activityExercises = signal<Pick<ExerciseDetailResponse, 'id' | 'name'>[]>([]);
+  readonly activitySaving = signal(false);
+  readonly activitiesLoading = signal(false);
+  readonly confirmingActivityDelete = signal(false);
+  readonly activityBusy = computed(
+    () => this.activitySaving() || this.activitiesLoading() || this.confirmingActivityDelete(),
+  );
+  readonly excludedExerciseIds = computed(() =>
+    (this.activityDay()?.activities ?? [])
+      .filter((activity) => activity.id !== this.selectedActivity()?.id)
+      .map((activity) => activity.exercise.id),
+  );
+  activityForm = createWorkoutActivityForm();
+  activityOrderForm = createWorkoutActivityOrderForm(0);
+
+  openActivitySelector(day: WorkoutDayDetailResponse): void {
+    if (
+      !this.canMutateActivities() ||
+      this.activityMode() ||
+      !this.cycle()?.days.some((item) => item.id === day.id)
+    )
+      return;
+    this.activityDayId.set(day.id);
+    this.selectedActivity.set(null);
+    this.activityExercises.set([]);
+    this.activityMode.set('select');
+  }
+
+  confirmExercises(exercises: ListExercisesItemResponse[]): void {
+    if (!this.canMutateActivities() || this.activityMode() !== 'select' || !this.activityDay())
+      return;
+    const unique = exercises.filter(
+      (exercise, index) =>
+        !this.excludedExerciseIds().includes(exercise.id) &&
+        exercises.findIndex((item) => item.id === exercise.id) === index,
+    );
+    if (!unique.length) return;
+    this.activityExercises.set(this.selectedActivity() ? unique.slice(0, 1) : unique);
+    if (this.selectedActivity()) this.activityMode.set('edit');
+    else {
+      this.activityForm = createWorkoutActivityForm();
+      this.activityMode.set('create');
+    }
+  }
+
+  changeActivityExercise(): void {
+    if (this.canMutateActivities() && this.activityMode() === 'edit')
+      this.activityMode.set('select');
+  }
+
+  cancelActivitySelection(): void {
+    if (this.activityBusy()) return;
+    if (this.selectedActivity()) this.activityMode.set('edit');
+    else this.cancelActivityForm();
+  }
+
+  openActivityForm(
+    mode: 'edit' | 'reorder',
+    day: WorkoutDayDetailResponse,
+    activity: WorkoutActivityDetailResponse,
+  ): void {
+    if (
+      !this.canMutateActivities() ||
+      this.activityMode() ||
+      !this.cycle()
+        ?.days.find((item) => item.id === day.id)
+        ?.activities.some((item) => item.id === activity.id)
+    )
+      return;
+    this.activityDayId.set(day.id);
+    this.selectedActivity.set(activity);
+    this.activityExercises.set([activity.exercise]);
+    this.activityForm = createWorkoutActivityForm(activity);
+    this.activityOrderForm = createWorkoutActivityOrderForm(
+      day.activities.length,
+      day.activities.indexOf(activity) + 1,
+    );
+    this.activityMode.set(mode);
+  }
+
+  cancelActivityForm(): void {
+    if (this.activityBusy()) return;
+    this.activityMode.set(null);
+    this.activityExercises.set([]);
+    this.selectedActivity.set(null);
+  }
+
+  saveActivity(): void {
+    const day = this.activityDay();
+    if (!this.canMutateActivities() || !day) return;
+    const mode = this.activityMode();
+    const activity = this.selectedActivity();
+    if (mode === 'reorder' && activity) {
+      if (this.activityOrderForm.invalid) {
+        this.activityOrderForm.markAllAsTouched();
+        return;
+      }
+      this.mutateActivity(
+        this.workoutPlanningService.reorderWorkoutActivity(
+          activity.id,
+          this.activityOrderForm.getRawValue(),
+        ),
+        'Atividade reordenada com sucesso.',
+      );
+      return;
+    }
+    if (mode !== 'create' && mode !== 'edit') return;
+    if (this.activityForm.invalid) {
+      this.activityForm.markAllAsTouched();
+      return;
+    }
+    const exercise = this.activityExercises()[0];
+    if (!exercise) return;
+    if (this.excludedExerciseIds().includes(exercise.id)) {
+      this.dialogService.open({
+        title: 'Exercício já adicionado',
+        message: 'Exercício já está vinculado a este dia de treino.',
+        primaryAction: 'Ok',
+      });
+      return;
+    }
+    const request = buildWorkoutActivityRequest(this.activityForm, exercise.id);
+    if (mode === 'create') {
+      this.mutateActivity(
+        this.workoutPlanningService.createWorkoutActivity({ ...request, workoutDayId: day.id }),
+        'Atividade criada com sucesso.',
+        true,
+      );
+    } else if (activity) {
+      this.mutateActivity(
+        this.workoutPlanningService.updateWorkoutActivity(activity.id, request),
+        'Atividade atualizada com sucesso.',
+      );
+    }
+  }
+
+  deleteActivity(day: WorkoutDayDetailResponse, activity: WorkoutActivityDetailResponse): void {
+    if (
+      !this.canMutateActivities() ||
+      this.activityMode() ||
+      !this.cycle()
+        ?.days.find((item) => item.id === day.id)
+        ?.activities.some((item) => item.id === activity.id)
+    )
+      return;
+    this.confirmingActivityDelete.set(true);
+    this.dialogService
+      .open({
+        title: 'Excluir atividade',
+        message: `Deseja excluir a atividade “${activity.exercise.name}”? Esta ação não pode ser desfeita.`,
+        primaryAction: 'Excluir',
+        secondaryAction: 'Cancelar',
+      })
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.confirmingActivityDelete.set(false)),
+      )
+      .subscribe((confirmed) => {
+        if (!confirmed || !this.canEdit() || this.saving() || this.editing()) return;
+        this.mutateActivity(
+          this.workoutPlanningService.deleteWorkoutActivity(activity.id),
+          'Atividade excluída com sucesso.',
+        );
+      });
+  }
+
+  private canMutateActivities(): boolean {
+    return (
+      !!this.cycle() &&
+      this.canEdit() &&
+      !this.editing() &&
+      !this.saving() &&
+      !this.loading() &&
+      !this.error() &&
+      !this.dayBusy() &&
+      !this.dayMode() &&
+      !this.activityBusy()
+    );
+  }
+
+  private mutateActivity(operation: Observable<unknown>, message: string, creating = false): void {
+    const cycleId = this.cycle()!.id;
+    this.activitySaving.set(true);
+    this.activityForm.disable();
+    this.activityOrderForm.disable();
+    operation
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => {
+          this.activityForm.enable();
+          this.activityOrderForm.enable();
+          this.activitySaving.set(false);
+        }),
+      )
+      .subscribe({
+        next: () => {
+          this.toastService.success(message);
+          if (creating) this.activityExercises.update((exercises) => exercises.slice(1));
+          else this.activityExercises.set([]);
+          this.activityMode.set(null);
+          this.selectedActivity.set(null);
+          this.reloadActivities(cycleId);
+        },
+        error: (error) =>
+          this.dialogService.open({
+            title: 'Não foi possível alterar a atividade',
+            message: error.error?.message ?? 'Tente novamente mais tarde.',
+            primaryAction: 'Ok',
+          }),
+      });
+  }
+
+  private reloadActivities(cycleId: number): void {
+    this.activitiesLoading.set(true);
+    this.workoutPlanningService
+      .getWorkoutCycleDetail(cycleId)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.activitiesLoading.set(false)),
+      )
+      .subscribe({
+        next: (cycle) => {
+          this.cycle.set(cycle);
+          if (this.canEdit() && this.activityDay() && this.activityExercises().length) {
+            this.activityForm = createWorkoutActivityForm();
+            this.activityMode.set('create');
+          } else this.activityExercises.set([]);
+        },
+        error: () => {
+          this.activityExercises.set([]);
+          this.error.set(
+            'A alteração foi salva, mas não foi possível atualizar a composição. Tente carregar o ciclo novamente.',
+          );
+        },
+      });
+  }
 
   ngOnInit(): void {
     this.loadCycle();
   }
 
   loadCycle(): void {
-    if (this.loading() || this.saving() || this.dayBusy()) return;
+    if (this.loading() || this.saving() || this.dayBusy() || this.activityBusy()) return;
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!Number.isSafeInteger(id) || id <= 0) {
       this.backToCycles();
@@ -113,7 +371,7 @@ export class WorkoutCycleDetailComponent implements OnInit {
   }
 
   backToCycles(): void {
-    if (this.saving() || this.dayBusy()) return;
+    if (this.saving() || this.dayBusy() || this.activityBusy()) return;
     void this.router.navigate(['/workout-planning']);
   }
 
@@ -126,7 +384,9 @@ export class WorkoutCycleDetailComponent implements OnInit {
       this.editing() ||
       this.error() ||
       this.dayBusy() ||
-      this.dayMode()
+      this.dayMode() ||
+      this.activityMode() ||
+      this.activityBusy()
     )
       return;
     this.form.reset({
@@ -246,7 +506,9 @@ export class WorkoutCycleDetailComponent implements OnInit {
       !this.saving() &&
       !this.loading() &&
       !this.error() &&
-      !this.dayBusy()
+      !this.dayBusy() &&
+      !this.activityBusy() &&
+      !this.activityMode()
     );
   }
 
