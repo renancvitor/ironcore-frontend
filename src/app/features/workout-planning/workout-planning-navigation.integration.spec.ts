@@ -1,14 +1,175 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Routes } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { of } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { By } from '@angular/platform-browser';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { MatDialogHarness } from '@angular/material/dialog/testing';
+import { MatButtonHarness } from '@angular/material/button/testing';
 import { routes } from '../../app.routes';
 import { WorkoutPlanningService } from './workout-planning.service';
 import { cycleDetail, cyclePage } from './workout-planning.testing';
 import { WorkoutCycleCatalogComponent } from './catalog/workout-cycle-catalog.component';
 import { WorkoutCycleDetailComponent } from './detail/workout-cycle-detail.component';
+import { WorkoutCycleCreateComponent } from './create/workout-cycle-create.component';
+import { WorkoutCycleFormComponent } from './form/workout-cycle-form.component';
+import { WorkoutCycleCatalogStateService } from './catalog/workout-cycle-catalog-state.service';
+import { ToastService } from '../../shared/components/toast/toast.service';
+import {
+  CreateWorkoutCycleRequest,
+  GetWorkoutCycleDetailResponse,
+} from './workout-planning.models';
 
 describe('Workout Planning navigation', () => {
+  it('creates, edits and confirms deletion with real routes and refreshes the preserved catalog', async () => {
+    const featureRoutes = routes
+      .find((route) => route.path === '' && route.children)!
+      .children!.filter((route) => route.path?.startsWith('workout-planning'));
+    let stored: GetWorkoutCycleDetailResponse | null = {
+      ...cycleDetail,
+      workoutStatus: 'NOT_STARTED',
+    };
+    const success = vi.fn();
+    const service = {
+      getTrainingGoals: () => of([{ id: 22, code: 'GOAL', name: cycleDetail.trainingGoal.name }]),
+      listWorkoutCycles: vi.fn((page: number, size: number) =>
+        of({
+          cycles: {
+            ...cyclePage(page, size).cycles,
+            content: stored ? [stored] : [],
+            totalElements: stored ? 1 : 0,
+            totalPages: stored ? 1 : 0,
+          },
+        }),
+      ),
+      getWorkoutCycleDetail: vi.fn(() => of(stored!)),
+      createWorkoutCycle: vi.fn((request: CreateWorkoutCycleRequest) => {
+        stored = {
+          ...cycleDetail,
+          id: 16,
+          name: request.name,
+          workoutStatus: 'NOT_STARTED',
+          startDate: null,
+          endDate: null,
+          desiredDurationMonths: request.desiredDurationMonths ?? null,
+          notes: request.notes ?? null,
+          days: [],
+        };
+        return of({
+          id: 16,
+          personId: 1,
+          ...request,
+          desiredDurationMonths: stored.desiredDurationMonths,
+          notes: stored.notes,
+          workoutStatus: 'NOT_STARTED',
+          workoutOrigin: 'MANUAL',
+          createdAt: '',
+        });
+      }),
+      updateWorkoutCycle: vi.fn((id: number, request: CreateWorkoutCycleRequest) => {
+        stored = {
+          ...stored!,
+          ...request,
+          desiredDurationMonths: request.desiredDurationMonths ?? null,
+          notes: request.notes ?? null,
+        };
+        return of({
+          id,
+          ...request,
+          startDate: null,
+          workoutStatus: 'NOT_STARTED',
+          workoutOrigin: 'MANUAL',
+          updatedAt: '',
+        });
+      }),
+      deleteWorkoutCycle: vi.fn(() => {
+        stored = null;
+        return of(undefined);
+      }),
+    };
+    await TestBed.configureTestingModule({
+      providers: [
+        provideRouter(featureRoutes),
+        { provide: WorkoutPlanningService, useValue: service },
+        { provide: ToastService, useValue: { success } },
+      ],
+    }).compileComponents();
+    const state = TestBed.inject(WorkoutCycleCatalogStateService);
+    state.filters = { name: 'Ciclo' };
+    state.size = 50;
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/workout-planning', WorkoutCycleCatalogComponent);
+    harness
+      .routeNativeElement!.querySelector<HTMLButtonElement>('header app-button button')!
+      .click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(harness.routeDebugElement!.componentInstance).toBeInstanceOf(
+      WorkoutCycleCreateComponent,
+    );
+    let editor = harness.routeDebugElement!.query(By.directive(WorkoutCycleFormComponent))
+      .componentInstance as WorkoutCycleFormComponent;
+    editor.form.patchValue({ name: 'Ciclo criado', trainingGoalId: 22 });
+    editor.submit();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(harness.routeDebugElement!.componentInstance).toBeInstanceOf(
+      WorkoutCycleDetailComponent,
+    );
+    expect(harness.routeNativeElement!.textContent).toContain('Ciclo criado');
+    expect(service.getWorkoutCycleDetail).toHaveBeenLastCalledWith(16);
+    harness
+      .routeNativeElement!.querySelector<HTMLButtonElement>(
+        '[aria-label="Editar ciclo de treino"]',
+      )!
+      .click();
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+    editor = harness.routeDebugElement!.query(By.directive(WorkoutCycleFormComponent))
+      .componentInstance as WorkoutCycleFormComponent;
+    editor.form.controls.name.setValue('Ciclo editado');
+    editor.submit();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(harness.routeNativeElement!.textContent).toContain('Ciclo editado');
+    const detail = harness.routeDebugElement!.componentInstance as WorkoutCycleDetailComponent;
+    detail.backToCycles();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(harness.routeNativeElement!.textContent).toContain('Ciclo editado');
+    expect(service.listWorkoutCycles).toHaveBeenLastCalledWith(0, 50, { name: 'Ciclo' });
+    const catalog = harness.routeDebugElement!.componentInstance as WorkoutCycleCatalogComponent;
+    catalog.openCycle(16);
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    harness
+      .routeNativeElement!.querySelector<HTMLButtonElement>(
+        '[aria-label="Excluir ciclo de treino"]',
+      )!
+      .click();
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+    const loader = TestbedHarnessEnvironment.documentRootLoader(harness.fixture);
+    const dialog = await loader.getHarness(MatDialogHarness);
+    expect(await dialog.getText()).toContain('Esta ação não pode ser desfeita.');
+    const confirm = await dialog.getHarness(MatButtonHarness.with({ text: 'Excluir' }));
+    const closed = firstValueFrom(TestBed.inject(MatDialog).openDialogs[0].afterClosed());
+    await confirm.click();
+    expect(await closed).toBe(true);
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(service.deleteWorkoutCycle).toHaveBeenCalledExactlyOnceWith(16);
+    expect(harness.routeDebugElement!.componentInstance).toBeInstanceOf(
+      WorkoutCycleCatalogComponent,
+    );
+    expect(harness.routeNativeElement!.textContent).toContain('Nenhum ciclo de treino encontrado.');
+    expect(harness.routeNativeElement!.textContent).not.toContain('Ciclo editado');
+    expect(state.filters).toEqual({ name: 'Ciclo' });
+    expect(state.size).toBe(50);
+    expect(success).toHaveBeenCalledTimes(3);
+  });
+
   it('uses authenticated lazy routes and restores applied filters and page after detail', async () => {
     const authenticated = routes.find((route) => route.path === '' && route.children)!;
     expect(authenticated.canActivate?.length).toBeGreaterThan(0);
@@ -17,6 +178,7 @@ describe('Workout Planning navigation', () => {
     ) as Routes;
     expect(featureRoutes.map((route) => route.path)).toEqual([
       'workout-planning',
+      'workout-planning/create',
       'workout-planning/:id',
     ]);
     const list = vi.fn((page = 0, size = 20) => of(cyclePage(page, size)));

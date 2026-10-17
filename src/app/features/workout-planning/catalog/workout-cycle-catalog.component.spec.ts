@@ -226,4 +226,30 @@ describe('WorkoutCycleCatalogComponent', () => {
     expect(component.cycles()).toBeNull();
     expect(component.loading()).toBe(false);
   });
+
+  it('opens creation from the primary catalog action', async () => {
+    await create();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    fixture.nativeElement.querySelector('header app-button button').click();
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/workout-planning/create']);
+  });
+
+  it.each([0, 21])(
+    'recovers an empty page after deletion with %s remaining cycles',
+    async (totalElements) => {
+      const state = TestBed.inject(WorkoutCycleCatalogStateService);
+      state.page = 2;
+      state.filters = filters;
+      const targetPage = totalElements ? 1 : 0;
+      service.listWorkoutCycles
+        .mockReturnValueOnce(of({ cycles: { ...cyclePage(2).cycles, content: [], totalElements } }))
+        .mockReturnValueOnce(of(cyclePage(targetPage)));
+      await create();
+      expect(service.listWorkoutCycles).toHaveBeenNthCalledWith(1, 2, 20, filters);
+      expect(service.listWorkoutCycles).toHaveBeenNthCalledWith(2, targetPage, 20, filters);
+      expect(component.cycles()?.cycles.page).toBe(targetPage);
+      expect(state.filters).toEqual(filters);
+      expect(component.loading()).toBe(false);
+    },
+  );
 });
