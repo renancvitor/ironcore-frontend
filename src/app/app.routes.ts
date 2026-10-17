@@ -75,6 +75,20 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'workout-planning',
+        loadComponent: () =>
+          import('./features/workout-planning/catalog/workout-cycle-catalog.component').then(
+            (m) => m.WorkoutCycleCatalogComponent,
+          ),
+      },
+      {
+        path: 'workout-planning/:id',
+        loadComponent: () =>
+          import('./features/workout-planning/detail/workout-cycle-detail.component').then(
+            (m) => m.WorkoutCycleDetailComponent,
+          ),
+      },
+      {
         path: 'exercises',
         loadComponent: () =>
           import('./features/exercise/catalog/exercise-catalog.component').then(

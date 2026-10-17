@@ -1,0 +1,135 @@
+@use '../../../../styles/responsive' as responsive;
+@use '../../../../styles/actions' as actions;
+
+:host {
+  display: block;
+  min-width: 0;
+}
+.ic-workout-catalog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ic-space-5);
+}
+.ic-workout-catalog__header {
+  h1 {
+    margin: 0;
+    color: var(--ic-text-primary);
+  }
+  p {
+    margin: var(--ic-space-2) 0 0;
+    color: var(--ic-text-secondary);
+  }
+}
+.ic-workout-catalog__filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ic-space-4);
+  padding: var(--ic-space-5);
+  background: var(--ic-surface);
+  border: var(--ic-border-width-default) solid var(--ic-border-soft);
+  border-radius: var(--ic-radius-md);
+}
+.ic-workout-catalog__filters-header {
+  h2 {
+    margin: 0;
+    font-size: 1.125rem;
+  }
+  p {
+    margin: var(--ic-space-1) 0 0;
+    color: var(--ic-text-secondary);
+  }
+}
+.ic-workout-catalog__filters-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ic-space-4);
+  align-items: start;
+  app-input,
+  mat-form-field {
+    width: 100%;
+    min-width: 0;
+  }
+}
+.ic-workout-catalog__hint {
+  margin: 0;
+  color: var(--ic-text-secondary);
+}
+.ic-workout-catalog__filters-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ic-space-3);
+}
+.ic-workout-catalog__card {
+  overflow: hidden;
+  background: var(--ic-surface);
+  border: var(--ic-border-width-default) solid var(--ic-border-soft);
+  border-radius: var(--ic-radius-md);
+}
+.ic-workout-catalog__table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+.ic-workout-catalog__table {
+  width: 100%;
+  min-width: 900px;
+  background: var(--ic-surface);
+  th {
+    background: var(--ic-surface-elevated);
+    color: var(--ic-text-secondary);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  td {
+    color: var(--ic-text-primary);
+  }
+  th,
+  td {
+    padding-inline: var(--ic-space-4);
+  }
+  tr:last-child td {
+    border-bottom: 0;
+  }
+}
+.ic-workout-catalog__row {
+  cursor: pointer;
+}
+.ic-workout-catalog__row:hover,
+.ic-workout-catalog__row:focus-visible {
+  background: var(--ic-surface-elevated);
+}
+mat-paginator {
+  border-top: var(--ic-border-width-default) solid var(--ic-border-soft);
+  background: var(--ic-surface);
+}
+@include responsive.tablet {
+  .ic-workout-catalog {
+    gap: var(--ic-space-4);
+  }
+  .ic-workout-catalog__filters {
+    padding: var(--ic-space-4);
+  }
+  .ic-workout-catalog__filters-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@include responsive.mobile {
+  .ic-workout-catalog {
+    gap: var(--ic-space-3);
+  }
+  .ic-workout-catalog__filters {
+    gap: var(--ic-space-3);
+    padding: var(--ic-space-3);
+  }
+  .ic-workout-catalog__filters-grid {
+    grid-template-columns: 1fr;
+    gap: var(--ic-space-3);
+  }
+  .ic-workout-catalog__filters-actions {
+    @include actions.form;
+  }
+  .ic-workout-catalog__table th,
+  .ic-workout-catalog__table td {
+    padding-inline: var(--ic-space-3);
+  }
+}
