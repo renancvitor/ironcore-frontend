@@ -1,0 +1,70 @@
+<form
+  class="ic-workout-activity-form"
+  [formGroup]="form()"
+  (ngSubmit)="submit()"
+  [attr.aria-busy]="saving()"
+  aria-labelledby="workout-activity-form-title"
+>
+  <h3 id="workout-activity-form-title">
+    {{ editing() ? 'Editar atividade' : 'Adicionar atividade' }}
+  </h3>
+  <p>{{ exerciseName() }}</p>
+  @if (editing()) {
+    <app-button
+      type="button"
+      variant="secondary"
+      [disabled]="saving()"
+      (click)="changeExercise.emit()"
+      >Trocar exercício</app-button
+    >
+  }
+  <p>Todos os campos de prescrição são opcionais e podem ser combinados.</p>
+  @if (remaining() > 0) {
+    <p role="status">Após salvar, configure mais {{ remaining() }} exercício(s) selecionado(s).</p>
+  }
+  <div class="ic-workout-activity-form__fields">
+    @for (field of numericFields; track field.name) {
+      <mat-form-field appearance="outline">
+        <mat-label>{{ field.label }} (opcional)</mat-label>
+        <input
+          matInput
+          [id]="'activity-' + field.name"
+          type="number"
+          [step]="field.integer ? '1' : 'any'"
+          [formControlName]="field.name"
+        />
+        <mat-error>{{
+          field.integer ? 'Informe um número inteiro positivo.' : 'Informe um número positivo.'
+        }}</mat-error>
+      </mat-form-field>
+    }
+    <app-input
+      id="activity-load-text"
+      label="Orientação de carga (opcional)"
+      formControlName="targetLoadText"
+    />
+    <app-input
+      id="activity-intensity"
+      label="Intensidade (opcional)"
+      formControlName="intensityText"
+    />
+    <mat-form-field appearance="outline" class="ic-workout-activity-form__notes">
+      <mat-label>Observações (opcional)</mat-label>
+      <textarea matInput rows="4" formControlName="notes"></textarea>
+    </mat-form-field>
+  </div>
+  @if (
+    form().hasError('repRange') &&
+    (form().controls.repRangeMin.touched || form().controls.repRangeMax.touched)
+  ) {
+    <p role="alert">O mínimo de repetições não pode ser maior que o máximo.</p>
+  }
+  <footer class="ic-workout-activity-form__actions">
+    <app-button type="button" variant="secondary" [disabled]="saving()" (click)="cancelled.emit()"
+      >Cancelar</app-button
+    >
+    <app-button type="submit" [disabled]="saving()">{{
+      saving() ? 'Salvando...' : 'Salvar atividade'
+    }}</app-button>
+  </footer>
+</form>

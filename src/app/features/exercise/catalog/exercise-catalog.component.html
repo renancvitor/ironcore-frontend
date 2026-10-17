@@ -1,8 +1,14 @@
 <section class="ic-exercise-catalog">
   <header class="ic-exercise-catalog__header">
     <div>
-      <h1>Catálogo de exercícios</h1>
-      <p>Consulte os exercícios disponíveis</p>
+      <h1>{{ mode() === 'select' ? 'Selecionar exercícios' : 'Catálogo de exercícios' }}</h1>
+      <p>
+        {{
+          mode() === 'select'
+            ? 'Selecione os exercícios para o dia de treino. Exercícios já vinculados ficam indisponíveis.'
+            : 'Consulte os exercícios disponíveis'
+        }}
+      </p>
     </div>
   </header>
 
@@ -179,6 +185,11 @@
 
   @if (loading()) {
     <app-loading />
+  } @else if (selectionError()) {
+    <div role="alert">
+      <p>{{ selectionError() }}</p>
+      <app-button type="button" (click)="retrySelection()">Tentar novamente</app-button>
+    </div>
   } @else if (exercises(); as response) {
     @if (response.exercises.totalElements === 0) {
       <app-empty-state icon="fitness_center" message="Nenhum exercício encontrado." />
@@ -196,6 +207,21 @@
               [dataSource]="response.exercises.content"
               class="ic-exercise-catalog__table"
             >
+              <ng-container matColumnDef="selection">
+                <th mat-header-cell *matHeaderCellDef>Selecionar</th>
+                <td mat-cell *matCellDef="let exercise">
+                  <mat-checkbox
+                    [aria-label]="'Selecionar ' + exercise.name"
+                    [checked]="selectedIds().includes(exercise.id)"
+                    [disabled]="excludedExerciseIds().includes(exercise.id)"
+                    (click)="$event.stopPropagation()"
+                    (change)="toggleExercise(exercise)"
+                  />
+                  @if (excludedExerciseIds().includes(exercise.id)) {
+                    <span>Já adicionado</span>
+                  }
+                </td>
+              </ng-container>
               <ng-container matColumnDef="name">
                 <th mat-header-cell *matHeaderCellDef>Exercício</th>
 
@@ -248,16 +274,19 @@
                 </td>
               </ng-container>
 
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-header-row *matHeaderRowDef="columns()"></tr>
 
               <tr
                 mat-row
-                *matRowDef="let row; columns: displayedColumns"
+                *matRowDef="let row; columns: columns()"
                 class="ic-exercise-catalog__row"
                 tabindex="0"
                 (click)="openExercise(row.id)"
-                (keydown.enter)="openExercise(row.id)"
-                (keydown.space)="openExercise(row.id)"
+                [attr.aria-disabled]="
+                  mode() === 'select' && excludedExerciseIds().includes(row.id) ? true : null
+                "
+                (keydown.enter)="openRowFromKeyboard($event, row.id)"
+                (keydown.space)="openRowFromKeyboard($event, row.id)"
               ></tr>
             </table>
           </div>
@@ -274,5 +303,21 @@
         />
       </section>
     }
+  }
+  @if (mode() === 'select') {
+    <footer class="ic-exercise-catalog__filters-actions">
+      <p role="status" aria-live="polite">
+        {{ selectedExercises().length }} exercício(s) selecionado(s)
+      </p>
+      <app-button type="button" variant="secondary" (click)="selectionCancelled.emit()"
+        >Cancelar seleção</app-button
+      >
+      <app-button
+        type="button"
+        [disabled]="loading() || !!selectionError() || selectedExercises().length === 0"
+        (click)="confirmSelection()"
+        >Confirmar seleção</app-button
+      >
+    </footer>
   }
 </section>

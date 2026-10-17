@@ -1,0 +1,29 @@
+﻿<form
+  class="ic-workout-activity-form"
+  [formGroup]="form()"
+  (ngSubmit)="submit()"
+  [attr.aria-busy]="saving()"
+  aria-labelledby="activity-order-title"
+>
+  <h3 id="activity-order-title">Reordenar atividade</h3>
+  <p>{{ exerciseName() }}</p>
+  <div class="ic-workout-activity-form__fields">
+    <mat-form-field appearance="outline">
+      <mat-label>Posição no dia</mat-label>
+      <mat-select formControlName="orderIndex" required>
+        @for (item of activities(); track item.id; let index = $index) {
+          <mat-option [value]="index + 1">{{ index + 1 }}ª posição</mat-option>
+        }
+      </mat-select>
+      <mat-error>Selecione uma posição válida.</mat-error>
+    </mat-form-field>
+  </div>
+  <footer class="ic-workout-activity-form__actions">
+    <app-button type="button" variant="secondary" [disabled]="saving()" (click)="cancelled.emit()"
+      >Cancelar</app-button
+    >
+    <app-button type="submit" [disabled]="saving()">{{
+      saving() ? 'Salvando...' : 'Salvar ordem'
+    }}</app-button>
+  </footer>
+</form>

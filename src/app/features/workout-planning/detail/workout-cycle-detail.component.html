@@ -12,7 +12,7 @@
             type="button"
             aria-label="Editar ciclo de treino"
             matTooltip="Editar ciclo"
-            [disabled]="saving() || dayBusy() || !!dayMode()"
+            [disabled]="saving() || dayBusy() || !!dayMode() || activityBusy() || !!activityMode()"
             (click)="startEdit()"
           >
             <mat-icon>edit</mat-icon>
@@ -24,7 +24,7 @@
         type="button"
         aria-label="Voltar aos ciclos de treino"
         matTooltip="Voltar à listagem"
-        [disabled]="saving() || dayBusy()"
+        [disabled]="saving() || dayBusy() || activityBusy()"
         (click)="backToCycles()"
       >
         <mat-icon>arrow_back</mat-icon>
@@ -38,6 +38,15 @@
       <p>{{ error() }}</p>
       <app-button type="button" (click)="loadCycle()">Tentar novamente</app-button>
     </div>
+  } @else if (activityMode() === 'select') {
+    <p class="ic-workout-detail__status">Compor {{ activityDay()?.title }}</p>
+    <app-exercise-catalog
+      mode="select"
+      [multiple]="!selectedActivity()"
+      [excludedExerciseIds]="excludedExerciseIds()"
+      (selectionConfirmed)="confirmExercises($event)"
+      (selectionCancelled)="cancelActivitySelection()"
+    />
   } @else if (cycle(); as cycle) {
     @if (editing()) {
       <app-workout-cycle-form
@@ -95,7 +104,7 @@
     <section
       class="ic-workout-detail__days"
       aria-labelledby="cycle-days-title"
-      [attr.aria-busy]="daySaving() || daysLoading()"
+      [attr.aria-busy]="daySaving() || daysLoading() || activityBusy()"
     >
       <header class="ic-workout-detail__days-header">
         <h2 id="cycle-days-title">Dias de treino</h2>
@@ -105,7 +114,7 @@
             type="button"
             aria-label="Adicionar dia de treino"
             matTooltip="Adicionar dia"
-            [disabled]="editing() || dayBusy() || !!dayMode()"
+            [disabled]="editing() || dayBusy() || !!dayMode() || activityBusy() || !!activityMode()"
             (click)="openDayForm('create')"
           >
             <mat-icon>add</mat-icon>
@@ -114,11 +123,40 @@
       </header>
       @if (!canEdit()) {
         <p class="ic-workout-detail__status" role="status">
-          Ciclos concluídos ou cancelados não permitem alterar dias de treino.
+          Ciclos concluídos ou cancelados não permitem alterar dias de treino ou atividades.
         </p>
       }
       @if (daySaving() || daysLoading()) {
         <p class="ic-workout-detail__status" role="status">Salvando e atualizando a composição…</p>
+      }
+      @if (activitySaving()) {
+        <p class="ic-workout-detail__status" role="status">Salvando atividade…</p>
+      }
+      @if (activitiesLoading()) {
+        <p class="ic-workout-detail__status" role="status">Atualizando a composição…</p>
+      }
+      @if (activityMode() === 'create' || activityMode() === 'edit') {
+        <p class="ic-workout-detail__status">Compor {{ activityDay()?.title }}</p>
+        <app-workout-activity-form
+          [form]="activityForm"
+          [exerciseName]="activityExercises()[0]?.name ?? ''"
+          [editing]="activityMode() === 'edit'"
+          [remaining]="activityExercises().length - 1"
+          [saving]="activitySaving() || activitiesLoading()"
+          (submitted)="saveActivity()"
+          (cancelled)="cancelActivityForm()"
+          (changeExercise)="changeActivityExercise()"
+        />
+      }
+      @if (activityMode() === 'reorder') {
+        <app-workout-activity-order-form
+          [form]="activityOrderForm"
+          [exerciseName]="selectedActivity()?.exercise?.name ?? ''"
+          [activities]="activityDay()?.activities ?? []"
+          [saving]="activityBusy()"
+          (submitted)="saveActivity()"
+          (cancelled)="cancelActivityForm()"
+        />
       }
       @if (dayMode(); as mode) {
         <app-workout-day-form
@@ -143,9 +181,23 @@
                 <button
                   matIconButton
                   type="button"
+                  [attr.aria-label]="'Adicionar atividades ao dia ' + day.title"
+                  matTooltip="Adicionar atividades"
+                  [disabled]="
+                    editing() || dayBusy() || !!dayMode() || activityBusy() || !!activityMode()
+                  "
+                  (click)="openActivitySelector(day)"
+                >
+                  <mat-icon>add</mat-icon>
+                </button>
+                <button
+                  matIconButton
+                  type="button"
                   [attr.aria-label]="'Editar dia ' + day.title"
                   matTooltip="Editar dia"
-                  [disabled]="editing() || dayBusy() || !!dayMode()"
+                  [disabled]="
+                    editing() || dayBusy() || !!dayMode() || activityBusy() || !!activityMode()
+                  "
                   (click)="openDayForm('edit', day)"
                 >
                   <mat-icon>edit</mat-icon>
@@ -155,7 +207,9 @@
                   type="button"
                   [attr.aria-label]="'Reordenar dia ' + day.title"
                   matTooltip="Reordenar dia"
-                  [disabled]="editing() || dayBusy() || !!dayMode()"
+                  [disabled]="
+                    editing() || dayBusy() || !!dayMode() || activityBusy() || !!activityMode()
+                  "
                   (click)="openDayForm('reorder', day)"
                 >
                   <mat-icon>swap_vert</mat-icon>
@@ -166,7 +220,9 @@
                   [attr.aria-label]="'Excluir dia ' + day.title"
                   class="ic-workout-detail__delete"
                   matTooltip="Excluir dia"
-                  [disabled]="editing() || dayBusy() || !!dayMode()"
+                  [disabled]="
+                    editing() || dayBusy() || !!dayMode() || activityBusy() || !!activityMode()
+                  "
                   (click)="deleteDay(day)"
                 >
                   <mat-icon>delete</mat-icon>
@@ -177,7 +233,62 @@
           <ol class="ic-workout-detail__activities">
             @for (activity of day.activities; track activity.id) {
               <li class="ic-workout-detail__activity">
-                <h4>{{ activity.exercise.name }}</h4>
+                <div class="ic-workout-detail__day-header">
+                  <h4>{{ activity.exercise.name }}</h4>
+                  @if (canEdit()) {
+                    <div class="ic-workout-detail__day-actions">
+                      <button
+                        matIconButton
+                        type="button"
+                        [attr.aria-label]="'Editar atividade ' + activity.exercise.name"
+                        matTooltip="Editar atividade"
+                        [disabled]="
+                          editing() ||
+                          dayBusy() ||
+                          !!dayMode() ||
+                          activityBusy() ||
+                          !!activityMode()
+                        "
+                        (click)="openActivityForm('edit', day, activity)"
+                      >
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button
+                        matIconButton
+                        type="button"
+                        [attr.aria-label]="'Reordenar atividade ' + activity.exercise.name"
+                        matTooltip="Reordenar atividade"
+                        [disabled]="
+                          editing() ||
+                          dayBusy() ||
+                          !!dayMode() ||
+                          activityBusy() ||
+                          !!activityMode()
+                        "
+                        (click)="openActivityForm('reorder', day, activity)"
+                      >
+                        <mat-icon>swap_vert</mat-icon>
+                      </button>
+                      <button
+                        matIconButton
+                        type="button"
+                        class="ic-workout-detail__delete"
+                        [attr.aria-label]="'Excluir atividade ' + activity.exercise.name"
+                        matTooltip="Excluir atividade"
+                        [disabled]="
+                          editing() ||
+                          dayBusy() ||
+                          !!dayMode() ||
+                          activityBusy() ||
+                          !!activityMode()
+                        "
+                        (click)="deleteActivity(day, activity)"
+                      >
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
                 @if (activity.exercise.muscleGroups.length > 0) {
                   <div class="ic-workout-detail__muscles">
                     <span>Grupos musculares:</span>

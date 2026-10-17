@@ -134,9 +134,17 @@
     list-style: none;
   }
   li {
-    border: var(--ic-border-width-default) solid var(--ic-border-soft);
+    border: var(--ic-border-width-default) solid
+      color-mix(in srgb, var(--ic-text-secondary) 18%, var(--ic-surface));
     border-radius: var(--ic-radius-md);
-    padding: var(--ic-space-1) var(--ic-space-2);
+    background: var(--ic-surface-elevated);
+    padding: calc(var(--ic-space-2) / 2) var(--ic-space-2);
+    font-size: var(--ic-font-size-sm);
+    line-height: 1.5;
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
   }
 }
 .ic-workout-detail__empty {
