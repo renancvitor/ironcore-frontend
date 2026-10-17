@@ -11,7 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, of, switchMap } from 'rxjs';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputComponent } from '../../../shared/components/input/input.component';
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
@@ -90,6 +90,20 @@ export class WorkoutCycleCatalogComponent {
     this.service
       .listWorkoutCycles(this.state.page, this.state.size, this.state.filters)
       .pipe(
+        switchMap((response) => {
+          if (response.cycles.page > 0 && response.cycles.content.length === 0) {
+            this.state.page = Math.max(
+              0,
+              Math.ceil(response.cycles.totalElements / response.cycles.size) - 1,
+            );
+            return this.service.listWorkoutCycles(
+              this.state.page,
+              this.state.size,
+              this.state.filters,
+            );
+          }
+          return of(response);
+        }),
         takeUntilDestroyed(this.destroyRef),
         finalize(() => this.loading.set(false)),
       )
@@ -155,6 +169,10 @@ export class WorkoutCycleCatalogComponent {
 
   openCycle(id: number): void {
     void this.router.navigate(['/workout-planning', id]);
+  }
+
+  createCycle(): void {
+    void this.router.navigate(['/workout-planning/create']);
   }
 
   statusLabel(status: WorkoutStatus): string {

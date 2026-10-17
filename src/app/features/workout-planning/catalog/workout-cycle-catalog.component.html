@@ -4,6 +4,7 @@
       <h1>Planejamento de treinos</h1>
       <p>Consulte seus ciclos de treino e sua composição.</p>
     </div>
+    <app-button type="button" (click)="createCycle()">Novo ciclo</app-button>
   </header>
 
   <form class="ic-workout-catalog__filters" [formGroup]="filtersForm" (ngSubmit)="applyFilters()">

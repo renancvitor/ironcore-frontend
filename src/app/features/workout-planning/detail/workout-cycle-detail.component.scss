@@ -26,7 +26,11 @@
   }
 }
 .ic-workout-detail__header-actions {
+  display: flex;
   flex-shrink: 0;
+}
+.ic-workout-detail__delete:not(:disabled) {
+  color: var(--ic-button-danger-bg);
 }
 .ic-workout-detail__card {
   overflow: hidden;
