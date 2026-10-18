@@ -13,7 +13,8 @@
 | Detalhes/edição de avaliação                         | Editar, voltar, salvar e cancelar                                                         | Cabeçalho horizontal; rodapé com quebra conforme espaço.                                                                    |
 | Criar avaliação                                      | Salvar e cancelar                                                                         | Mesmo padrão de rodapé da edição.                                                                                           |
 | Evolução corporal                                    | Voltar conforme a origem, aplicar período, tipos de visão e tentar novamente              | Cabeçalho à direita; retorno à Home ou histórico; datas e opções flexíveis; aplicar e tentar novamente alinhados à direita. |
-| Home e seus três cards                               | Links de detalhes e evolução completa, retry do resumo de evolução e rodapé compartilhado | Rodapé compartilhado com flex, wrap e alinhamento à direita. O card de treinos não tem ações.                               |
+| Home e seus três cards                               | Links individuais, evolução completa, Ver todos e retry dos resumos | Rodapé compartilhado com flex, wrap e alinhamento à direita; planejamento integrado. |
+| Workout Planning | Catálogo, filtros, criação, edição, composição, reorder e lifecycle | Cabeçalhos e formulários reutilizam actions; tabelas com rolagem e seleção contextual responsiva. |
 | Cabeçalho global                                     | Menu, início, tema, sair e perfil                                                         | Preservado: grupo de ações horizontal já adequado.                                                                          |
 | Sidebar/app-shell                                    | Links, grupo expansível e navegação                                                       | Preservados: navegação vertical tem função própria.                                                                         |
 | Dialog                                               | Confirmar e cancelar, inclusive diálogos de ação única                                    | Mesmo padrão dos rodapés, sem inversão visual da ordem do DOM.                                                              |
@@ -69,5 +70,15 @@ O catálogo reutiliza `actions.form` nas ações de aplicar e limpar filtros no 
 Ícones de limpeza e retorno possuem `aria-label` e tooltip. As linhas da listagem podem ser abertas por clique, Enter ou Space. O atalho de exercícios no header fica oculto no mobile, mantendo o acesso pela sidebar.
 
 Na revisão documental da `v0.4.0`, esses comportamentos foram conferidos nos templates e estilos existentes. O build e a suíte de testes passaram; não foi executada uma nova bateria visual em navegador. Os contratos, estados e testes da feature estão em [Catálogo de Exercícios](../exercises/README.md).
+
+## Workout Planning e Home na v1.0.0
+
+Catálogo e detalhe de ciclos reutilizam `actions.header` e `actions.icons`; filtros e formulários de ciclo, dia e atividade usam `actions.form` no mobile. Filtros reduzem colunas por breakpoint e tabelas mantêm rolagem no próprio container. Reorder usa formulário de posição e controles acessíveis, sem depender de arrastar itens.
+
+O seletor contextual reutiliza o catálogo existente, com checkboxes rotulados, seleção por teclado, indicação de exercício já adicionado e confirmação/cancelamento. A Home apresenta links individuais de ciclo, `Ver todos` e retry do planejamento, preservando os padrões do card compartilhado.
+
+O header acrescenta o atalho de planejamento, oculto no mobile junto dos atalhos de histórico e exercícios; o acesso permanece pela sidebar. Botões de lifecycle e composição mantêm labels, tooltips e bloqueios conforme o status ou operação pendente. O detalhe do ciclo oferece retorno à Home ou ao catálogo conforme a origem.
+
+Na revisão documental da v1.0.0, esses comportamentos foram conferidos nos templates, estilos e testes existentes. A suíte completa passou com 699 testes em 59 arquivos e o build de produção concluiu sem avisos. Não foi executada nova bateria visual em navegador nem auditoria completa de acessibilidade; os cenários e números da seção de validação original continuam históricos. Os contratos e fluxos estão em [Workout Planning](../workout-planning/README.md), [Home e Cards-Resumo](../card-resume/README.md) e [v1.0.0](../releases/v1.0.0/README.md).
 
 <p align="right"><a href="README.md">Voltar para arquitetura</a></p>

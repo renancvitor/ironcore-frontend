@@ -5,15 +5,6 @@
   <img src="https://img.shields.io/badge/Status-In%20Progress-yellow" width="150" height="30" />
 </p>
 
-<!-- Troque o texto e a cor do badge conforme o status do projeto:
-     Status-Completed-brightgreen   → Projeto concluído
-     Status-In%20Progress-yellow    → Projeto em andamento
-     Status-Paused-orange           → Projeto pausado
-     Status-Canceled-red            → Projeto cancelado
-     Exemplo de uso:
-     https://img.shields.io/badge/Status-Completed-brightgreen
--->
-
 ---
 
 <h2 align="center">🔗 Backend</h2>
@@ -42,8 +33,8 @@ Planejamento, tarefas e histórico de evolução disponíveis no GitHub Projects
 - [Ferramentas Utilizadas](#ferramentas-utilizadas)
 - [Princípios de Integração com o Backend](#principios-de-integracao-com-o-backend)
 - [Documentação Técnica](#documentacao-tecnica)
-- [Escopo Inicial / MVP](#escopo-inicial--mvp)
-- [Funcionalidades Planejadas](#funcionalidades-planejadas)
+- [Escopo da Primeira Versão](#escopo-da-primeira-versao)
+- [Funcionalidades Disponíveis](#funcionalidades-disponiveis)
 - [Testes Automatizados](#testes-automatizados)
 - [Estrutura do Projeto](#estrutura-do-projeto)
 - [Como Executar o Projeto](#como-executar-o-projeto)
@@ -55,9 +46,9 @@ Planejamento, tarefas e histórico de evolução disponíveis no GitHub Projects
 
 <h2 id="visao-geral-do-projeto" align="center">Visão Geral do Projeto</h2>
 
-<b>IronCore Frontend</b> é a interface web em desenvolvimento do ecossistema IronCore. Construído com <b>[Angular](https://angular.dev/)</b>, o projeto evoluirá como a camada de apresentação para os fluxos disponibilizados pelo [IronCore Backend](https://github.com/renancvitor/ironcore-backend).
+<b>IronCore Frontend</b> é a interface web do ecossistema IronCore. Construído com <b>[Angular](https://angular.dev/)</b>, oferece a camada de apresentação para os fluxos disponibilizados pelo [IronCore Backend](https://github.com/renancvitor/ironcore-backend).
 
-A aplicação terá como objetivo oferecer uma experiência clara para acompanhar evolução física, consultar o catálogo de exercícios, organizar ciclos de treino e, em etapas futuras, registrar sessões executadas e interagir com recursos apoiados por IA.
+A aplicação permite acompanhar evolução física, consultar o catálogo de exercícios e organizar ciclos de treino. Registro de sessões executadas e recursos apoiados por IA permanecem como evoluções futuras, fora da v1.0.0.
 
 O frontend não replica regras de domínio. Sua responsabilidade é apresentar informações, orientar a interação, consumir os contratos reais da API e tratar adequadamente os estados de carregamento, sucesso e erro. As validações de domínio, autenticação, autorização e integridade dos dados permanecem sob responsabilidade do backend.
 
@@ -76,22 +67,23 @@ O desenvolvimento do projeto busca consolidar habilidades como:
 
 <h2 id="status-atual-do-projeto" align="center">Status Atual do Projeto</h2>
 
-O <b>IronCore Frontend</b> possui fluxos funcionais de autenticação, conta, avaliação corporal e catálogo de exercícios. A aplicação integra sessão baseada em cookie, login, primeiro acesso, perfil, gerenciamento de avaliações corporais e consulta de exercícios com busca, filtros, paginação e detalhe, sobre a infraestrutura visual e HTTP estabelecida anteriormente.
+O <b>IronCore Frontend v1.0.0</b> é a primeira versão funcional e estável da interface e encerra a primeira fase do produto no frontend. Consolida autenticação, conta, avaliação e evolução corporal, catálogo de exercícios e Workout Planning completo, integrados à Home e à navegação global. O registro da release está em [v1.0.0](docs/releases/v1.0.0/README.md); sua preparação documental não implica publicação no GitHub.
 
 ### Já existe no projeto
 
 - Aplicação Angular 21 configurada com TypeScript e SCSS.
-- Rotas públicas para login e primeiro acesso, e rotas protegidas carregadas sob demanda para início, perfil, alteração de senha, avaliação corporal e exercícios.
+- Rotas públicas para login e primeiro acesso, e rotas protegidas carregadas sob demanda para início, perfil, alteração de senha, avaliação corporal, exercícios e planejamento de treinos.
 - Provider HTTP com URL base configurável por environment.
 - Fluxos de login, primeiro acesso, logout e restauração de sessão pelo contrato real da API.
 - Estado do usuário autenticado em memória, interceptor com `withCredentials` para a API e `authGuard` aplicado às rotas protegidas.
 - Perfil com dados separados de `User` e `Person`, edição de nickname e dados pessoais, e alteração de senha.
 - Avaliação corporal com cadastro, histórico paginado, detalhe, última avaliação, edição, exclusão, evolução e comparativo integrados ao backend.
 - Catálogo de exercícios com classificações auxiliares, busca por nome, filtros combinados, paginação, detalhe e apresentação de músculos-alvo e seus papéis.
-- Home com resumo da última avaliação corporal e resumo real de evolução corporal por período, com acesso à página completa e retorno contextual; o card de treinos permanece sem integração.
+- Workout Planning com objetivos ativos da API, catálogo filtrado e paginado, criação/edição de ciclos, composição de dias e atividades, seleção de exercícios, prescrição híbrida, reorder, exclusão e lifecycle conforme status.
+- Home com resumos independentes de última avaliação, evolução corporal e planejamento de treinos; o resumo de planejamento prioriza ciclos em andamento, com fallback para não iniciados, até três itens, links individuais e acesso ao catálogo completo.
 - Angular Material, design tokens, preferência persistente de tema claro, escuro ou do sistema e breakpoints responsivos centralizados.
 - Componentes compartilhados de botão, input, loading, empty state, diálogo de confirmação e toast.
-- Application shell com header, sidebar, acesso ao perfil, avaliação corporal e exercícios, logout, preferência de tema, container de conteúdo e `router-outlet` interno.
+- Application shell com header, sidebar, acesso ao perfil, avaliação corporal, exercícios e planejamento de treinos, logout, preferência de tema, container de conteúdo e `router-outlet` interno.
 - Actions mobile compartilhadas, ícones com labels acessíveis e tooltips, além de gráficos e tabelas com rolagem horizontal quando necessária.
 - Configuração de build de produção e desenvolvimento.
 - Estrutura de testes unitários baseada em Vitest.
@@ -101,9 +93,9 @@ O <b>IronCore Frontend</b> possui fluxos funcionais de autenticação, conta, av
 
 ### Planejado para as próximas etapas
 
-- Telas para planejamento de treinos.
 - Registro e histórico de sessões executadas e visualizações de progresso de treino.
-- Integração do card de treinos na Home.
+- Geração de treino com IA/agent, conforme futuros contratos do backend.
+- Métricas de aderência e progresso percentual de ciclos apoiadas em dados reais de execução.
 - Evolução dos testes para os novos fluxos de domínio e de interface.
 - Documentação técnica complementar conforme novas estruturas e decisões forem implementadas.
 
@@ -139,9 +131,9 @@ O estado acima descreve exclusivamente o que está presente neste repositório. 
 
 <h2 id="principios-de-integracao-com-o-backend" align="center">Princípios de Integração com o Backend</h2>
 
-O frontend será integrado progressivamente ao [IronCore Backend](https://github.com/renancvitor/ironcore-backend), respeitando os contratos e o modelo de segurança já definidos pela API.
+O frontend está integrado ao [IronCore Backend](https://github.com/renancvitor/ironcore-backend), respeitando os contratos e o modelo de segurança definidos pela API.
 
-Essa integração seguirá os seguintes princípios:
+Essa integração segue os seguintes princípios:
 
 - utilizar contratos reais da API, sem criar representações divergentes do domínio;
 - manter validações de domínio, autenticação, autorização e ownership como responsabilidade do backend;
@@ -150,7 +142,7 @@ Essa integração seguirá os seguintes princípios:
 - não expor detalhes técnicos desnecessários ao usuário;
 - não armazenar credenciais, tokens ou dados sensíveis de forma insegura no navegador.
 
-Os mecanismos implementados de comunicação HTTP, sessão e proteção de rotas estão documentados em [Arquitetura](docs/architecture/README.md). O interceptor trata globalmente respostas `401`; os demais erros dos fluxos são apresentados pelas telas. Os contratos utilizados estão em [Avaliação corporal](docs/body-metrics/README.md) e [Catálogo de Exercícios](docs/exercises/README.md).
+Os mecanismos implementados de comunicação HTTP, sessão e proteção de rotas estão documentados em [Arquitetura](docs/architecture/README.md). O interceptor trata globalmente respostas `401`; os demais erros dos fluxos são apresentados pelas telas. Os contratos utilizados estão em [Avaliação corporal](docs/body-metrics/README.md), [Catálogo de Exercícios](docs/exercises/README.md) e [Workout Planning](docs/workout-planning/README.md).
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -158,32 +150,19 @@ Os mecanismos implementados de comunicação HTTP, sessão e proteção de rotas
 
 <h2 id="documentacao-tecnica" align="center">Documentação Técnica</h2>
 
-A documentação técnica registra a arquitetura efetivamente implementada e separa convenções planejadas de estruturas já existentes:
+A documentação técnica detalhada do projeto está disponível no índice central da pasta [docs](docs/README.md).
 
-- [Índice da documentação técnica](docs/README.md)
-- [Arquitetura](docs/architecture/README.md)
-- [Estrutura do projeto](docs/project-structure/README.md)
-- [Home e Cards-Resumo](docs/card-resume/README.md)
-- [Avaliação corporal](docs/body-metrics/README.md)
-- [Catálogo de Exercícios](docs/exercises/README.md)
-- [Disposição de ações no mobile](docs/architecture/mobile-actions.md)
-- [Histórico de releases](docs/releases/README.md)
-- [v0.1.0 — Foundation técnica e visual](docs/releases/v0.1.0/README.md)
-- [v0.2.0 — Autenticação, sessão e conta](docs/releases/v0.2.0/README.md)
-- [v0.3.0 — Body Metrics](docs/releases/v0.3.0/README.md)
-- [v0.4.0 — Exercise Catalog](docs/releases/v0.4.0/README.md)
+Esse índice central reúne os principais documentos sobre arquitetura, estrutura do projeto, módulos funcionais, Home e cards-resumo, padrões responsivos e notas de release. Para o fluxo de ciclos, consulte [Workout Planning](docs/workout-planning/README.md). A primeira fase do frontend está consolidada na [release v1.0.0](docs/releases/v1.0.0/README.md).
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
-<h2 id="escopo-inicial--mvp" align="center">Escopo Inicial / MVP</h2>
+<h2 id="escopo-da-primeira-versao" align="center">Escopo da Primeira Versão</h2>
 
-> Esta seção descreve o escopo planejado do frontend, não funcionalidades já implementadas.
+O escopo funcional da primeira fase está entregue na v1.0.0, incluindo os fluxos abaixo e sua integração à Home.
 
-O escopo inicial da interface acompanha a evolução incremental do IronCore e será priorizado conforme os contratos do backend estiverem estáveis.
-
-### Núcleo do MVP
+### Núcleo entregue
 
 - Autenticação e acesso à área protegida conforme o baseline single-user da API.
 - Consulta e atualização de dados da pessoa autenticada.
@@ -192,7 +171,7 @@ O escopo inicial da interface acompanha a evolução incremental do IronCore e s
 - Criação, consulta e organização de ciclos de treino.
 - Feedbacks de carregamento, erro e sucesso nos fluxos principais.
 
-### Evoluções planejadas após o MVP
+### Evoluções futuras, fora da v1.0.0
 
 - Registro e histórico de sessões de treino executadas.
 - Visualizações de treino.
@@ -203,35 +182,36 @@ O escopo inicial da interface acompanha a evolução incremental do IronCore e s
 
 ---
 
-<h2 id="funcionalidades-planejadas" align="center">Funcionalidades Planejadas</h2>
+<h2 id="funcionalidades-disponiveis" align="center">Funcionalidades Disponíveis</h2>
 
-As funcionalidades abaixo representam o escopo funcional da interface. Entregas existentes são identificadas por versão; os demais itens continuam planejados e não devem ser interpretados como recursos disponíveis.
+As funcionalidades abaixo compõem a [v1.0.0](docs/releases/v1.0.0/README.md). As versões incrementais identificam a origem das entregas e preservam seu próprio registro histórico. Execução e histórico de sessões permanecem explicitamente futuros.
 
 ### Acesso e sessão
 
-- Login, logout, proteção de rotas, restauração de sessão e fluxos de troca de senha foram entregues na `v0.2.0`.
+- Login, logout, proteção de rotas, restauração de sessão e fluxos de troca de senha foram entregues na [v0.2.0](docs/releases/v0.2.0/README.md).
 - Evoluções adicionais de tratamento de sessão e autenticação serão realizadas conforme novos contratos forem disponibilizados.
 
 ### Pessoa e evolução física
 
-- Consulta e atualização dos dados da pessoa autenticada foram entregues na `v0.2.0`.
-- Cadastro, edição, exclusão, histórico paginado, detalhe e resumo da última avaliação corporal foram entregues na `v0.3.0`.
-- Evolução das medidas, comparativo por período e resumo de evolução na Home foram entregues na `v0.3.0`, reutilizando a página completa com retorno conforme a origem de acesso.
+- Consulta e atualização dos dados da pessoa autenticada foram entregues na [v0.2.0](docs/releases/v0.2.0/README.md).
+- Cadastro, edição, exclusão, histórico paginado, detalhe e resumo da última avaliação corporal foram entregues na [v0.3.0](docs/releases/v0.3.0/README.md).
+- Evolução das medidas, comparativo por período e resumo de evolução na Home foram entregues na [v0.3.0](docs/releases/v0.3.0/README.md), reutilizando a página completa com retorno conforme a origem de acesso.
 
 ### Catálogo de exercícios
 
-- Listagem paginada, busca por nome e filtros combinados foram implementados na `v0.4.0`.
-- Classificações auxiliares e dependência entre grupo e subgrupo muscular foram integradas na `v0.4.0`.
-- Detalhe com classificações, músculos-alvo e seus papéis foi implementado na `v0.4.0`.
+- Listagem paginada, busca por nome e filtros combinados foram implementados na [v0.4.0](docs/releases/v0.4.0/README.md).
+- Classificações auxiliares e dependência entre grupo e subgrupo muscular foram integradas na [v0.4.0](docs/releases/v0.4.0/README.md).
+- Detalhe com classificações, músculos-alvo e seus papéis foi implementado na [v0.4.0](docs/releases/v0.4.0/README.md).
 
 ### Planejamento de treinos
 
-- Consulta de objetivos de treino.
-- Criação e organização de ciclos de treino.
-- Gerenciamento de dias e atividades planejadas.
-- Consulta, edição, reordenação, filtros e exclusão conforme os contratos disponíveis.
+- Consulta de objetivos ativos da API e catálogo de ciclos com filtros e paginação.
+- Criação/edição de ciclos e composição de dias e atividades com exercícios do catálogo existente.
+- Seleção contextual múltipla, prevenção de duplicidade por dia e prescrição híbrida combinável.
+- Reorder de dias/atividades, exclusão conforme status e lifecycle de início, conclusão e cancelamento.
+- Integração à Home e navegação global, com retorno contextual do detalhe; entrega consolidada na [v1.0.0](docs/releases/v1.0.0/README.md).
 
-### Execução e histórico
+### Execução e histórico — futuros
 
 - Registro de sessões e atividades executadas, quando esse fluxo for disponibilizado pelo backend.
 - Consulta de histórico e resumo de treinos realizados.
@@ -248,7 +228,7 @@ As funcionalidades abaixo representam o escopo funcional da interface. Entregas 
 
 <h2 id="testes-automatizados" align="center">Testes Automatizados</h2>
 
-O projeto possui testes com Vitest para a foundation e os fluxos de autenticação, conta, avaliação corporal e catálogo de exercícios: infraestrutura HTTP, rotas, layout, tema, perfil, componentes compartilhados, formulários, gráficos/comparativo, filtros, paginação e músculos-alvo. Testes de integração entre rotas verificam novas consultas após cadastro, edição e exclusão. Os testes HTTP usam respostas simuladas e não alteram dados de uma API real.
+O projeto possui testes com Vitest para a foundation e os fluxos de autenticação, conta, avaliação corporal, catálogo de exercícios e Workout Planning: infraestrutura HTTP, rotas, layout, tema, perfil, componentes compartilhados, formulários, gráficos/comparativo, filtros, paginação, músculos-alvo, composição, seleção, prescrição, reorder, lifecycle e resumos da Home. Testes de integração verificam consultas após mutações e navegação contextual. Os testes HTTP usam respostas simuladas e não alteram dados de uma API real. A [validação final da v1.0.0](docs/releases/v1.0.0/README.md#validação-local) registra 699 testes aprovados em 59 arquivos e build de produção sem avisos.
 
 Os testes protegem, quando aplicável:
 
@@ -283,7 +263,7 @@ A estrutura atual é a base criada pelo Angular CLI, estendida com infraestrutur
 src/
  ├── app/
  │    ├── core/           # autenticação, tema, HTTP, interceptor e guard globais
- │    ├── features/       # autenticação, avaliação corporal, exercícios, início e perfil
+ │    ├── features/       # autenticação, avaliação corporal, exercícios, treinos, início e perfil
  │    ├── layout/         # application shell, header e sidebar
  │    ├── shared/         # componentes reutilizáveis de interação e feedback
  │    ├── app.config.ts   # providers globais da aplicação

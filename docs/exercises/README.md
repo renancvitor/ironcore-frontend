@@ -2,7 +2,7 @@
 
 ## Escopo Implementado
 
-O Exercise Catalog permite consultar o catálogo global de exercícios, aplicar busca e filtros combinados, percorrer resultados paginados e abrir o detalhe com classificações e músculos-alvo. A feature está em `src/app/features/exercise` e compõe a entrega frontend `v0.4.0`.
+O Exercise Catalog permite consultar o catálogo global de exercícios, aplicar busca e filtros combinados, percorrer resultados paginados e abrir o detalhe com classificações e músculos-alvo. A feature está em `src/app/features/exercise`, foi entregue na `v0.4.0` e, na `v1.0.0`, também é reutilizada na seleção de exercícios do Workout Planning.
 
 O catálogo é controlado pelo sistema. A interface consome consultas autenticadas; a manutenção de exercícios, classificações e associações musculares pertence ao backend, conforme sua [documentação do catálogo](https://github.com/renancvitor/ironcore-backend/blob/main/docs/exercises/README.md). Não há operações de cadastro, edição ou exclusão nesta feature.
 
@@ -16,7 +16,7 @@ O catálogo é controlado pelo sistema. A interface consome consultas autenticad
 | `catalog/exercise-catalog-state.service.ts` | Filtros aplicados, página e tamanho preservados em memória durante a navegação.                          |
 | `catalog/detail/exercise-detail.component`  | Consulta por ID, informações gerais, músculos-alvo, resolução dos nomes dos grupos e retorno.            |
 
-`ExerciseService` centraliza o acesso à API e não guarda resultados em cache. As telas mantêm dados e estados de carregamento em signals locais. `ExerciseCatalogStateService`, fornecido na raiz da aplicação, preserva somente o contexto da consulta. A feature reutiliza HTTP, sessão, componentes de feedback e paginator existentes, sem acrescentar infraestrutura a `core` ou regras de catálogo a `shared`.
+`ExerciseService` centraliza o acesso à API e não guarda resultados em cache. As telas mantêm dados e estados de carregamento em signals locais. `ExerciseCatalogStateService`, fornecido na raiz da aplicação para a consulta normal, preserva somente o contexto da consulta. O detalhe de ciclo fornece uma instância local para a seleção contextual. A feature reutiliza HTTP, sessão, componentes de feedback e paginator existentes, sem acrescentar infraestrutura a `core` ou regras de catálogo a `shared`.
 
 ## Rotas e Navegação
 
@@ -32,6 +32,16 @@ As linhas da tabela abrem o detalhe por clique, Enter ou Space. O botão de reto
 A busca aplicada, a página e o tamanho permanecem em memória ao abrir um detalhe e voltar ao catálogo. O catálogo é consultado novamente nesse retorno, utilizando o contexto preservado. Alterações no formulário ainda não aplicadas não substituem essa busca. Recarregar a aplicação limpa o estado e reinicia na página `0`, com tamanho `20` e sem filtros. Essa é uma escolha de navegação: voltar preserva; recarregar reinicia. Os filtros não são gravados na URL ou em armazenamento persistente.
 
 O detalhe lê o ID da rota na inicialização. Valores que não sejam inteiros positivos retornam ao catálogo sem consultar exercício ou grupos musculares. A rota vigente é `/exercises/:id`, conforme a padronização posterior ao PR #69.
+
+## Seleção Contextual no Workout Planning
+
+`ExerciseCatalogComponent` expõe `mode` (`browse` por padrão ou `select`), `multiple`, `excludedExerciseIds` e eventos `selectionConfirmed`/`selectionCancelled`. O modo normal mantém a consulta e a navegação para o detalhe descritas acima. Em `select`, clique ou teclado altera a seleção e a confirmação devolve os exercícios ao componente responsável pela composição do dia, sem navegar para o detalhe do exercício.
+
+A inclusão aceita seleção múltipla, preservada ao aplicar filtros e paginar enquanto o seletor permanece aberto. A troca de exercício de uma atividade usa seleção única. Exercícios vinculados ao mesmo dia aparecem com `Já adicionado`, checkbox desabilitado e indicação acessível na linha. Não são removidos silenciosamente da página retornada. O frontend evita duplicidade ao confirmar e salvar; a unicidade final é responsabilidade do backend.
+
+O seletor reutiliza busca, classificações, filtros aplicados, paginação e apresentação responsiva existentes. A instância local de `ExerciseCatalogStateService` no detalhe do ciclo preserva esse contexto sem substituir a busca normal de `/exercises`. A seleção de itens não é persistida ao fechar e reabrir o seletor. Falhas de listagem ficam no contexto de seleção com retry, sem o redirecionamento adotado no modo normal.
+
+O catálogo emite a seleção; criação/edição de atividades, prescrição híbrida, processamento individual dos exercícios e validação por status pertencem a [Workout Planning](../workout-planning/README.md). Não há catálogo paralelo nem novos endpoints de exercícios para esse modo.
 
 ## Contratos HTTP
 
@@ -185,6 +195,6 @@ npm run build
 
 Na revisão de 15/10/2026, passaram 431 testes em 46 arquivos e o build de produção concluiu sem avisos. Os testes HTTP usam respostas simuladas. A conferência de contratos com o backend foi feita pela leitura da implementação e dos testes; não foi executado um novo teste autenticado contra a API real nem uma nova verificação visual em navegador nesta etapa documental.
 
-O registro para o pre-release está em [v0.4.0 — Exercise Catalog](../releases/v0.4.0/README.md).
+O registro histórico da entrega original está em [v0.4.0 — Exercise Catalog](../releases/v0.4.0/README.md). A seleção contextual foi consolidada em [v1.0.0](../releases/v1.0.0/README.md), cuja validação final registra 699 testes aprovados em 59 arquivos e build sem avisos; o contexto e os resultados de 15/10/2026 acima preservam a revisão original do catálogo. A suíte atual também cobre seleção múltipla/única, duplicidade, erro contextual e integração com a composição do ciclo.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>
