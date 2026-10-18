@@ -80,6 +80,22 @@ describe('HeaderComponent', () => {
     expect(link.getAttribute('aria-label')).toBe('Catálogo de exercícios');
   });
 
+  it('opens Workout Planning from the existing responsive header link', async () => {
+    const links = fixture.nativeElement.querySelectorAll('a.ic-header__workout-planning');
+    expect(links).toHaveLength(1);
+    const link = links[0] as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('/workout-planning');
+    expect(link.getAttribute('aria-label')).toBe('Planejamento de treinos');
+    const navigateByUrl = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    link.click();
+    expect(navigateByUrl).toHaveBeenCalledOnce();
+    expect(
+      TestBed.inject(Router).serializeUrl(
+        navigateByUrl.mock.calls[0][0] as import('@angular/router').UrlTree,
+      ),
+    ).toBe('/workout-planning');
+  });
+
   it('should log out and redirect to login after the request succeeds', () => {
     const result = new Subject<void>();
     logout.mockReturnValue(result);

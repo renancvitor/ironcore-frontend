@@ -9,6 +9,8 @@ import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { MatDialogHarness } from '@angular/material/dialog/testing';
 import { MatButtonHarness } from '@angular/material/button/testing';
 import { routes } from '../../app.routes';
+import { HomeComponent } from '../home/home.component';
+import { BodyMetricsService } from '../body-metrics/body-metrics.service';
 import { WorkoutPlanningService } from './workout-planning.service';
 import { cycleDetail, cyclePage } from './workout-planning.testing';
 import { WorkoutCycleCatalogComponent } from './catalog/workout-cycle-catalog.component';
@@ -23,6 +25,75 @@ import {
 } from './workout-planning.models';
 
 describe('Workout Planning navigation', () => {
+  it.each(['IN_PROGRESS', 'NOT_STARTED'] as const)(
+    'returns to Home after opening a %s cycle from its summary card',
+    async (status) => {
+      const featureRoutes = routes
+        .find((route) => route.path === '' && route.children)!
+        .children!.filter(
+          (route) => route.path === '' || route.path?.startsWith('workout-planning'),
+        );
+      const cycle = {
+        ...cycleDetail,
+        workoutStatus: status,
+        startDate: status === 'NOT_STARTED' ? null : cycleDetail.startDate,
+      };
+      const summaryCycles = [cycle, { ...cycle, id: 12, name: 'Corrida' }];
+      await TestBed.configureTestingModule({
+        providers: [
+          provideRouter(featureRoutes),
+          {
+            provide: BodyMetricsService,
+            useValue: { getLatest: () => of(null), getChanges: () => of({ changes: [] }) },
+          },
+          {
+            provide: WorkoutPlanningService,
+            useValue: {
+              listWorkoutCycles: (
+                _page: number,
+                _size: number,
+                filters: { workoutStatus: string },
+              ) =>
+                of({
+                  cycles: {
+                    content: filters.workoutStatus === status ? summaryCycles : [],
+                    totalElements: filters.workoutStatus === status ? 2 : 0,
+                  },
+                }),
+              getWorkoutCycleDetail: (id: number) =>
+                of(summaryCycles.find((item) => item.id === id)),
+            },
+          },
+        ],
+      }).compileComponents();
+      const harness = await RouterTestingHarness.create();
+      await harness.navigateByUrl('/', HomeComponent);
+      for (const [index, id] of [9, 12].entries()) {
+        harness
+          .routeNativeElement!.querySelectorAll<HTMLAnchorElement>(
+            'app-in-progress-workouts-card li a',
+          )
+          [index].click();
+        await harness.fixture.whenStable();
+        harness.detectChanges();
+        expect(TestBed.inject(Router).url).toBe(`/workout-planning/${id}?from=home`);
+        expect(harness.routeDebugElement!.componentInstance).toBeInstanceOf(
+          WorkoutCycleDetailComponent,
+        );
+        harness
+          .routeNativeElement!.querySelector<HTMLButtonElement>(
+            'button[aria-label="Voltar ao início"]',
+          )!
+          .click();
+        await harness.fixture.whenStable();
+        harness.detectChanges();
+        expect(TestBed.inject(Router).url).toBe('/');
+        expect(harness.routeDebugElement!.componentInstance).toBeInstanceOf(HomeComponent);
+        expect(harness.routeNativeElement!.querySelectorAll('.ic-summary-card')).toHaveLength(3);
+      }
+    },
+  );
+
   it.each([
     ['NOT_STARTED', 'start', 'Iniciar ciclo de treino', 'IN_PROGRESS', 'Em andamento'],
     ['IN_PROGRESS', 'complete', 'Concluir ciclo de treino', 'COMPLETED', 'Concluído'],

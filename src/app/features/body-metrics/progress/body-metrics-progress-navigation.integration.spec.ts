@@ -37,6 +37,17 @@ describe('body metrics progress contextual navigation', () => {
 
   function flushPage(path: string): void {
     if (path === '/') {
+      for (const status of ['IN_PROGRESS', 'NOT_STARTED']) {
+        http
+          .expectOne(
+            (req) =>
+              req.url === '/api/users/me/workout-cycles' &&
+              req.params.get('workoutStatus') === status,
+          )
+          .flush({
+            cycles: { content: [], page: 0, size: 3, totalElements: 0, totalPages: 0, last: true },
+          });
+      }
       http.expectOne(`${endpoint}/latest`).flush(null, { status: 404, statusText: 'Not Found' });
       const summary = http.expectOne((req) => req.url === `${endpoint}/progress/changes`);
       summary.flush({
@@ -45,11 +56,9 @@ describe('body metrics progress contextual navigation', () => {
         changes: [],
       });
     } else if (path === '/body-metrics') {
-      http
-        .expectOne(endpoint)
-        .flush({
-          metrics: { content: [], page: 0, size: 20, totalElements: 0, totalPages: 0, last: true },
-        });
+      http.expectOne(endpoint).flush({
+        metrics: { content: [], page: 0, size: 20, totalElements: 0, totalPages: 0, last: true },
+      });
     } else {
       const chart = http.expectOne((req) => req.url === `${endpoint}/progress/body-composition`);
       chart.flush({

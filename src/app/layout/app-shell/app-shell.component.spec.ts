@@ -76,6 +76,22 @@ describe('AppShellComponent', () => {
     expect(outlet).toBeTruthy();
   });
 
+  it('preserves one Workout Planning entry per global navigation without duplicating the shell', async () => {
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelectorAll('app-header a[href="/workout-planning"]')).toHaveLength(1);
+    for (let i = 0; i < 2; i++) {
+      element.querySelector<HTMLButtonElement>('button[aria-label="Abrir menu"]')!.click();
+      await fixture.whenStable();
+      expect(element.querySelectorAll('app-sidebar a[href="/workout-planning"]')).toHaveLength(1);
+      expect(element.querySelectorAll('app-header')).toHaveLength(1);
+      expect(element.querySelectorAll('app-sidebar')).toHaveLength(1);
+      expect(element.querySelectorAll('router-outlet')).toHaveLength(1);
+      element.querySelector<HTMLButtonElement>('button[aria-label="Abrir menu"]')!.click();
+      await fixture.whenStable();
+      expect(element.querySelector('app-sidebar')).toBeNull();
+    }
+  });
+
   it('should render the page container', () => {
     const container = fixture.nativeElement.querySelector('.ic-container');
 
