@@ -5,7 +5,7 @@ Este documento descreve a organização principal do IronCore Frontend.
 O projeto usa Angular standalone e mantém responsabilidades transversais e visuais separadas:
 
 - `core`: autenticação, tema, HTTP, interceptor e guard globais.
-- `features`: páginas e fluxos funcionais de autenticação, avaliação corporal, exercícios, início e perfil.
+- `features`: páginas e fluxos funcionais de autenticação, avaliação corporal, exercícios, planejamento de treinos, início e perfil.
 - `shared`: componentes reutilizáveis de interação e feedback.
 - `layout`: application shell e estrutura visual persistente.
 
@@ -39,6 +39,8 @@ docs
 │   └── README.md
 ├── project-structure
 │   └── README.md
+├── workout-planning
+│   └── README.md
 └── releases
     ├── README.md
     ├── v0.1.0
@@ -47,7 +49,9 @@ docs
     │    └── README.md
     ├── v0.3.0
     │    └── README.md
-    └── v0.4.0
+    ├── v0.4.0
+    │    └── README.md
+    └── v1.0.0
         └── README.md
 ```
 
@@ -94,6 +98,7 @@ src/app
 │   │       ├── exercise-catalog.component.html
 │   │       ├── exercise-catalog.component.scss
 │   │       ├── exercise-catalog-state.service.ts
+│   │       ├── exercise-catalog.types.ts
 │   │       └── detail
 │   ├── home
 │   │   └── components
@@ -101,6 +106,19 @@ src/app
 │   │       ├── body-metrics-progress-card
 │   │       ├── in-progress-workouts-card
 │   │       └── summary-card
+│   ├── workout-planning
+│   │   ├── workout-planning.models.ts
+│   │   ├── workout-planning.service.ts
+│   │   ├── workout-planning.labels.ts
+│   │   ├── workout-cycle.form.ts
+│   │   ├── workout-day.form.ts
+│   │   ├── workout-activity.form.ts
+│   │   ├── catalog
+│   │   │   ├── workout-cycle-catalog.component.ts
+│   │   │   └── workout-cycle-catalog-state.service.ts
+│   │   ├── create
+│   │   ├── detail
+│   │   └── form
 │   └── profile
 │       └── change-password
 ├── layout
@@ -175,6 +193,14 @@ src/app
 │   │       └── detail
 │   │           └── exercise-detail.component.spec.ts
 │   ├── home
+│   ├── workout-planning
+│   │   ├── workout-planning.service.spec.ts
+│   │   ├── workout-planning-navigation.integration.spec.ts
+│   │   ├── workout-planning.testing.ts
+│   │   ├── catalog
+│   │   ├── create
+│   │   ├── detail
+│   │   └── form
 │   └── profile
 ├── layout
 │   ├── app-shell
@@ -196,6 +222,8 @@ src/app
 
 Na feature de exercícios, os testes verificam contratos HTTP, formulário, filtros aplicados, paginação, restauração do contexto, dependência entre grupo e subgrupo, estados e detalhe com músculos-alvo. `exercise-catalog.integration.spec.ts` integra componente, formulário, paginator e serviço com respostas HTTP simuladas. Rotas, header e sidebar também verificam o acesso ao catálogo.
 
+Os testes de `features/workout-planning` ficam próximos a serviço, formulários e páginas. O detalhe possui specs de ciclos, dias, atividades e lifecycle; `workout-planning-navigation.integration.spec.ts` verifica navegação e novas consultas. `workout-planning.testing.ts` concentra fixtures da feature. Home, catálogo de exercícios, rotas e layout cobrem a integração de planejamento, incluindo seleção contextual e retorno à Home.
+
 ## Regra de Leitura
 
 - `core` contém infraestrutura única e transversal, sem regras de uma tela ou domínio.
@@ -206,8 +234,10 @@ Na feature de exercícios, os testes verificam contratos HTTP, formulário, filt
 - `BodyMetricsProgressCardComponent` usa o serviço e o período padrão de avaliação corporal para consultar `/progress/changes`. O card mantém estado local e abre a mesma página de evolução com `from=home`; o histórico usa `from=history`. A página completa concentra o retorno contextual e o fallback para histórico.
 - Serviço, modelos, formulário, campos e transformações corporais permanecem em `features/body-metrics`. Responsabilidades e contratos estão em [Avaliação corporal](../body-metrics/README.md).
 - Serviço, modelos, estado da busca e telas do catálogo permanecem em `features/exercise`. `ExerciseCatalogStateService` guarda filtros aplicados e paginação em memória; as respostas HTTP pertencem às telas. Responsabilidades e contratos estão em [Catálogo de Exercícios](../exercises/README.md).
+- Serviço, modelos, formulários, catálogo, criação e detalhe do planejamento permanecem em `features/workout-planning`. O detalhe compõe a API pública de seleção de `ExerciseCatalogComponent`, com estado de filtros local. Lifecycle e gravação de atividades pertencem ao planejamento. Contratos e permissões estão em [Workout Planning](../workout-planning/README.md).
+- `InProgressWorkoutsCardComponent` consulta `WorkoutPlanningService` com estados independentes, preserva a ordem recebida e abre o detalhe com `from=home`. Não cria serviço ou store exclusivo da Home.
 - O AppShell fornece a configuração compartilhada do paginator em português. `_actions.scss` concentra a disposição mobile de ações, conforme [Disposição de ações no mobile](../architecture/mobile-actions.md).
-- As rotas públicas são `/login` e `/first-access`. A área protegida monta o application shell e contém início, perfil, alteração de senha, avaliação corporal e as rotas `/exercises` e `/exercises/:id`, com componentes carregados sob demanda.
+- As rotas públicas são `/login` e `/first-access`. A área protegida monta o application shell e contém início, perfil, alteração de senha, avaliação corporal, `/exercises`, `/exercises/:id`, `/workout-planning`, `/workout-planning/create` e `/workout-planning/:id`, com componentes carregados sob demanda.
 - [Home e Cards-Resumo](../card-resume/README.md) reúne o comportamento entregue e identifica separadamente as diretrizes de produto para integrações futuras. Releases preservam registros históricos próprios.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

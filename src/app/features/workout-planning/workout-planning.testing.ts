@@ -67,9 +67,9 @@ export function cyclePage(page = 0, size = 20): ListWorkoutCyclesResponse {
   return {
     cycles: {
       content: [
-        cycleDetail,
+        structuredClone(cycleDetail),
         {
-          ...cycleDetail,
+          ...structuredClone(cycleDetail),
           id: 1,
           name: 'Força B',
           startDate: null,

@@ -2,11 +2,11 @@
 
 ## Objetivo
 
-Este documento reúne as decisões de produto, UX e composição dos cards-resumo da Home do IronCore. Ele descreve o estado entregue na `v0.3.0` e identifica separadamente as diretrizes para integrações futuras.
+Este documento reúne as decisões de produto, UX e composição dos cards-resumo da Home do IronCore na `v1.0.0`, incluindo a integração final de Workout Planning. Diretrizes para execução de sessões permanecem identificadas como futuras.
 
 A Home apresenta informações recentes, o estado atual do usuário e caminhos úteis para as features. Histórico, cadastro e detalhes continuam nas páginas responsáveis por esses fluxos.
 
-Os contratos e fluxos completos de avaliação corporal estão em [Avaliação corporal](../body-metrics/README.md). As responsabilidades dos componentes estão em [Arquitetura](../architecture/README.md) e [Estrutura do projeto](../project-structure/README.md).
+Os contratos e fluxos completos estão em [Avaliação corporal](../body-metrics/README.md) e [Workout Planning](../workout-planning/README.md). As responsabilidades dos componentes estão em [Arquitetura](../architecture/README.md) e [Estrutura do projeto](../project-structure/README.md).
 
 ## Princípios dos Cards-Resumo
 
@@ -26,10 +26,10 @@ O backend define indicadores corporais, estado dos ciclos e regras de execução
 
 A estrutura atual contém três cards:
 
-| Card                      | Estado na `v0.3.0`                           | Ação                                          |
+| Card                      | Estado na `v1.0.0`                           | Ação                                          |
 | ------------------------- | -------------------------------------------- | --------------------------------------------- |
 | Última avaliação corporal | Integrado ao backend.                        | `Ver detalhes`, quando existe avaliação.      |
-| Treinos em andamento      | Estrutura visual, sem integração de treinos. | Sem ação disponível.                          |
+| Planejamento de treinos   | Integrado ao backend.                        | Links individuais e `Ver todos`.              |
 | Evolução corporal         | Integrado ao backend.                        | `Ver evolução completa`, em todos os estados. |
 
 ### Última Avaliação Corporal
@@ -76,21 +76,28 @@ O retorno dessa página acompanha a origem:
 
 A seleção de período, os gráficos de composição corporal, circunferências e percentual de gordura e o comparativo completo ficam na página de evolução. Os três endpoints de séries alimentam os gráficos; `/progress/changes` fornece as diferenças entre medidas.
 
-### Treinos em Andamento
+### Planejamento de Treinos
 
-O card ocupa seu lugar na composição da Home e informa `O resumo dos treinos em andamento ainda não está disponível.`. Na `v0.3.0`, ele não consulta ciclos e não possui links ou ações de treino.
+`InProgressWorkoutsCardComponent` apresenta o card `Planejamento de treinos` e consulta `GET /api/users/me/workout-cycles?page=0&size=3&workoutStatus=IN_PROGRESS` pelo serviço de Workout Planning.
 
-A integração planejada considera múltiplos ciclos `IN_PROGRESS`. Essa decisão permite planejamentos independentes, como musculação, corrida e mobilidade. O card deve apresentar uma pequena lista, sem assumir um único “treino atual”.
+O resumo contempla múltiplos planejamentos independentes, como musculação, corrida e mobilidade. A prioridade é `IN_PROGRESS`: somente se a resposta não contiver itens é feita outra consulta, com `NOT_STARTED`. Não há mistura de status, preenchimento de vagas com ciclos não iniciados ou fallback após erro de consulta.
 
-As diretrizes para essa integração são:
+O conteúdo implementado é:
 
-- consultar ciclos por status, usando o contrato de `GET /api/users/me/workout-cycles?workoutStatus=IN_PROGRESS` quando a feature for integrada;
-- destacar nome do ciclo e objetivo de treino; a data inicial pode ser informação secundária;
-- permitir acesso ao respectivo ciclo e à listagem completa por `Ver todos`, quando essas rotas existirem;
-- definir a quantidade de itens durante a implementação; `3 itens + Ver todos` é uma proposta, não uma regra consolidada;
-- apresentar `Nenhum treino em andamento.` somente quando uma consulta real confirmar essa condição.
+- até três ciclos, preservando a ordem recebida da API, sem escolher um ciclo principal;
+- nome com link individual para `/workout-planning/:id?from=home` e objetivo de treino;
+- status e duração desejada em meses, quando informada;
+- insight simples de tempo em andamento derivado de `startDate`: `Iniciado hoje` ou dias desde o início; data ausente, inválida ou futura não gera duração artificial;
+- indicação `Exibindo N de T ciclos.` quando `totalElements` excede a quantidade exibida;
+- `Ver todos` para `/workout-planning`, sem filtro implícito, disponível em todos os estados.
 
-Usar `size=1` para escolher um “treino atual” não representa essa decisão de produto: a ordenação da listagem não define prioridade nem um ciclo principal.
+Loading tem `aria-busy` e anúncio de estado; falhas aparecem no próprio card com `Tentar novamente`, sem duplicar uma requisição pendente. Quando ambas as consultas retornam vazias, informa que não existem ciclos em andamento ou aguardando início e orienta consultar ou criar um planejamento. Ciclos concluídos ou cancelados não entram nesse resumo, mas continuam acessíveis no catálogo completo.
+
+O detalhe lê `from=home` da URL, inclusive após recarregamento, e oferece `Voltar ao início`. Origem ausente/inválida ou acesso pelo catálogo retorna aos ciclos. Não há nova página de detalhe ou destino arbitrário de retorno.
+
+O tempo desde `startDate` é apenas informação de calendário. O card não calcula progresso percentual, aderência, sessões, volume executado ou um treino principal. Usar a primeira posição da listagem para definir prioridade de domínio não faz parte da entrega.
+
+Header e sidebar também oferecem `Planejamento de treinos`. No mobile, o atalho do header fica oculto, mantendo o acesso pela sidebar. A Home acrescenta caminhos contextuais sem substituir a navegação global existente.
 
 ## Composição e Responsividade
 
@@ -102,15 +109,15 @@ Não há carrossel automático, autoplay ou sistema de widgets. Novos componente
 
 ## Estados e Integração
 
-Loading, ausência de dados e erro acompanham cada consulta. Os dois cards de avaliação corporal são carregados independentemente e fazem novas consultas ao visitar a Home novamente. O card de evolução cancela sua requisição quando é destruído.
+Loading, ausência de dados e erro acompanham cada consulta. Os três cards carregam independentemente e fazem novas consultas ao visitar a Home novamente; não há um loading ou erro global para todos. Evolução e planejamento cancelam suas requisições quando destruídos.
 
-Um estado vazio representa ausência real de dados. A mensagem do card de treinos identifica uma integração ainda indisponível, sem afirmar que o usuário não possui treinos.
+Um estado vazio representa ausência real de dados, incluindo a ausência de ciclos nos dois status consultados pelo planejamento. As estratégias de feedback específicas da última avaliação permanecem sob responsabilidade da feature corporal.
 
 Os cards usam os componentes compartilhados de loading e empty state, o locale `pt-BR` e as unidades dos dados apresentados. Não há dados fictícios, store global exclusivo da Home ou outra página de evolução.
 
 ## Diretrizes para Cards Futuros
 
-As diretrizes abaixo preservam as decisões de produto para execução de treinos. Elas não descrevem funcionalidades entregues na `v0.3.0` nem novos requisitos para seu fechamento.
+As diretrizes abaixo preservam as decisões de produto para execução de treinos. Elas não descrevem funcionalidades entregues na `v1.0.0` nem novos requisitos para seu fechamento.
 
 ### Treino de Hoje e Próximos Treinos
 
@@ -147,5 +154,7 @@ Esses cards dependem de execução registrada. A existência de ciclos planejado
 Os testes atuais verificam a composição da Home, o resumo da última avaliação e o acesso à página completa. Para evolução, cobrem medidas elegíveis, valores recebidos da API, unidades, datas, loading, erro, retry, ausência de dados, cancelamento e navegação.
 
 Os testes de integração da página de evolução cobrem o retorno a partir da Home e do histórico, acesso direto, recarregamento, origem inválida e acesso pela sidebar. Os comandos de validação estão em [Avaliação corporal](../body-metrics/README.md#testes-e-validação-local).
+
+O card de planejamento possui testes de prioridade, fallback, limite de três, ordem da API, indicação de mais ciclos, links, tempo desde `startDate`, loading, erro/retry, vazio e cancelamento. A navegação integrada verifica o retorno do detalhe para a Home e os fallbacks para catálogo. A [validação final da v1.0.0](../releases/v1.0.0/README.md#validação-local) registra a suíte completa e o build de produção.
 
 <p align="right"><a href="../README.md">Voltar para o índice da documentação</a></p>
