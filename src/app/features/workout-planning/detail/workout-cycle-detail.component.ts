@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { finalize, Observable } from 'rxjs';
+import { finalize, Observable, take } from 'rxjs';
 import { ExerciseCatalogComponent } from '../../exercise/catalog/exercise-catalog.component';
 import { ExerciseCatalogStateService } from '../../exercise/catalog/exercise-catalog-state.service';
 import { ListExercisesItemResponse } from '../../exercise/exercise.models';
@@ -28,6 +28,9 @@ import {
   WeekDay,
   WorkoutActivityDetailResponse,
   ExerciseDetailResponse,
+  StartWorkoutCycleResponse,
+  CompleteWorkoutCycleResponse,
+  CancelWorkoutCycleResponse,
 } from '../workout-planning.models';
 import { WEEK_DAY_LABELS, WORKOUT_STATUS_LABELS } from '../workout-planning.labels';
 import { ToastService } from '../../../shared/components/toast/toast.service';
@@ -77,6 +80,23 @@ export class WorkoutCycleDetailComponent implements OnInit {
   readonly canEdit = computed(() =>
     ['NOT_STARTED', 'IN_PROGRESS'].includes(this.cycle()?.workoutStatus ?? ''),
   );
+  readonly canStart = computed(() => this.cycle()?.workoutStatus === 'NOT_STARTED');
+  readonly canComplete = computed(() => this.cycle()?.workoutStatus === 'IN_PROGRESS');
+  readonly canCancel = computed(() => this.canEdit());
+  readonly lifecycleState = signal<'confirming' | 'saving' | null>(null);
+  readonly lifecycleBusy = computed(() => this.lifecycleState() !== null);
+  readonly contextualActionsDisabled = computed(
+    () =>
+      this.lifecycleBusy() ||
+      this.loading() ||
+      !!this.error() ||
+      this.editing() ||
+      this.saving() ||
+      this.dayBusy() ||
+      !!this.dayMode() ||
+      this.activityBusy() ||
+      !!this.activityMode(),
+  );
   readonly statusLabels = WORKOUT_STATUS_LABELS;
   readonly weekDayLabels = WEEK_DAY_LABELS;
   readonly weekDays = Object.keys(WEEK_DAY_LABELS) as WeekDay[];
@@ -116,6 +136,89 @@ export class WorkoutCycleDetailComponent implements OnInit {
   );
   activityForm = createWorkoutActivityForm();
   activityOrderForm = createWorkoutActivityOrderForm(0);
+
+  startCycle(): void {
+    if (!this.canStart() || this.contextualActionsDisabled()) return;
+    this.mutateLifecycle(
+      this.workoutPlanningService.startWorkoutCycle(this.cycle()!.id),
+      'Ciclo de treino iniciado com sucesso.',
+    );
+  }
+
+  completeCycle(): void {
+    if (!this.canComplete() || this.contextualActionsDisabled()) return;
+    this.confirmLifecycle('complete');
+  }
+
+  cancelCycle(): void {
+    if (!this.canCancel() || this.contextualActionsDisabled()) return;
+    this.confirmLifecycle('cancel');
+  }
+
+  private confirmLifecycle(action: 'complete' | 'cancel'): void {
+    const completing = action === 'complete';
+    this.lifecycleState.set('confirming');
+    this.dialogService
+      .open({
+        title: completing ? 'Concluir ciclo de treino' : 'Cancelar ciclo de treino',
+        message: `Deseja ${completing ? 'concluir' : 'cancelar'} o ciclo “${this.cycle()!.name}”? Após esta ação, não será possível editar o ciclo, seus dias ou atividades. Esta ação não pode ser desfeita.`,
+        primaryAction: completing ? 'Concluir' : 'Cancelar ciclo',
+        secondaryAction: 'Voltar',
+      })
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe((confirmed) => {
+        this.lifecycleState.set(null);
+        if (
+          !confirmed ||
+          this.contextualActionsDisabled() ||
+          !(completing ? this.canComplete() : this.canCancel())
+        )
+          return;
+        this.mutateLifecycle(
+          completing
+            ? this.workoutPlanningService.completeWorkoutCycle(this.cycle()!.id)
+            : this.workoutPlanningService.cancelWorkoutCycle(this.cycle()!.id),
+          completing
+            ? 'Ciclo de treino concluído com sucesso.'
+            : 'Ciclo de treino cancelado com sucesso.',
+        );
+      });
+  }
+
+  private mutateLifecycle(
+    operation: Observable<
+      StartWorkoutCycleResponse | CompleteWorkoutCycleResponse | CancelWorkoutCycleResponse
+    >,
+    message: string,
+  ): void {
+    this.lifecycleState.set('saving');
+    operation
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.lifecycleState.set(null)),
+      )
+      .subscribe({
+        next: (response) => {
+          this.cycle.update((cycle) =>
+            cycle
+              ? {
+                  ...cycle,
+                  workoutStatus: response.workoutStatus,
+                  startDate: 'startDate' in response ? response.startDate : cycle.startDate,
+                  endDate: 'endDate' in response ? response.endDate : cycle.endDate,
+                }
+              : null,
+          );
+          this.toastService.success(message);
+        },
+        error: (error) =>
+          this.dialogService.open({
+            title: 'Não foi possível alterar o status do ciclo de treino',
+            message: error.error?.message ?? 'Tente novamente mais tarde.',
+            primaryAction: 'Ok',
+          }),
+      });
+  }
 
   openActivitySelector(day: WorkoutDayDetailResponse): void {
     if (
@@ -270,6 +373,7 @@ export class WorkoutCycleDetailComponent implements OnInit {
 
   private canMutateActivities(): boolean {
     return (
+      !this.lifecycleBusy() &&
       !!this.cycle() &&
       this.canEdit() &&
       !this.editing() &&
@@ -344,7 +448,14 @@ export class WorkoutCycleDetailComponent implements OnInit {
   }
 
   loadCycle(): void {
-    if (this.loading() || this.saving() || this.dayBusy() || this.activityBusy()) return;
+    if (
+      this.lifecycleBusy() ||
+      this.loading() ||
+      this.saving() ||
+      this.dayBusy() ||
+      this.activityBusy()
+    )
+      return;
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!Number.isSafeInteger(id) || id <= 0) {
       this.backToCycles();
@@ -371,7 +482,7 @@ export class WorkoutCycleDetailComponent implements OnInit {
   }
 
   backToCycles(): void {
-    if (this.saving() || this.dayBusy() || this.activityBusy()) return;
+    if (this.lifecycleBusy() || this.saving() || this.dayBusy() || this.activityBusy()) return;
     void this.router.navigate(['/workout-planning']);
   }
 
@@ -380,6 +491,7 @@ export class WorkoutCycleDetailComponent implements OnInit {
     if (
       !cycle ||
       !this.canEdit() ||
+      this.lifecycleBusy() ||
       this.saving() ||
       this.editing() ||
       this.error() ||
@@ -500,6 +612,7 @@ export class WorkoutCycleDetailComponent implements OnInit {
 
   private canMutateDays(): boolean {
     return (
+      !this.lifecycleBusy() &&
       !!this.cycle() &&
       this.canEdit() &&
       !this.editing() &&
@@ -581,6 +694,7 @@ export class WorkoutCycleDetailComponent implements OnInit {
     if (
       !cycle ||
       !this.editing() ||
+      this.lifecycleBusy() ||
       !this.canEdit() ||
       this.saving() ||
       this.goalsLoading() ||
