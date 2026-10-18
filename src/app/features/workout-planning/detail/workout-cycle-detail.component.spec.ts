@@ -11,10 +11,12 @@ describe('WorkoutCycleDetailComponent', () => {
   const service = { getWorkoutCycleDetail: vi.fn(), getTrainingGoals: vi.fn(() => of([])) };
   let routeId: string;
   let editQuery: string;
+  let fromQuery: string;
 
   beforeEach(async () => {
     routeId = '9';
     editQuery = '';
+    fromQuery = '';
     service.getWorkoutCycleDetail.mockReset().mockReturnValue(of(cycleDetail));
     await TestBed.configureTestingModule({
       imports: [WorkoutCycleDetailComponent],
@@ -26,7 +28,7 @@ describe('WorkoutCycleDetailComponent', () => {
           useValue: {
             snapshot: {
               get queryParamMap() {
-                return convertToParamMap({ edit: editQuery });
+                return convertToParamMap({ edit: editQuery, from: fromQuery });
               },
               get paramMap() {
                 return convertToParamMap({ id: routeId });
@@ -185,6 +187,27 @@ describe('WorkoutCycleDetailComponent', () => {
 
   it('returns to the catalog from the accessible header button, including on error', async () => {
     service.getWorkoutCycleDetail.mockReturnValueOnce(throwError(() => new Error('offline')));
+    await create();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    fixture.nativeElement.querySelector('button[aria-label="Voltar aos ciclos de treino"]').click();
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/workout-planning']);
+  });
+
+  it.each([false, true])(
+    'returns to Home with its accessible label when from=home (error: %s)',
+    async (error) => {
+      fromQuery = 'home';
+      if (error)
+        service.getWorkoutCycleDetail.mockReturnValueOnce(throwError(() => new Error('offline')));
+      await create();
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      fixture.nativeElement.querySelector('button[aria-label="Voltar ao início"]').click();
+      expect(navigate).toHaveBeenCalledExactlyOnceWith(['/']);
+    },
+  );
+
+  it('uses the catalog for an unrecognized origin', async () => {
+    fromQuery = 'https://example.com';
     await create();
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     fixture.nativeElement.querySelector('button[aria-label="Voltar aos ciclos de treino"]').click();

@@ -1,4 +1,57 @@
+﻿@use '../../../../../styles/responsive' as responsive;
+
 :host {
   display: block;
   min-width: 0;
+}
+
+.ic-in-progress-workouts-card__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li + li {
+    margin-top: var(--ic-space-3);
+    padding-top: var(--ic-space-3);
+    border-top: var(--ic-border-width-default) solid var(--ic-border-soft);
+  }
+}
+
+.ic-in-progress-workouts-card__name {
+  margin: 0;
+  color: var(--ic-text-primary);
+  font-size: 1.125rem;
+}
+
+.ic-in-progress-workouts-card__goal,
+.ic-in-progress-workouts-card__insight,
+.ic-in-progress-workouts-card__count {
+  margin: var(--ic-space-2) 0 0;
+  color: var(--ic-text-secondary);
+  font-size: var(--ic-font-size-sm);
+}
+
+.ic-in-progress-workouts-card__count {
+  margin-top: var(--ic-space-4);
+}
+
+.ic-in-progress-workouts-card__details {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ic-navigation);
+  border-radius: var(--ic-radius-md);
+  text-underline-offset: 0.2em;
+
+  &:focus-visible {
+    outline: var(--ic-focus-ring-width) solid var(--ic-primary);
+    outline-offset: var(--ic-focus-ring-offset);
+  }
+}
+
+@include responsive.mobile {
+  .ic-in-progress-workouts-card__list li + li {
+    margin-top: var(--ic-space-2);
+    padding-top: var(--ic-space-2);
+  }
 }

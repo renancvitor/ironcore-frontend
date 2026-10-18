@@ -98,6 +98,24 @@ describe('body metrics editing across routes', () => {
         expect(latest.request.method).toBe('GET');
         latest.flush(metric);
         if (path === '/') {
+          for (const status of ['IN_PROGRESS', 'NOT_STARTED']) {
+            http
+              .expectOne(
+                (req) =>
+                  req.url === '/api/users/me/workout-cycles' &&
+                  req.params.get('workoutStatus') === status,
+              )
+              .flush({
+                cycles: {
+                  content: [],
+                  page: 0,
+                  size: 3,
+                  totalElements: 0,
+                  totalPages: 0,
+                  last: true,
+                },
+              });
+          }
           const summary = http.expectOne((req) => req.url === `${endpoint}/progress/changes`);
           const delta = metric.weightKg - 82;
           summary.flush({

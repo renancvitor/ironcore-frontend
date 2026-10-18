@@ -31,6 +31,20 @@ import { ToastService } from './shared/components/toast/toast.service';
 import { ExerciseCatalogComponent } from './features/exercise/catalog/exercise-catalog.component';
 import { ExerciseDetailComponent } from './features/exercise/catalog/detail/exercise-detail.component';
 
+function flushEmptyWorkoutSummary(http: HttpTestingController): void {
+  for (const status of ['IN_PROGRESS', 'NOT_STARTED']) {
+    http
+      .expectOne(
+        (request) =>
+          request.url === '/api/users/me/workout-cycles' &&
+          request.params.get('workoutStatus') === status,
+      )
+      .flush({
+        cycles: { content: [], page: 0, size: 3, totalElements: 0, totalPages: 0, last: true },
+      });
+  }
+}
+
 describe('application routes', () => {
   it('lazy loads the exercise catalog and detail inside the protected shell', async () => {
     const shell = routes.find((route) => route.path === '')!;
@@ -201,6 +215,7 @@ describe('body metrics deletion with the real router', () => {
       const { http, router, harness } = await setup();
       router.setUpLocationChangeListener();
       await harness.navigateByUrl('/');
+      flushEmptyWorkoutSummary(http);
       http.expectOne(`${endpoint}/latest`).flush(metric);
       http
         .expectOne((request) => request.url === `${endpoint}/progress/changes`)
@@ -262,6 +277,7 @@ describe('body metrics deletion with the real router', () => {
       http.expectNone((request) => request.method === 'GET');
       expect(await router.navigateByUrl('/')).toBe(true);
       harness.detectChanges();
+      flushEmptyWorkoutSummary(http);
       http.expectOne(`${endpoint}/latest`).flush(outcome === 'success' ? remaining : metric);
       http
         .expectOne((request) => request.url === `${endpoint}/progress/changes`)
@@ -276,6 +292,7 @@ describe('body metrics deletion with the real router', () => {
     async function visitDependentScreens(afterDeletion: boolean): Promise<void> {
       const latestMetric = afterDeletion ? remaining : metric;
       await harness.navigateByUrl('/');
+      flushEmptyWorkoutSummary(http);
       const latest = http.expectOne(`${endpoint}/latest`);
       expect(latest.request.method).toBe('GET');
       latest.flush(latestMetric);
@@ -478,6 +495,7 @@ describe('independent body metrics screens', () => {
       if (afterCreation) expect(harness.routeNativeElement?.textContent).toContain(metric.notes);
 
       await harness.navigateByUrl('/');
+      flushEmptyWorkoutSummary(http);
       const latest = http.expectOne(`${endpoint}/latest`);
       if (afterCreation) latest.flush(metric);
       else latest.flush(null, { status: 404, statusText: 'Not Found' });
