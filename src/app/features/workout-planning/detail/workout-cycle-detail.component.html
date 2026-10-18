@@ -22,8 +22,8 @@
       <button
         matIconButton
         type="button"
-        aria-label="Voltar aos ciclos de treino"
-        matTooltip="Voltar à listagem"
+        [attr.aria-label]="backLabel"
+        [matTooltip]="backLabel"
         [disabled]="lifecycleBusy() || saving() || dayBusy() || activityBusy()"
         (click)="backToCycles()"
       >

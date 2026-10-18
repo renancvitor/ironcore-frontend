@@ -1,6 +1,58 @@
-<app-summary-card title="Treinos em andamento">
-  <app-empty-state
-    icon="fitness_center"
-    message="O resumo dos treinos em andamento ainda não está disponível."
-  />
+﻿<app-summary-card title="Planejamento de treinos">
+  <div [attr.aria-busy]="loading()" aria-live="polite">
+    @if (loading()) {
+      <app-loading />
+    } @else if (error()) {
+      <p role="alert">Não foi possível carregar o resumo dos ciclos de treino.</p>
+      <app-button variant="secondary" (click)="loadCycles()">Tentar novamente</app-button>
+    } @else if (cycles().length) {
+      <ul class="ic-in-progress-workouts-card__list" aria-label="Resumo dos ciclos de treino">
+        @for (cycle of cycles(); track cycle.id) {
+          <li>
+            <h3 class="ic-in-progress-workouts-card__name">
+              <a
+                class="ic-in-progress-workouts-card__details"
+                [routerLink]="['/workout-planning', cycle.id]"
+                [queryParams]="{ from: 'home' }"
+                >{{ cycle.name }}</a
+              >
+            </h3>
+            <p class="ic-in-progress-workouts-card__goal">
+              Objetivo: {{ cycle.trainingGoal.name }}
+            </p>
+            <p class="ic-in-progress-workouts-card__insight">
+              @if (cycle.elapsedDays; as days) {
+                Em andamento há {{ days }} {{ days === 1 ? 'dia' : 'dias' }}
+              } @else if (cycle.elapsedDays === 0) {
+                {{ statusLabels[cycle.workoutStatus] }} · Iniciado hoje
+              } @else {
+                {{ statusLabels[cycle.workoutStatus] }}
+              }
+              @if (cycle.desiredDurationMonths !== null) {
+                · Duração desejada: {{ cycle.desiredDurationMonths }}
+                {{ cycle.desiredDurationMonths === 1 ? 'mês' : 'meses' }}
+              }
+            </p>
+          </li>
+        }
+      </ul>
+      @if (response()!.cycles.totalElements > cycles().length) {
+        <p class="ic-in-progress-workouts-card__count">
+          Exibindo {{ cycles().length }} de {{ response()!.cycles.totalElements }} ciclos.
+        </p>
+      }
+    } @else {
+      <app-empty-state
+        icon="fitness_center"
+        message="Nenhum ciclo em andamento ou aguardando início. Consulte ou crie um planejamento de treino."
+      />
+    }
+  </div>
+  <a
+    summaryCardAction
+    class="ic-in-progress-workouts-card__details"
+    routerLink="/workout-planning"
+    aria-label="Ver todos os ciclos de treino"
+    >Ver todos</a
+  >
 </app-summary-card>

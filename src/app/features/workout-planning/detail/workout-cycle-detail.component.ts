@@ -481,9 +481,17 @@ export class WorkoutCycleDetailComponent implements OnInit {
       });
   }
 
+  get backLabel(): string {
+    return this.route.snapshot.queryParamMap?.get('from') === 'home'
+      ? 'Voltar ao início'
+      : 'Voltar aos ciclos de treino';
+  }
+
   backToCycles(): void {
     if (this.lifecycleBusy() || this.saving() || this.dayBusy() || this.activityBusy()) return;
-    void this.router.navigate(['/workout-planning']);
+    const destination =
+      this.route.snapshot.queryParamMap?.get('from') === 'home' ? '/' : '/workout-planning';
+    void this.router.navigate([destination]);
   }
 
   startEdit(): void {
