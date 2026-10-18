@@ -1,4 +1,4 @@
-<section class="ic-workout-detail">
+<section class="ic-workout-detail" [attr.aria-busy]="lifecycleState() === 'saving'">
   <header class="ic-workout-detail__header">
     <div>
       <h1>Detalhes do ciclo de treino</h1>
@@ -12,7 +12,7 @@
             type="button"
             aria-label="Editar ciclo de treino"
             matTooltip="Editar ciclo"
-            [disabled]="saving() || dayBusy() || !!dayMode() || activityBusy() || !!activityMode()"
+            [disabled]="contextualActionsDisabled()"
             (click)="startEdit()"
           >
             <mat-icon>edit</mat-icon>
@@ -24,13 +24,16 @@
         type="button"
         aria-label="Voltar aos ciclos de treino"
         matTooltip="Voltar à listagem"
-        [disabled]="saving() || dayBusy() || activityBusy()"
+        [disabled]="lifecycleBusy() || saving() || dayBusy() || activityBusy()"
         (click)="backToCycles()"
       >
         <mat-icon>arrow_back</mat-icon>
       </button>
     </div>
   </header>
+  @if (lifecycleState() === 'saving') {
+    <p class="ic-workout-detail__status" role="status">Atualizando o status do ciclo…</p>
+  }
   @if (loading()) {
     <app-loading />
   } @else if (error()) {
@@ -62,8 +65,48 @@
       />
     } @else {
       <section class="ic-workout-detail__card" aria-labelledby="cycle-general-title">
-        <header class="ic-workout-detail__card-header">
+        <header class="ic-workout-detail__card-header ic-workout-detail__day-header">
           <h2 id="cycle-general-title">{{ cycle.name }}</h2>
+          @if (canStart() || canComplete() || canCancel()) {
+            <div class="ic-workout-detail__day-actions">
+              @if (canStart()) {
+                <button
+                  matIconButton
+                  type="button"
+                  aria-label="Iniciar ciclo de treino"
+                  matTooltip="Iniciar ciclo"
+                  [disabled]="contextualActionsDisabled()"
+                  (click)="startCycle()"
+                >
+                  <mat-icon>play_arrow</mat-icon>
+                </button>
+              }
+              @if (canComplete()) {
+                <button
+                  matIconButton
+                  type="button"
+                  aria-label="Concluir ciclo de treino"
+                  matTooltip="Concluir ciclo"
+                  [disabled]="contextualActionsDisabled()"
+                  (click)="completeCycle()"
+                >
+                  <mat-icon>check_circle</mat-icon>
+                </button>
+              }
+              @if (canCancel()) {
+                <button
+                  matIconButton
+                  type="button"
+                  aria-label="Cancelar ciclo de treino"
+                  matTooltip="Cancelar ciclo"
+                  [disabled]="contextualActionsDisabled()"
+                  (click)="cancelCycle()"
+                >
+                  <mat-icon>cancel</mat-icon>
+                </button>
+              }
+            </div>
+          }
         </header>
         <dl class="ic-workout-detail__fields">
           <div>
@@ -114,7 +157,7 @@
             type="button"
             aria-label="Adicionar dia de treino"
             matTooltip="Adicionar dia"
-            [disabled]="editing() || dayBusy() || !!dayMode() || activityBusy() || !!activityMode()"
+            [disabled]="contextualActionsDisabled()"
             (click)="openDayForm('create')"
           >
             <mat-icon>add</mat-icon>
@@ -183,9 +226,7 @@
                   type="button"
                   [attr.aria-label]="'Adicionar atividades ao dia ' + day.title"
                   matTooltip="Adicionar atividades"
-                  [disabled]="
-                    editing() || dayBusy() || !!dayMode() || activityBusy() || !!activityMode()
-                  "
+                  [disabled]="contextualActionsDisabled()"
                   (click)="openActivitySelector(day)"
                 >
                   <mat-icon>add</mat-icon>
@@ -195,9 +236,7 @@
                   type="button"
                   [attr.aria-label]="'Editar dia ' + day.title"
                   matTooltip="Editar dia"
-                  [disabled]="
-                    editing() || dayBusy() || !!dayMode() || activityBusy() || !!activityMode()
-                  "
+                  [disabled]="contextualActionsDisabled()"
                   (click)="openDayForm('edit', day)"
                 >
                   <mat-icon>edit</mat-icon>
@@ -207,9 +246,7 @@
                   type="button"
                   [attr.aria-label]="'Reordenar dia ' + day.title"
                   matTooltip="Reordenar dia"
-                  [disabled]="
-                    editing() || dayBusy() || !!dayMode() || activityBusy() || !!activityMode()
-                  "
+                  [disabled]="contextualActionsDisabled()"
                   (click)="openDayForm('reorder', day)"
                 >
                   <mat-icon>swap_vert</mat-icon>
@@ -220,9 +257,7 @@
                   [attr.aria-label]="'Excluir dia ' + day.title"
                   class="ic-workout-detail__delete"
                   matTooltip="Excluir dia"
-                  [disabled]="
-                    editing() || dayBusy() || !!dayMode() || activityBusy() || !!activityMode()
-                  "
+                  [disabled]="contextualActionsDisabled()"
                   (click)="deleteDay(day)"
                 >
                   <mat-icon>delete</mat-icon>
@@ -242,13 +277,7 @@
                         type="button"
                         [attr.aria-label]="'Editar atividade ' + activity.exercise.name"
                         matTooltip="Editar atividade"
-                        [disabled]="
-                          editing() ||
-                          dayBusy() ||
-                          !!dayMode() ||
-                          activityBusy() ||
-                          !!activityMode()
-                        "
+                        [disabled]="contextualActionsDisabled()"
                         (click)="openActivityForm('edit', day, activity)"
                       >
                         <mat-icon>edit</mat-icon>
@@ -258,13 +287,7 @@
                         type="button"
                         [attr.aria-label]="'Reordenar atividade ' + activity.exercise.name"
                         matTooltip="Reordenar atividade"
-                        [disabled]="
-                          editing() ||
-                          dayBusy() ||
-                          !!dayMode() ||
-                          activityBusy() ||
-                          !!activityMode()
-                        "
+                        [disabled]="contextualActionsDisabled()"
                         (click)="openActivityForm('reorder', day, activity)"
                       >
                         <mat-icon>swap_vert</mat-icon>
@@ -275,13 +298,7 @@
                         class="ic-workout-detail__delete"
                         [attr.aria-label]="'Excluir atividade ' + activity.exercise.name"
                         matTooltip="Excluir atividade"
-                        [disabled]="
-                          editing() ||
-                          dayBusy() ||
-                          !!dayMode() ||
-                          activityBusy() ||
-                          !!activityMode()
-                        "
+                        [disabled]="contextualActionsDisabled()"
                         (click)="deleteActivity(day, activity)"
                       >
                         <mat-icon>delete</mat-icon>

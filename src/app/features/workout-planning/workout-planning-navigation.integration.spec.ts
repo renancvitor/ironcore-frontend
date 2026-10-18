@@ -23,6 +23,109 @@ import {
 } from './workout-planning.models';
 
 describe('Workout Planning navigation', () => {
+  it.each([
+    ['NOT_STARTED', 'start', 'Iniciar ciclo de treino', 'IN_PROGRESS', 'Em andamento'],
+    ['IN_PROGRESS', 'complete', 'Concluir ciclo de treino', 'COMPLETED', 'Concluído'],
+    ['NOT_STARTED', 'cancel', 'Cancelar ciclo de treino', 'CANCELLED', 'Cancelado'],
+    ['IN_PROGRESS', 'cancel', 'Cancelar ciclo de treino', 'CANCELLED', 'Cancelado'],
+  ] as const)(
+    'refreshes the catalog after %s -> %s with preserved filters and pagination',
+    async (initial, action, label, status, statusLabel) => {
+      let stored: GetWorkoutCycleDetailResponse = {
+        ...cycleDetail,
+        workoutStatus: initial,
+        endDate: null,
+        startDate: initial === 'NOT_STARTED' ? null : '2026-10-01',
+      };
+      const transition = vi.fn(() => {
+        stored = {
+          ...stored,
+          workoutStatus: status,
+          startDate: action === 'start' ? '2026-10-17' : stored.startDate,
+          endDate: action === 'complete' ? '2026-10-17' : stored.endDate,
+        };
+        return of({
+          id: 9,
+          trainingGoalId: 22,
+          workoutStatus: status,
+          ...(action === 'start' || action === 'complete' ? { startDate: stored.startDate! } : {}),
+          ...(action === 'complete' ? { endDate: stored.endDate! } : {}),
+        });
+      });
+      const list = vi.fn((page: number, size: number) =>
+        of({
+          cycles: { ...cyclePage(page, size).cycles, content: [stored] },
+        }),
+      );
+      const featureRoutes = routes
+        .find((route) => route.path === '' && route.children)!
+        .children!.filter((route) => route.path?.startsWith('workout-planning'));
+      await TestBed.configureTestingModule({
+        providers: [
+          provideRouter(featureRoutes),
+          { provide: ToastService, useValue: { success: vi.fn() } },
+          {
+            provide: WorkoutPlanningService,
+            useValue: {
+              listWorkoutCycles: list,
+              getWorkoutCycleDetail: () => of(stored),
+              getTrainingGoals: () => of([]),
+              startWorkoutCycle: transition,
+              completeWorkoutCycle: transition,
+              cancelWorkoutCycle: transition,
+            },
+          },
+        ],
+      }).compileComponents();
+      const state = TestBed.inject(WorkoutCycleCatalogStateService);
+      state.filters = { name: 'Força' };
+      state.page = 2;
+      state.size = 50;
+      const harness = await RouterTestingHarness.create();
+      const catalog = await harness.navigateByUrl(
+        '/workout-planning',
+        WorkoutCycleCatalogComponent,
+      );
+      catalog.openCycle(9);
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+      harness
+        .routeNativeElement!.querySelector<HTMLButtonElement>(`[aria-label="${label}"]`)!
+        .click();
+      harness.detectChanges();
+      if (action !== 'start') {
+        const loader = TestbedHarnessEnvironment.documentRootLoader(harness.fixture);
+        const dialog = await loader.getHarness(MatDialogHarness);
+        expect(await dialog.getText()).toContain('Esta ação não pode ser desfeita.');
+        const closed = firstValueFrom(TestBed.inject(MatDialog).openDialogs[0].afterClosed());
+        await (
+          await dialog.getHarness(
+            MatButtonHarness.with({ text: action === 'complete' ? 'Concluir' : 'Cancelar ciclo' }),
+          )
+        ).click();
+        expect(await closed).toBe(true);
+      }
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+      expect(transition).toHaveBeenCalledExactlyOnceWith(9);
+      const detail = harness.routeDebugElement!.componentInstance as WorkoutCycleDetailComponent;
+      expect(detail.cycle()?.workoutStatus).toBe(status);
+      detail.backToCycles();
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+      const refreshed = harness.routeDebugElement!
+        .componentInstance as WorkoutCycleCatalogComponent;
+      expect(refreshed).toBeInstanceOf(WorkoutCycleCatalogComponent);
+      expect(refreshed.cycles()?.cycles.content[0]).toEqual(stored);
+      expect(harness.routeNativeElement!.textContent).toContain(statusLabel);
+      if (action !== 'cancel')
+        expect(harness.routeNativeElement!.textContent).toContain('17/10/2026');
+      expect(list).toHaveBeenCalledTimes(2);
+      expect(list).toHaveBeenLastCalledWith(2, 50, { name: 'Força' });
+      expect(refreshed.filtersForm.controls.name.value).toBe('Força');
+    },
+  );
+
   it.each(['cancel', 'save'] as const)(
     'clears edit=true after %s, replaces history and keeps other query params',
     async (action) => {
