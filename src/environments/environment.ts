@@ -1,4 +1,4 @@
 export const environment = {
-  production: false,
-  apiBaseUrl: '',
+  production: true,
+  apiBaseUrl: 'https://api.irconcore.com.br',
 };

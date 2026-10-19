@@ -37,10 +37,12 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
 function shouldRedirectToLogin(request: { method: string; url: string }, router: Router): boolean {
   const navigationUrl = router.currentNavigation()?.initialUrl.toString();
 
-  return router.url !== '/login'
-    && navigationUrl !== '/login'
-    && !isPublicAuthenticationRequest(request)
-    && !isSessionRestorationRequest(request);
+  return (
+    router.url !== '/login' &&
+    navigationUrl !== '/login' &&
+    !isPublicAuthenticationRequest(request) &&
+    !isSessionRestorationRequest(request)
+  );
 }
 
 function isPublicAuthenticationRequest(request: { method: string; url: string }): boolean {
@@ -50,9 +52,11 @@ function isPublicAuthenticationRequest(request: { method: string; url: string })
 
   const path = requestPath(request.url);
 
-  return path === '/api/auth/login'
-    || path === '/api/auth/logout'
-    || path === '/api/users/change-initial-password';
+  return (
+    path === '/api/auth/login' ||
+    path === '/api/auth/logout' ||
+    path === '/api/users/change-initial-password'
+  );
 }
 
 function isSessionRestorationRequest(request: { method: string; url: string }): boolean {
@@ -65,7 +69,7 @@ function requestPath(requestUrl: string): string {
   return new URL(requestUrl, applicationOrigin).pathname;
 }
 
-function isRequestToApi(requestUrl: string, apiBaseUrl: string): boolean {
+export function isRequestToApi(requestUrl: string, apiBaseUrl: string): boolean {
   if (!apiBaseUrl) {
     return requestUrl === '/api' || requestUrl.startsWith('/api/');
   }
