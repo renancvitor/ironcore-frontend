@@ -44,16 +44,20 @@ O card de planejamento usa a API pública de `WorkoutPlanningService`, com consu
 
 ## Comunicação HTTP e Environments
 
-`provideCoreHttp()` registra o `HttpClient` com `authInterceptor` e fornece `API_BASE_URL` a partir do environment ativo. Serviços devem receber esse token; URLs da API não devem ser repetidas nas features.
+`provideCoreHttp()` registra o `HttpClient` com `authInterceptor` e `csrfInterceptor` e fornece `API_BASE_URL` a partir do environment ativo. Serviços devem receber esse token; URLs da API não devem ser repetidas nas features.
 
 O interceptor identifica chamadas para a API por origem e caminho. Somente essas chamadas recebem `withCredentials: true`; chamadas externas permanecem inalteradas. Em uma resposta `401`, o estado local é limpo e o erro continua no fluxo RxJS. Para chamadas que não sejam login, logout, primeiro acesso ou restauração de sessão, também há navegação para `/login`.
 
 | Arquivo                                       | Uso                                     | `apiBaseUrl`                                  |
 | --------------------------------------------- | --------------------------------------- | --------------------------------------------- |
-| `src/environments/environment.ts`             | configuração padrão e build de produção | vazio, para chamadas relativas à mesma origem |
+| `src/environments/environment.ts`             | configuração padrão e build de produção | `https://api.ironcore.dev.br` |
 | `src/environments/environment.development.ts` | `ng serve` e build `development`        | `http://localhost:8080`                       |
 
 `angular.json` substitui o environment padrão pelo de desenvolvimento nessa configuração. Arquivos de environment não devem conter segredos.
+
+O `csrfInterceptor` consulta `GET /api/auth/csrf` por meio de `CsrfService` antes das operações de escrita na API e envia o token no header indicado pela resposta. Métodos `GET`, `HEAD` e `OPTIONS` e chamadas externas não passam por essa obtenção de token. A sessão de produção utiliza cookie `HttpOnly`/`Secure` com `SameSite=Lax`, e CORS permite a origem oficial do frontend.
+
+O frontend está publicado no Cloudflare Pages em `https://ironcore.dev.br`, integrado à API de produção. Hospedagem, build e publicação automática estão em [Deploy e Produção](../deploy/README.md).
 
 ## Autenticação
 
@@ -128,6 +132,6 @@ A UI reflete permissões por status: edição e composição em `NOT_STARTED`/`I
 
 ## Recortes Atuais
 
-Não fazem parte da v1.0.0: execução ou histórico de sessões de treino, geração por IA/agent, métricas de aderência, progresso percentual de ciclos, deploy ou publicação de artefatos. Os três cards da Home usam dados reais do backend. Não há sincronização entre abas ou confirmação de alterações não salvas; formulários corporais e de planejamento não possuem guard de saída próprio. A regra de troca obrigatória de senha é direcionada pela resposta do login; o `authGuard` verifica somente a existência de usuário no estado local.
+Execução ou histórico de sessões de treino, geração por IA/agent, métricas de aderência e progresso percentual de ciclos permanecem fora do escopo implementado. O deploy em produção e a publicação automática foram concluídos e validados em outubro de 2026, em registro posterior à release v1.0.0. Os três cards da Home usam dados reais do backend. Não há sincronização entre abas ou confirmação de alterações não salvas; formulários corporais e de planejamento não possuem guard de saída próprio. A regra de troca obrigatória de senha é direcionada pela resposta do login; o `authGuard` verifica somente a existência de usuário no estado local.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

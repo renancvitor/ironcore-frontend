@@ -12,6 +12,10 @@ Os documentos descrevem estruturas já implementadas. Convenções e evoluções
 - [Estrutura do projeto](project-structure/README.md): diretórios existentes, responsabilidades e regras de dependência.
 - [Disposição de ações no mobile](architecture/mobile-actions.md): padrões compartilhados de cabeçalhos, ícones e ações de formulário.
 
+### Produção e operação
+
+- [Deploy e Produção](deploy/README.md): Cloudflare Pages, domínio, environments, CI, publicação automática e integração com a API.
+
 ### Features
 
 - [Home e Cards-Resumo](card-resume/README.md): composição, conteúdo, estados, navegação e diretrizes de produto para os cards da Home.

@@ -38,6 +38,7 @@ Planejamento, tarefas e histórico de evolução disponíveis no GitHub Projects
 - [Testes Automatizados](#testes-automatizados)
 - [Estrutura do Projeto](#estrutura-do-projeto)
 - [Como Executar o Projeto](#como-executar-o-projeto)
+- [Deploy](#deploy)
 - [Contribuições](#contribuicoes)
 - [Contato](#contato)
 - [Licença](#licenca)
@@ -71,6 +72,8 @@ O <b>IronCore Frontend v1.0.0</b> é a primeira versão funcional e estável da 
 
 ### Já existe no projeto
 
+A implantação inicial em produção foi concluída e validada em outubro de 2026. A interface está disponível em [ironcore.dev.br](https://ironcore.dev.br), integrada à API em `https://api.ironcore.dev.br`, com publicação automática pelo Cloudflare Pages. Consulte [Deploy e Produção](docs/deploy/README.md).
+
 - Aplicação Angular 21 configurada com TypeScript e SCSS.
 - Rotas públicas para login e primeiro acesso, e rotas protegidas carregadas sob demanda para início, perfil, alteração de senha, avaliação corporal, exercícios e planejamento de treinos.
 - Provider HTTP com URL base configurável por environment.
@@ -88,6 +91,7 @@ O <b>IronCore Frontend v1.0.0</b> é a primeira versão funcional e estável da 
 - Configuração de build de produção e desenvolvimento.
 - Estrutura de testes unitários baseada em Vitest.
 - CI no GitHub Actions para build e testes em `main`.
+- Deploy automático da `main` pela integração Cloudflare Pages + GitHub, independente do workflow de CI.
 - Configuração de formatação com Prettier.
 - Documentos de contribuição, código de conduta, segurança e licença.
 
@@ -325,6 +329,18 @@ npm start
 Após iniciar o servidor de desenvolvimento, acesse `http://localhost:4200/` no navegador.
 
 Os fluxos de integração disponíveis exigem que o backend correspondente esteja em execução e configurado conforme sua própria documentação. Em desenvolvimento, a URL base da API é `http://localhost:8080`.
+
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
+
+---
+
+<h2 id="deploy" align="center">Deploy</h2>
+
+O frontend está publicado em [ironcore.dev.br](https://ironcore.dev.br), no plano gratuito do Cloudflare Pages, com Node.js 24. A integração com GitHub publica a branch `main` usando `npm run build` e o diretório `dist/ironcore-frontend/browser`.
+
+O GitHub Actions executa build e testes; a publicação é realizada pela integração própria do Pages, sem `cd.yml` no frontend. A interface consome `https://api.ironcore.dev.br` por HTTPS, com autenticação por cookie e proteção CSRF.
+
+Consulte [Deploy e Produção](docs/deploy/README.md) para environments, fluxo de publicação, integração e limitações operacionais.
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
