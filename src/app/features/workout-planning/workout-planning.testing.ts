@@ -12,6 +12,7 @@ export const cycleDetail: GetWorkoutCycleDetailResponse = {
   startDate: '2026-10-01',
   endDate: '2026-12-31',
   desiredDurationMonths: 3,
+  weekStartsOn: 'SUNDAY',
   notes: 'Notas do ciclo\nSegunda linha',
   days: [
     {

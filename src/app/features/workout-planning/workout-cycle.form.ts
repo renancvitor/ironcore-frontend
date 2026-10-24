@@ -1,5 +1,9 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { CreateWorkoutCycleRequest, TrainingGoalResponse } from './workout-planning.models';
+import {
+  CreateWorkoutCycleRequest,
+  TrainingGoalResponse,
+  WeekDay,
+} from './workout-planning.models';
 
 export function createWorkoutCycleForm(goals: () => readonly TrainingGoalResponse[]) {
   return new FormGroup({
@@ -21,6 +25,9 @@ export function createWorkoutCycleForm(goals: () => readonly TrainingGoalRespons
       (control) =>
         control.value === null || Number.isInteger(control.value) ? null : { integer: true },
     ]),
+    weekStartsOn: new FormControl<WeekDay>('SUNDAY', {
+      nonNullable: true,
+    }),
     notes: new FormControl('', { nonNullable: true }),
   });
 }
@@ -33,6 +40,7 @@ export function buildWorkoutCycleRequest(form: WorkoutCycleForm): CreateWorkoutC
     name: value.name.trim(),
     trainingGoalId: value.trainingGoalId!,
     desiredDurationMonths: value.desiredDurationMonths,
+    weekStartsOn: value.weekStartsOn,
     notes: value.notes || null,
   };
 }

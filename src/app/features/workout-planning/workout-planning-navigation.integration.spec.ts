@@ -273,6 +273,7 @@ describe('Workout Planning navigation', () => {
           startDate: null,
           endDate: null,
           desiredDurationMonths: request.desiredDurationMonths ?? null,
+          weekStartsOn: request.weekStartsOn ?? stored?.weekStartsOn ?? 'SUNDAY',
           notes: request.notes ?? null,
           days: [],
         };
@@ -281,6 +282,7 @@ describe('Workout Planning navigation', () => {
           personId: 1,
           ...request,
           desiredDurationMonths: stored.desiredDurationMonths,
+          weekStartsOn: stored.weekStartsOn,
           notes: stored.notes,
           workoutStatus: 'NOT_STARTED',
           workoutOrigin: 'MANUAL',
@@ -291,6 +293,7 @@ describe('Workout Planning navigation', () => {
         stored = {
           ...stored!,
           ...request,
+          weekStartsOn: request.weekStartsOn ?? stored!.weekStartsOn,
           desiredDurationMonths: request.desiredDurationMonths ?? null,
           notes: request.notes ?? null,
         };

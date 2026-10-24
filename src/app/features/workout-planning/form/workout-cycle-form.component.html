@@ -21,6 +21,17 @@
       Nenhum objetivo de treino ativo disponível.
     </p>
   }
+  <mat-form-field appearance="outline" [hideRequiredMarker]="true">
+    <mat-label>Início da semana</mat-label>
+
+    <mat-select formControlName="weekStartsOn">
+      @for (weekDay of weekDays; track weekDay) {
+        <mat-option [value]="weekDay">
+          {{ weekDayLabels[weekDay] }}
+        </mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
   <div class="ic-workout-cycle-form__fields">
     <app-input
       id="workout-cycle-name"

@@ -7,6 +7,8 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 import { InputComponent } from '../../../shared/components/input/input.component';
 import { GetWorkoutCycleDetailResponse, TrainingGoalResponse } from '../workout-planning.models';
 import { WorkoutCycleForm } from '../workout-cycle.form';
+import { WEEK_DAY_LABELS } from '../workout-planning.labels';
+import { WeekDay } from '../workout-planning.models';
 
 @Component({
   selector: 'app-workout-cycle-form',
@@ -38,6 +40,8 @@ export class WorkoutCycleFormComponent {
       !this.goalsError() &&
       !this.goals().some((goal) => goal.id === this.cycle()!.trainingGoal.id),
   );
+  readonly weekDayLabels = WEEK_DAY_LABELS;
+  readonly weekDays = Object.keys(WEEK_DAY_LABELS) as WeekDay[];
 
   submit(): void {
     if (!this.saving()) this.submitted.emit();

@@ -16,6 +16,7 @@ describe('WorkoutCycleCreateComponent', () => {
     name: 'Nome normalizado',
     trainingGoalId: 22,
     desiredDurationMonths: null,
+    weekStartsOn: 'SUNDAY',
     notes: null,
     workoutStatus: 'NOT_STARTED',
     workoutOrigin: 'MANUAL',
@@ -102,6 +103,7 @@ describe('WorkoutCycleCreateComponent', () => {
       name: 'Novo',
       trainingGoalId: 22,
       desiredDurationMonths: null,
+      weekStartsOn: 'SUNDAY',
       notes: null,
     });
     expect(component.form.disabled).toBe(true);
@@ -115,6 +117,20 @@ describe('WorkoutCycleCreateComponent', () => {
     expect(toast.success).toHaveBeenCalledExactlyOnceWith('Ciclo de treino criado com sucesso.');
     expect(component.saving()).toBe(false);
     expect(component.form.enabled).toBe(true);
+  });
+
+  it('sends the selected week start when creating a cycle', async () => {
+    const component = await create();
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    component.form.patchValue({ name: 'Novo', trainingGoalId: 22, weekStartsOn: 'SATURDAY' });
+    component.createCycle();
+    expect(service.createWorkoutCycle).toHaveBeenCalledExactlyOnceWith({
+      name: 'Novo',
+      trainingGoalId: 22,
+      desiredDurationMonths: null,
+      weekStartsOn: 'SATURDAY',
+      notes: null,
+    });
   });
 
   it('keeps input and shows API errors', async () => {
