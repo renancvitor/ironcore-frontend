@@ -765,8 +765,4 @@ export class WorkoutCycleDetailComponent implements OnInit {
     this.clearEditQuery();
     this.toastService.success('Ciclo de treino atualizado com sucesso.');
   }
-
-  canReorderDay(day: WorkoutDayDetailResponse): boolean {
-    return (this.cycle()?.days.filter((item) => item.weekDay === day.weekDay).length ?? 0) > 1;
-  }
 }

@@ -1,6 +1,8 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { MatSelectHarness } from '@angular/material/select/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
@@ -203,7 +205,7 @@ describe('Workout day composition with the HTTP service', () => {
     'reorders to %s position %s and reads the backend result',
     async (weekDay, sortOrder) => {
       await create('IN_PROGRESS');
-      click('Reordenar dia Treino A');
+      click('Alterar dia ou posição Treino A');
       const form = editor();
       expect(form.form().controls.weekDay.value).toBe('MONDAY');
       expect(form.form().controls.sortOrder.value).toBe(1);
@@ -216,6 +218,36 @@ describe('Workout day composition with the HTTP service', () => {
       request.flush(null, { status: 204, statusText: 'No Content' });
       refresh({ ...detail, days: [{ ...detail.days[0], weekDay, sortOrder }] });
       expect(toast.success).toHaveBeenCalledWith('Dia de treino reordenado com sucesso.');
+    },
+  );
+
+  it.each(['NOT_STARTED', 'IN_PROGRESS'] as const)(
+    'moves a single session to an empty weekday in %s',
+    async (status) => {
+      await create(status, { ...detail, days: [detail.days[2]] });
+      click('Alterar dia ou posi\u00e7\u00e3o Treino C');
+      const form = editor();
+      expect(form.positions()).toEqual([1]);
+      expect(fixture.nativeElement.querySelector('[formControlName="sortOrder"]')).toBeNull();
+      const select = await TestbedHarnessEnvironment.loader(fixture).getHarness(
+        MatSelectHarness.with({ selector: '[formControlName="weekDay"]' }),
+      );
+      await select.open();
+      expect(await select.getOptions()).toHaveLength(7);
+      await select.clickOptions({ text: 'Domingo' });
+      expect(form.form().controls.sortOrder.value).toBe(1);
+      expect(form.form().valid).toBe(true);
+      form.submit();
+      const request = http.expectOne(daysUrl + '/12/reorder');
+      expect(request.request.method).toBe('PATCH');
+      expect(request.request.body).toEqual({ weekDay: 'SUNDAY', sortOrder: 1 });
+      request.flush(null, { status: 204, statusText: 'No Content' });
+      refresh({
+        ...detail,
+        workoutStatus: status,
+        days: [{ ...detail.days[2], weekDay: 'SUNDAY' }],
+      });
+      expect(component.cycle()?.days[0].weekDay).toBe('SUNDAY');
     },
   );
 
@@ -251,8 +283,9 @@ describe('Workout day composition with the HTTP service', () => {
       for (const label of [
         'Adicionar dia de treino',
         'Editar dia Treino A',
-        'Reordenar dia Treino A',
+        'Alterar dia ou posição Treino A',
         'Excluir dia Treino A',
+        'Alterar dia ou posi\u00e7\u00e3o Treino C',
       ]) {
         expect(!!fixture.nativeElement.querySelector(`[aria-label="${label}"]`)).toBe(allowed);
       }

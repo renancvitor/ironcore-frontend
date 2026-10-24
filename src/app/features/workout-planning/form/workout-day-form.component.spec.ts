@@ -13,18 +13,18 @@ describe('WorkoutDayFormComponent', () => {
     { id: 3, title: 'Treino C', weekDay: 'FRIDAY', sortOrder: 1, activities: [] },
   ];
 
-  async function create(mode: 'create' | 'edit' | 'reorder') {
+  async function create(mode: 'create' | 'edit' | 'reorder', day = days[0]) {
     await TestBed.configureTestingModule({
       imports: [WorkoutDayFormComponent],
     }).compileComponents();
     fixture = TestBed.createComponent(WorkoutDayFormComponent);
     fixture.componentRef.setInput('mode', mode);
     fixture.componentRef.setInput('days', days);
-    const form = createWorkoutDayForm(mode, () => days, mode === 'create' ? null : days[0].id);
+    const form = createWorkoutDayForm(mode, () => days, mode === 'create' ? null : day.id);
     if (mode !== 'create')
-      form.reset({ title: days[0].title, weekDay: days[0].weekDay, sortOrder: days[0].sortOrder });
+      form.reset({ title: day.title, weekDay: day.weekDay, sortOrder: day.sortOrder });
     fixture.componentRef.setInput('form', form);
-    if (mode !== 'create') fixture.componentRef.setInput('day', days[0]);
+    if (mode !== 'create') fixture.componentRef.setInput('day', day);
     await fixture.whenStable();
     fixture.detectChanges();
     return fixture.componentInstance;
@@ -75,6 +75,10 @@ describe('WorkoutDayFormComponent', () => {
   it('offers destination positions, resets selection on weekday change and supports an empty day', async () => {
     const component = await create('reorder');
     expect(component.positions()).toEqual([1, 2]);
+    expect(fixture.nativeElement.querySelector('[formControlName="sortOrder"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('h3').textContent).toContain(
+      'Alterar dia ou posi\u00e7\u00e3o',
+    );
     expect(component.form().controls.sortOrder.value).toBe(2);
     const loader = TestbedHarnessEnvironment.loader(fixture);
     const select = await loader.getHarness(
@@ -87,6 +91,9 @@ describe('WorkoutDayFormComponent', () => {
     await select.open();
     await select.clickOptions({ text: 'Domingo' });
     expect(component.positions()).toEqual([1]);
+    expect(component.form().controls.sortOrder.value).toBe(1);
+    expect(component.form().valid).toBe(true);
+    expect(fixture.nativeElement.querySelector('[formControlName="sortOrder"]')).toBeNull();
     expect(fixture.nativeElement.querySelector('app-input')).toBeNull();
     const submit = vi.fn();
     component.submitted.subscribe(submit);
@@ -99,6 +106,31 @@ describe('WorkoutDayFormComponent', () => {
     component.submit();
     expect(submit).toHaveBeenCalledExactlyOnceWith(undefined);
     expect(days.map((day) => day.sortOrder)).toEqual([2, 1, 1]);
+  });
+
+  it('hides the only position and shows destination positions when moving a single session', async () => {
+    const component = await create('reorder', days[2]);
+    expect(component.positions()).toEqual([1]);
+    expect(fixture.nativeElement.querySelector('[formControlName="sortOrder"]')).toBeNull();
+    const select = await TestbedHarnessEnvironment.loader(fixture).getHarness(
+      MatSelectHarness.with({ selector: '[formControlName="weekDay"]' }),
+    );
+    await select.open();
+    await select.clickOptions({ text: 'Segunda-feira' });
+    expect(component.positions()).toEqual([1, 2, 3]);
+    expect(fixture.nativeElement.querySelector('[formControlName="sortOrder"]')).not.toBeNull();
+    const position = await TestbedHarnessEnvironment.loader(fixture).getHarness(
+      MatSelectHarness.with({ selector: '[formControlName="sortOrder"]' }),
+    );
+    await position.open();
+    const options = await position.getOptions();
+    await options[2].click();
+    expect(component.form().controls.sortOrder.value).toBe(3);
+    await select.open();
+    await select.clickOptions({ text: 'Domingo' });
+    expect(component.form().controls.sortOrder.value).toBe(1);
+    expect(component.form().valid).toBe(true);
+    expect(fixture.nativeElement.querySelector('[formControlName="sortOrder"]')).toBeNull();
   });
 
   it('renders the disabled form and blocks submission and actions while saving', async () => {

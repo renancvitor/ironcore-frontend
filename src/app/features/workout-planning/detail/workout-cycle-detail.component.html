@@ -245,18 +245,16 @@
                 >
                   <mat-icon>edit</mat-icon>
                 </button>
-                @if (canReorderDay(day)) {
-                  <button
-                    matIconButton
-                    type="button"
-                    [attr.aria-label]="'Reordenar dia ' + day.title"
-                    matTooltip="Reordenar dia"
-                    [disabled]="contextualActionsDisabled()"
-                    (click)="openDayForm('reorder', day)"
-                  >
-                    <mat-icon>swap_vert</mat-icon>
-                  </button>
-                }
+                <button
+                  matIconButton
+                  type="button"
+                  [attr.aria-label]="'Alterar dia ou posição ' + day.title"
+                  matTooltip="Alterar dia ou posição"
+                  [disabled]="contextualActionsDisabled()"
+                  (click)="openDayForm('reorder', day)"
+                >
+                  <mat-icon>swap_vert</mat-icon>
+                </button>
                 <button
                   matIconButton
                   type="button"

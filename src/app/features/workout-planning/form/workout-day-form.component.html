@@ -11,7 +11,7 @@
         ? 'Adicionar dia de treino'
         : mode() === 'edit'
           ? 'Editar dia de treino'
-          : 'Reordenar dia de treino'
+          : 'Alterar dia ou posição'
     }}
   </h3>
   @if (day(); as day) {
@@ -39,7 +39,7 @@
         <mat-error>Selecione o dia da semana.</mat-error>
       </mat-form-field>
     }
-    @if (mode() === 'reorder') {
+    @if (mode() === 'reorder' && positions().length > 1) {
       <mat-form-field appearance="outline" [hideRequiredMarker]="true">
         <mat-label>Posição no dia</mat-label>
         <mat-select formControlName="sortOrder" required>
