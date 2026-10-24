@@ -43,9 +43,9 @@ Todos os endpoints exigem sessão por cookie. O serviço reutiliza o interceptor
 | -------- | ----------------------------------------------- | --------------------------------------------------- |
 | `GET`    | `/api/training-goals`                           | Sem parâmetros.                                     |
 | `GET`    | `/api/users/me/workout-cycles`                  | Filtros, `page` e `size`.                           |
-| `POST`   | `/api/users/me/workout-cycles`                  | Nome, objetivo, duração desejada e observações.     |
+| `POST`   | `/api/users/me/workout-cycles`                  | Nome, objetivo, duração desejada, `weekStartsOn` e observações.     |
 | `GET`    | `/api/users/me/workout-cycles/{id}`             | ID.                                                 |
-| `PUT`    | `/api/users/me/workout-cycles/{id}`             | Campos editáveis completos do ciclo.                |
+| `PUT`    | `/api/users/me/workout-cycles/{id}`             | Campos editáveis completos do ciclo, incluindo `weekStartsOn`.                |
 | `DELETE` | `/api/users/me/workout-cycles/{id}`             | ID de ciclo não iniciado.                           |
 | `PATCH`  | `/api/users/me/workout-cycles/{id}/start`       | Sem corpo de dados (`null`).                        |
 | `PATCH`  | `/api/users/me/workout-cycles/{id}/complete`    | Sem corpo de dados (`null`).                        |
@@ -77,13 +77,21 @@ Listagem e objetivos carregam independentemente, com erro e retry próprios. A e
 
 ### WorkoutCycle: Criação e Edição
 
-Criação e edição compartilham formulário e campos: `name` e `trainingGoalId` obrigatórios, `desiredDurationMonths` opcional inteiro positivo e `notes` opcional. O backend define status, origem e datas; o fluxo REST cria ciclos `MANUAL` em `NOT_STARTED`. A duração desejada não é percentual de progresso nem data de término calculada pelo frontend.
+Criação e edição compartilham formulário e campos: `name` e `trainingGoalId` obrigatórios, `desiredDurationMonths` opcional inteiro positivo, `weekStartsOn` com valor inicial `SUNDAY` e `notes` opcional. O backend define status, origem e datas; o fluxo REST cria ciclos `MANUAL` em `NOT_STARTED`. A duração desejada não é percentual de progresso nem data de término calculada pelo frontend.
 
 Durante gravação, o formulário e as ações locais ficam bloqueados contra reenvio. Sucesso no POST navega ao detalhe para compor o ciclo; sucesso no PUT atualiza o detalhe pela resposta. Falha mantém os valores e apresenta diálogo com mensagem da API ou fallback. Cancelar edição não grava dados.
 
+### Início da Semana (`weekStartsOn`)
+
+O seletor **Início da semana**, disponível nos formulários de criação e edição do ciclo, permite escolher qualquer dia de `SUNDAY` a `SATURDAY`. O valor inicial na criação é `SUNDAY`; na edição, o formulário carrega o `weekStartsOn` persistido do ciclo. A configuração segue as mesmas permissões de edição dos demais campos: `NOT_STARTED` e `IN_PROGRESS`.
+
+O frontend envia `weekStartsOn` nos requests de criação e atualização. O campo é retornado nas respostas dessas operações e no detalhe do ciclo, que também exibe o dia escolhido. Após salvar a edição, o detalhe usa o valor retornado pela API e recalcula imediatamente a ordenação visual.
+
 ## WorkoutDay e Organização Visual
 
-Um dia pertence ao ciclo e contém `weekDay`, `title`, `sortOrder` e atividades. É possível ter vários dias no mesmo dia da semana. A apresentação organiza os dias de domingo a sábado e por `sortOrder` dentro de cada dia da semana.
+Um dia pertence ao ciclo e contém `weekDay`, `title`, `sortOrder` e atividades. É possível ter vários dias no mesmo dia da semana. A apresentação segue a sequência semanal natural a partir do `weekStartsOn` configurado no ciclo, de forma circular. Por exemplo, `SATURDAY` produz `SATURDAY → SUNDAY → MONDAY → TUESDAY → WEDNESDAY → THURSDAY → FRIDAY`. Dias da semana sem treinos não geram sessões artificiais nem interrompem essa sequência; entre sessões do mesmo `weekDay`, `sortOrder` continua definindo a ordem.
+
+`weekStartsOn` altera apenas o ponto inicial da apresentação, sem permitir uma ordem arbitrária dos dias da semana. A ordenação é calculada no frontend, preservando o array recebido da API, o `weekDay` original e o `sortOrder` de cada `WorkoutDay`.
 
 - Criação envia ciclo, título não vazio e `weekDay`, de `SUNDAY` a `SATURDAY`; o backend atribui a próxima posição.
 - Edição por PUT altera somente `title`.
