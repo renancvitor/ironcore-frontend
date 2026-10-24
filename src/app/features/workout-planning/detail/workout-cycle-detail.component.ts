@@ -100,13 +100,21 @@ export class WorkoutCycleDetailComponent implements OnInit {
   readonly statusLabels = WORKOUT_STATUS_LABELS;
   readonly weekDayLabels = WEEK_DAY_LABELS;
   readonly weekDays = Object.keys(WEEK_DAY_LABELS) as WeekDay[];
-  readonly orderedDays = computed(() =>
-    [...(this.cycle()?.days ?? [])].sort(
+  readonly orderedDays = computed(() => {
+    const cycle = this.cycle();
+
+    if (!cycle) return [];
+
+    const startIndex = this.weekDays.indexOf(cycle.weekStartsOn);
+
+    const relativePosition = (weekDay: WeekDay): number =>
+      (this.weekDays.indexOf(weekDay) - startIndex + 7) % 7;
+
+    return [...cycle.days].sort(
       (a, b) =>
-        this.weekDays.indexOf(a.weekDay) - this.weekDays.indexOf(b.weekDay) ||
-        a.sortOrder - b.sortOrder,
-    ),
-  );
+        relativePosition(a.weekDay) - relativePosition(b.weekDay) || a.sortOrder - b.sortOrder,
+    );
+  });
   readonly dayMode = signal<'create' | 'edit' | 'reorder' | null>(null);
   readonly selectedDay = signal<WorkoutDayDetailResponse | null>(null);
   readonly daySaving = signal(false);
@@ -513,6 +521,7 @@ export class WorkoutCycleDetailComponent implements OnInit {
       name: cycle.name,
       trainingGoalId: cycle.trainingGoal.id,
       desiredDurationMonths: cycle.desiredDurationMonths,
+      weekStartsOn: cycle.weekStartsOn,
       notes: cycle.notes ?? '',
     });
     this.editing.set(true);
@@ -745,6 +754,7 @@ export class WorkoutCycleDetailComponent implements OnInit {
             name: response.name,
             trainingGoal: { id: goal.id, name: goal.name },
             desiredDurationMonths: response.desiredDurationMonths,
+            weekStartsOn: response.weekStartsOn,
             notes: response.notes,
             workoutStatus: response.workoutStatus,
             startDate: response.startDate,
@@ -754,5 +764,9 @@ export class WorkoutCycleDetailComponent implements OnInit {
     this.editing.set(false);
     this.clearEditQuery();
     this.toastService.success('Ciclo de treino atualizado com sucesso.');
+  }
+
+  canReorderDay(day: WorkoutDayDetailResponse): boolean {
+    return (this.cycle()?.days.filter((item) => item.weekDay === day.weekDay).length ?? 0) > 1;
   }
 }

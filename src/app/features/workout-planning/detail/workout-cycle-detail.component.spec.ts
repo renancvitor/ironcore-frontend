@@ -224,4 +224,38 @@ describe('WorkoutCycleDetailComponent', () => {
       expect(navigate).toHaveBeenCalledWith(['/workout-planning']);
     },
   );
+
+  it.each([
+    ['SUNDAY', [3, 1, 4, 2]],
+    ['MONDAY', [4, 2, 3, 1]],
+    ['TUESDAY', [2, 3, 1, 4]],
+    ['WEDNESDAY', [2, 3, 1, 4]],
+    ['THURSDAY', [2, 3, 1, 4]],
+    ['FRIDAY', [2, 3, 1, 4]],
+    ['SATURDAY', [2, 3, 1, 4]],
+  ] as const)(
+    'orders days circularly when week starts on %s',
+    async (weekStartsOn, expectedIds) => {
+      const days = [
+        { id: 1, title: 'Domingo B', weekDay: 'SUNDAY' as const, sortOrder: 2, activities: [] },
+        { id: 2, title: 'Sábado', weekDay: 'SATURDAY' as const, sortOrder: 1, activities: [] },
+        { id: 3, title: 'Domingo A', weekDay: 'SUNDAY' as const, sortOrder: 1, activities: [] },
+        { id: 4, title: 'Segunda', weekDay: 'MONDAY' as const, sortOrder: 1, activities: [] },
+      ];
+
+      service.getWorkoutCycleDetail.mockReturnValue(of({ ...cycleDetail, weekStartsOn, days }));
+
+      await create();
+
+      expect(fixture.componentInstance.orderedDays().map((day) => day.id)).toEqual(expectedIds);
+
+      expect(fixture.componentInstance.cycle()?.days).toEqual(days);
+      expect(days.map((day) => [day.id, day.weekDay, day.sortOrder])).toEqual([
+        [1, 'SUNDAY', 2],
+        [2, 'SATURDAY', 1],
+        [3, 'SUNDAY', 1],
+        [4, 'MONDAY', 1],
+      ]);
+    },
+  );
 });

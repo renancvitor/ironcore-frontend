@@ -118,6 +118,10 @@
             <dd>{{ cycle.trainingGoal.name }}</dd>
           </div>
           <div>
+            <dt>Início da semana</dt>
+            <dd>{{ weekDayLabels[cycle.weekStartsOn] }}</dd>
+          </div>
+          <div>
             <dt>Duração desejada</dt>
             <dd>
               @if (cycle.desiredDurationMonths !== null) {
@@ -241,16 +245,18 @@
                 >
                   <mat-icon>edit</mat-icon>
                 </button>
-                <button
-                  matIconButton
-                  type="button"
-                  [attr.aria-label]="'Reordenar dia ' + day.title"
-                  matTooltip="Reordenar dia"
-                  [disabled]="contextualActionsDisabled()"
-                  (click)="openDayForm('reorder', day)"
-                >
-                  <mat-icon>swap_vert</mat-icon>
-                </button>
+                @if (canReorderDay(day)) {
+                  <button
+                    matIconButton
+                    type="button"
+                    [attr.aria-label]="'Reordenar dia ' + day.title"
+                    matTooltip="Reordenar dia"
+                    [disabled]="contextualActionsDisabled()"
+                    (click)="openDayForm('reorder', day)"
+                  >
+                    <mat-icon>swap_vert</mat-icon>
+                  </button>
+                }
                 <button
                   matIconButton
                   type="button"

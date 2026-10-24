@@ -50,8 +50,13 @@ describe('Workout cycle detail mutations', () => {
     }).compileComponents();
   });
 
-  async function create(status: WorkoutStatus = 'NOT_STARTED') {
-    service.getWorkoutCycleDetail.mockReturnValue(of({ ...cycleDetail, workoutStatus: status }));
+  async function create(
+    status: WorkoutStatus = 'NOT_STARTED',
+    weekStartsOn = cycleDetail.weekStartsOn,
+  ) {
+    service.getWorkoutCycleDetail.mockReturnValue(
+      of({ ...cycleDetail, workoutStatus: status, weekStartsOn }),
+    );
     fixture = TestBed.createComponent(WorkoutCycleDetailComponent);
     await fixture.whenStable();
     fixture.detectChanges();
@@ -76,49 +81,58 @@ describe('Workout cycle detail mutations', () => {
     expect(service.deleteWorkoutCycle).not.toHaveBeenCalled();
   });
 
-  it('opens populated editor, saves and updates the detail using the API response', async () => {
-    const component = await create('IN_PROGRESS');
-    service.updateWorkoutCycle.mockReturnValue(
-      of({
-        id: 9,
-        name: 'Nome retornado',
+  it.each(['NOT_STARTED', 'IN_PROGRESS'] as const)(
+    'loads and saves the week start in %s and immediately updates the visual order',
+    async (status) => {
+      const component = await create(status, 'SATURDAY');
+      service.updateWorkoutCycle.mockReturnValue(
+        of({
+          id: 9,
+          name: 'Nome retornado',
+          trainingGoalId: 35,
+          startDate: '2026-10-02',
+          workoutStatus: status,
+          workoutOrigin: 'MANUAL',
+          desiredDurationMonths: null,
+          weekStartsOn: 'FRIDAY',
+          notes: null,
+          updatedAt: '2026-10-17T10:00:00',
+        }),
+      );
+      fixture.nativeElement.querySelector('[aria-label="Editar ciclo de treino"]').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const editor = fixture.debugElement.query(By.directive(WorkoutCycleFormComponent))
+        .componentInstance as WorkoutCycleFormComponent;
+      expect(editor.form().controls.name.value).toBe(cycleDetail.name);
+      expect(editor.form().controls.weekStartsOn.value).toBe('SATURDAY');
+      editor.form().patchValue({
+        name: 'Nome enviado',
         trainingGoalId: 35,
-        startDate: '2026-10-02',
-        workoutStatus: 'IN_PROGRESS',
-        workoutOrigin: 'MANUAL',
         desiredDurationMonths: null,
+        weekStartsOn: 'MONDAY',
+        notes: '',
+      });
+      editor.submit();
+      fixture.detectChanges();
+      expect(service.updateWorkoutCycle).toHaveBeenCalledWith(9, {
+        name: 'Nome enviado',
+        trainingGoalId: 35,
+        desiredDurationMonths: null,
+        weekStartsOn: 'MONDAY',
         notes: null,
-        updatedAt: '2026-10-17T10:00:00',
-      }),
-    );
-    fixture.nativeElement.querySelector('[aria-label="Editar ciclo de treino"]').click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    const editor = fixture.debugElement.query(By.directive(WorkoutCycleFormComponent))
-      .componentInstance as WorkoutCycleFormComponent;
-    expect(editor.form().controls.name.value).toBe(cycleDetail.name);
-    editor.form().patchValue({
-      name: 'Nome enviado',
-      trainingGoalId: 35,
-      desiredDurationMonths: null,
-      notes: '',
-    });
-    editor.submit();
-    fixture.detectChanges();
-    expect(service.updateWorkoutCycle).toHaveBeenCalledWith(9, {
-      name: 'Nome enviado',
-      trainingGoalId: 35,
-      desiredDurationMonths: null,
-      notes: null,
-    });
-    expect(component.editing()).toBe(false);
-    expect(fixture.nativeElement.textContent).toContain('Nome retornado');
-    expect(fixture.nativeElement.textContent).toContain('Novo objetivo');
-    expect(component.cycle()?.startDate).toBe('2026-10-02');
-    expect(component.cycle()?.days).toEqual(cycleDetail.days);
-    expect(service.getWorkoutCycleDetail).toHaveBeenCalledTimes(1);
-    expect(toast.success).toHaveBeenCalledWith('Ciclo de treino atualizado com sucesso.');
-  });
+      });
+      expect(component.editing()).toBe(false);
+      expect(fixture.nativeElement.textContent).toContain('Nome retornado');
+      expect(fixture.nativeElement.textContent).toContain('Novo objetivo');
+      expect(component.cycle()?.startDate).toBe('2026-10-02');
+      expect(component.cycle()?.weekStartsOn).toBe('FRIDAY');
+      expect(component.orderedDays().map((day) => day.id)).toEqual([30, 31]);
+      expect(component.cycle()?.days).toEqual(cycleDetail.days);
+      expect(service.getWorkoutCycleDetail).toHaveBeenCalledTimes(1);
+      expect(toast.success).toHaveBeenCalledWith('Ciclo de treino atualizado com sucesso.');
+    },
+  );
 
   it('cancels editing without changing the detail', async () => {
     const component = await create();
@@ -156,6 +170,7 @@ describe('Workout cycle detail mutations', () => {
       name: cycleDetail.name,
       trainingGoalId: 22,
       desiredDurationMonths: null,
+      weekStartsOn: 'SUNDAY',
       notes: null,
     });
     expect(component.saving()).toBe(true);
@@ -172,6 +187,7 @@ describe('Workout cycle detail mutations', () => {
       workoutStatus: 'NOT_STARTED',
       workoutOrigin: 'MANUAL',
       desiredDurationMonths: null,
+      weekStartsOn: 'SUNDAY',
       notes: null,
       updatedAt: '',
     });

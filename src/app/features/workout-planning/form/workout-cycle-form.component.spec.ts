@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { MatSelect } from '@angular/material/select';
 import { createWorkoutCycleForm } from '../workout-cycle.form';
 import { cycleDetail } from '../workout-planning.testing';
 import { WorkoutCycleFormComponent } from './workout-cycle-form.component';
@@ -35,6 +37,30 @@ describe('WorkoutCycleFormComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Selecione um objetivo de treino ativo.');
     expect(fixture.nativeElement.querySelector('footer').textContent).toContain('Cancelar');
     expect(fixture.nativeElement.querySelector('footer').textContent).toContain('Salvar ciclo');
+  });
+
+  it('defaults to Sunday and offers every week day in the selector', async () => {
+    const form = fixture.componentInstance.form();
+    expect(form.controls.weekStartsOn.value).toBe('SUNDAY');
+    const select = fixture.debugElement
+      .queryAll(By.directive(MatSelect))
+      .map((element) => element.componentInstance as MatSelect)
+      .find((select) => select.ngControl?.name === 'weekStartsOn')!;
+    select.open();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(select.options.map((option) => option.value)).toEqual([
+      'SUNDAY',
+      'MONDAY',
+      'TUESDAY',
+      'WEDNESDAY',
+      'THURSDAY',
+      'FRIDAY',
+      'SATURDAY',
+    ]);
+    select.options.find((option) => option.value === 'SATURDAY')!._selectViaInteraction();
+    expect(form.controls.weekStartsOn.value).toBe('SATURDAY');
+    select.close();
   });
 
   it('emits submit and cancel for the parent to coordinate', () => {

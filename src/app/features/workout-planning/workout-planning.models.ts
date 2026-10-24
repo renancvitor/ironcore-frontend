@@ -15,6 +15,7 @@ export interface CreateWorkoutCycleRequest {
   name: string;
   trainingGoalId: number;
   desiredDurationMonths?: number | null;
+  weekStartsOn?: WeekDay | null;
   notes?: string | null;
 }
 
@@ -22,6 +23,7 @@ export interface UpdateWorkoutCycleRequest {
   name: string;
   trainingGoalId: number;
   desiredDurationMonths?: number | null;
+  weekStartsOn?: WeekDay | null;
   notes?: string | null;
 }
 
@@ -31,6 +33,7 @@ export interface CreateWorkoutCycleResponse {
   name: string;
   trainingGoalId: number;
   desiredDurationMonths: number | null;
+  weekStartsOn: WeekDay;
   workoutStatus: WorkoutStatus;
   workoutOrigin: WorkoutOrigin;
   notes: string | null;
@@ -45,6 +48,7 @@ export interface UpdateWorkoutCycleResponse {
   workoutStatus: WorkoutStatus;
   workoutOrigin: WorkoutOrigin;
   desiredDurationMonths: number | null;
+  weekStartsOn: WeekDay;
   notes: string | null;
   updatedAt: string;
 }
@@ -89,6 +93,7 @@ export interface GetWorkoutCycleDetailResponse {
   startDate: string | null;
   endDate: string | null;
   desiredDurationMonths: number | null;
+  weekStartsOn: WeekDay;
   notes: string | null;
   days: WorkoutDayDetailResponse[];
 }

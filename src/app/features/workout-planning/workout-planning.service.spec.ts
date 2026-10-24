@@ -93,6 +93,8 @@ describe('WorkoutPlanningService', () => {
 
   it.each([
     { name: 'Plano', trainingGoalId: 2 },
+    { name: 'Plano', trainingGoalId: 2, weekStartsOn: 'SATURDAY' },
+    { name: 'Plano', trainingGoalId: 2, weekStartsOn: null },
     { name: 'Plano', trainingGoalId: 2, desiredDurationMonths: 3, notes: 'Foco em força' },
     { name: 'Plano', trainingGoalId: 2, desiredDurationMonths: null, notes: null },
   ] satisfies CreateWorkoutCycleRequest[])('should create a cycle with %j', (body) => {
@@ -102,6 +104,7 @@ describe('WorkoutPlanningService', () => {
       name: body.name,
       trainingGoalId: body.trainingGoalId,
       desiredDurationMonths: body.desiredDurationMonths ?? null,
+      weekStartsOn: 'SATURDAY',
       workoutStatus: 'NOT_STARTED',
       workoutOrigin: 'MANUAL',
       notes: body.notes ?? null,
@@ -118,6 +121,8 @@ describe('WorkoutPlanningService', () => {
 
   it.each([
     { name: 'Plano atualizado', trainingGoalId: 2 },
+    { name: 'Plano atualizado', trainingGoalId: 2, weekStartsOn: 'SATURDAY' },
+    { name: 'Plano atualizado', trainingGoalId: 2, weekStartsOn: null },
     { name: 'Plano atualizado', trainingGoalId: 2, desiredDurationMonths: 4, notes: 'Notas' },
     { name: 'Plano atualizado', trainingGoalId: 2, desiredDurationMonths: null, notes: null },
   ] satisfies UpdateWorkoutCycleRequest[])('should update a cycle with %j', (body) => {
@@ -129,6 +134,7 @@ describe('WorkoutPlanningService', () => {
       workoutStatus: 'NOT_STARTED',
       workoutOrigin: 'MANUAL',
       desiredDurationMonths: body.desiredDurationMonths ?? null,
+      weekStartsOn: 'SATURDAY',
       notes: body.notes ?? null,
       updatedAt: timestamp,
     };
@@ -273,6 +279,7 @@ describe('WorkoutPlanningService', () => {
       startDate: null,
       endDate: null,
       desiredDurationMonths: null,
+      weekStartsOn: 'SATURDAY',
       notes: null,
       days: [
         {
@@ -315,6 +322,7 @@ describe('WorkoutPlanningService', () => {
       startDate: null,
       endDate: null,
       desiredDurationMonths: null,
+      weekStartsOn: 'SATURDAY',
       notes: null,
       days: [],
     };
