@@ -373,7 +373,6 @@ export class WorkoutSessionEditorState {
       'Aplicar modo', () => this.write(`mode:${activity.confirmed.id}`, activity,
         () => this.service.changeWorkoutSessionActivityLoadMode(this.session()!.id, activity.confirmed.id, { actualLoadMode: mode }),
         (response) => {
-          // This intentional reinterpretation is not a remote conflict in local numeric drafts.
           activity.confirmed = { ...activity.confirmed, actualLoadMode: response.actualLoadMode };
           activity.modeConflict = false;
           this.commitActivity(response);

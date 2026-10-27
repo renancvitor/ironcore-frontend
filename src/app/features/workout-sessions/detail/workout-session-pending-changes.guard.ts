@@ -5,7 +5,6 @@ import { catchError, defaultIfEmpty, Observable, of, shareReplay, take, tap } fr
 import { AuthStateService } from '../../../core/auth/auth-state.service';
 import type { WorkoutSessionDetailComponent } from './workout-session-detail.component';
 
-// Entry guards also run on parameter changes, before the reused component receives paramMap.
 @Injectable({ providedIn: 'root' })
 export class WorkoutSessionNavigation {
   private readonly router = inject(Router);

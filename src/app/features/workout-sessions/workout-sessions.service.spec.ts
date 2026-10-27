@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { Observable } from 'rxjs';
 import { AuthStateService } from '../../core/auth/auth-state.service';
 import { API_BASE_URL } from '../../core/http/api-base-url.token';
 import { provideCoreHttp } from '../../core/http/http.providers';
@@ -153,7 +154,7 @@ describe('WorkoutSessionsService with the existing authentication and CSRF inter
   });
 
   it('preserves cookies and CSRF for every new execution mutation', () => {
-    const requests = [
+    const requests: Array<() => Observable<unknown>> = [
       () => service.updateWorkoutSessionNotes(100, { notes: null }),
       () => service.updateWorkoutSessionActivityExecution(100, 200, { actualDistanceKm: 0 }),
       () => service.createWorkoutSessionSet(100, 200, { setNumber: 1, notes: 'Relato' }),
