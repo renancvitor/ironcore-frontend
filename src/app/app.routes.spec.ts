@@ -31,6 +31,7 @@ import { ToastService } from './shared/components/toast/toast.service';
 import { ExerciseCatalogComponent } from './features/exercise/catalog/exercise-catalog.component';
 import { ExerciseDetailComponent } from './features/exercise/catalog/detail/exercise-detail.component';
 import { WorkoutSessionDetailComponent } from './features/workout-sessions/detail/workout-session-detail.component';
+import { workoutSessionEntryGuard, workoutSessionPendingChangesGuard } from './features/workout-sessions/detail/workout-session-pending-changes.guard';
 
 function flushEmptyWorkoutSummary(http: HttpTestingController): void {
   for (const status of ['IN_PROGRESS', 'NOT_STARTED']) {
@@ -59,6 +60,9 @@ describe('application routes', () => {
     ]);
     for (const route of sessionRoutes) {
       expect(await route.loadComponent?.()).toBe(WorkoutSessionDetailComponent);
+      expect(route.canActivate).toEqual([workoutSessionEntryGuard]);
+      expect(route.canDeactivate).toEqual([workoutSessionPendingChangesGuard]);
+      expect(route.runGuardsAndResolvers).toBe('always');
     }
   });
   it('lazy loads the exercise catalog and detail inside the protected shell', async () => {
