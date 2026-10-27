@@ -20,13 +20,22 @@ describe('Workout Sessions navigation with HTTP', () => {
   const url = '/api/users/me/workout-sessions';
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ providers: [
-      provideHttpClient(), provideHttpClientTesting(), provideRouter(routes),
-      { provide: API_BASE_URL, useValue: '' },
-      { provide: DialogService, useValue: { open: vi.fn(() => of(true)) } },
-      { provide: ToastService, useValue: { success: vi.fn(), info: vi.fn() } },
-    ] }).compileComponents();
-    TestBed.inject(AuthStateService).setUser({ userId: 1, email: 'person@test.dev', nickname: 'Person', mustChangePassword: false });
+    await TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter(routes),
+        { provide: API_BASE_URL, useValue: '' },
+        { provide: DialogService, useValue: { open: vi.fn(() => of(true)) } },
+        { provide: ToastService, useValue: { success: vi.fn(), info: vi.fn() } },
+      ],
+    }).compileComponents();
+    TestBed.inject(AuthStateService).setUser({
+      userId: 1,
+      email: 'person@test.dev',
+      nickname: 'Person',
+      mustChangePassword: false,
+    });
     http = TestBed.inject(HttpTestingController);
   });
   afterEach(() => http.verify());
@@ -54,7 +63,9 @@ describe('Workout Sessions navigation with HTTP', () => {
     harness.detectChanges();
     harness.fixture.nativeElement.querySelector('button[aria-label="Abrir menu"]').click();
     harness.detectChanges();
-    const link = harness.fixture.nativeElement.querySelector('a[href="/workout-sessions"]') as HTMLAnchorElement;
+    const link = harness.fixture.nativeElement.querySelector(
+      'a[href="/workout-sessions"]',
+    ) as HTMLAnchorElement;
     link.click();
     await harness.fixture.whenStable();
     http.expectOne(`${url}/in-progress`).flush(sessionDetail);
@@ -74,20 +85,25 @@ describe('Workout Sessions navigation with HTTP', () => {
     const session = harness.fixture.debugElement.query(By.directive(WorkoutSessionDetailComponent))
       .componentInstance as WorkoutSessionDetailComponent;
     expect(previous.cancelled).toBe(true);
-    http.expectOne(`${url}/101`).flush({ ...sessionDetail, id: 101, workoutDayTitleSnapshot: 'Outra sessão' });
+    http
+      .expectOne(`${url}/101`)
+      .flush({ ...sessionDetail, id: 101, workoutDayTitleSnapshot: 'Outra sessão' });
     harness.detectChanges();
     expect(session.session()?.id).toBe(101);
     expect(harness.routeNativeElement!.textContent).toContain('Outra sessão');
     await harness.navigateByUrl('/workout-planning/9');
     http.expectOne('/api/users/me/workout-cycles/9').flush(cycleDetail);
     await harness.navigateByUrl('/workout-sessions/101');
-    http.expectOne(`${url}/101`).flush({ ...sessionDetail, id: 101, status: 'CLOSED', closeReason: 'AUTO_EXPIRED' });
+    http
+      .expectOne(`${url}/101`)
+      .flush({ ...sessionDetail, id: 101, status: 'CLOSED', closeReason: 'AUTO_EXPIRED' });
     harness.detectChanges();
     expect(harness.routeNativeElement!.textContent).toContain('Encerrada automaticamente');
   });
 
   it.each(['/workout-sessions', '/workout-sessions/100'])(
-    'rejects unauthenticated direct navigation to %s without a session request', async (path) => {
+    'rejects unauthenticated direct navigation to %s without a session request',
+    async (path) => {
       TestBed.inject(AuthStateService).clear();
       const harness = await RouterTestingHarness.create();
       await harness.navigateByUrl(path);

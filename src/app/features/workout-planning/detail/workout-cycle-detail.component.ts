@@ -164,64 +164,78 @@ export class WorkoutCycleDetailComponent implements OnInit {
     this.sessionStartingDayId.set(day.id);
     let refreshCycle = false;
     const operation = this.sessionNeedsRecovery()
-      ? this.recoverSession('Confira se a abertura anterior foi efetivada antes de iniciar outra sessão.')
-      : this.workoutSessionsService.startWorkoutSession({
-          workoutCycleId: this.cycle()!.id,
-          workoutDayId: day.id,
-        }).pipe(
-          catchError((error) => {
-            if (error.status === 401) return EMPTY;
-            const message = error.error?.message ?? 'Não foi possível confirmar a abertura da sessão.';
-            if (error.status === 409 || error.status === 0 || error.status >= 500) {
-              refreshCycle = error.status === 409;
-              this.sessionNeedsRecovery.set(true);
-              return this.recoverSession(message);
-            }
-            refreshCycle = error.status === 400 || error.status === 404;
-            this.dialogService.open({
-              title: 'Não foi possível iniciar a sessão de treino',
-              message,
-              primaryAction: 'Ok',
-            });
-            return of(null);
-          }),
-        );
-    operation.pipe(
-      takeUntilDestroyed(this.destroyRef),
-      finalize(() => this.sessionStartingDayId.set(null)),
-    ).subscribe((response) => {
-      if (response) {
-        this.toastService.success('Sessão de treino iniciada com sucesso.');
-        void this.router.navigate(['/workout-sessions', response.id]);
-      } else if (refreshCycle) {
-        this.sessionStartingDayId.set(null);
-        this.loadCycle();
-      }
-    });
+      ? this.recoverSession(
+          'Confira se a abertura anterior foi efetivada antes de iniciar outra sessão.',
+        )
+      : this.workoutSessionsService
+          .startWorkoutSession({
+            workoutCycleId: this.cycle()!.id,
+            workoutDayId: day.id,
+          })
+          .pipe(
+            catchError((error) => {
+              if (error.status === 401) return EMPTY;
+              const message =
+                error.error?.message ?? 'Não foi possível confirmar a abertura da sessão.';
+              if (error.status === 409 || error.status === 0 || error.status >= 500) {
+                refreshCycle = error.status === 409;
+                this.sessionNeedsRecovery.set(true);
+                return this.recoverSession(message);
+              }
+              refreshCycle = error.status === 400 || error.status === 404;
+              this.dialogService.open({
+                title: 'Não foi possível iniciar a sessão de treino',
+                message,
+                primaryAction: 'Ok',
+              });
+              return of(null);
+            }),
+          );
+    operation
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.sessionStartingDayId.set(null)),
+      )
+      .subscribe((response) => {
+        if (response) {
+          this.toastService.success('Sessão de treino iniciada com sucesso.');
+          void this.router.navigate(['/workout-sessions', response.id]);
+        } else if (refreshCycle) {
+          this.sessionStartingDayId.set(null);
+          this.loadCycle();
+        }
+      });
   }
 
   private recoverSession(message: string): Observable<null> {
     return this.workoutSessionsService.getInProgressWorkoutSession().pipe(
       switchMap((session) => {
         this.sessionNeedsRecovery.set(false);
-        return this.dialogService.open({
-          title: session ? 'Sessão de treino em andamento' : 'Abertura da sessão de treino',
-          message: session
-            ? `${message} Há uma sessão de “${session.workoutDayTitleSnapshot}” em andamento. Deseja continuar visualizando essa sessão?`
-            : `${message} Nenhuma sessão em andamento foi encontrada. Confira o planejamento antes de tentar novamente.`,
-          primaryAction: session ? 'Continuar sessão' : 'Ok',
-          ...(session ? { secondaryAction: 'Voltar' } : {}),
-        }).pipe(take(1), map((confirmed) => {
-          if (confirmed && session) void this.router.navigate(['/workout-sessions', session.id]);
-          return null;
-        }));
+        return this.dialogService
+          .open({
+            title: session ? 'Sessão de treino em andamento' : 'Abertura da sessão de treino',
+            message: session
+              ? `${message} Há uma sessão de “${session.workoutDayTitleSnapshot}” em andamento. Deseja continuar visualizando essa sessão?`
+              : `${message} Nenhuma sessão em andamento foi encontrada. Confira o planejamento antes de tentar novamente.`,
+            primaryAction: session ? 'Continuar sessão' : 'Ok',
+            ...(session ? { secondaryAction: 'Voltar' } : {}),
+          })
+          .pipe(
+            take(1),
+            map((confirmed) => {
+              if (confirmed && session)
+                void this.router.navigate(['/workout-sessions', session.id]);
+              return null;
+            }),
+          );
       }),
       catchError((error) => {
         if (error.status === 401) return EMPTY;
         this.sessionNeedsRecovery.set(true);
         this.dialogService.open({
           title: 'Não foi possível recuperar a sessão de treino',
-          message: error.error?.message ?? 'Consulte novamente antes de tentar iniciar outra sessão.',
+          message:
+            error.error?.message ?? 'Consulte novamente antes de tentar iniciar outra sessão.',
           primaryAction: 'Ok',
         });
         return of(null);

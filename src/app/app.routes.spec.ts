@@ -50,8 +50,13 @@ describe('application routes', () => {
   it('lazy loads session recovery and detail inside the existing protected shell', async () => {
     const shell = routes.find((route) => route.path === '')!;
     expect(shell.canActivate).toEqual([authGuard]);
-    const sessionRoutes = shell.children!.filter((route) => route.path?.startsWith('workout-sessions'));
-    expect(sessionRoutes.map((route) => route.path)).toEqual(['workout-sessions', 'workout-sessions/:id']);
+    const sessionRoutes = shell.children!.filter((route) =>
+      route.path?.startsWith('workout-sessions'),
+    );
+    expect(sessionRoutes.map((route) => route.path)).toEqual([
+      'workout-sessions',
+      'workout-sessions/:id',
+    ]);
     for (const route of sessionRoutes) {
       expect(await route.loadComponent?.()).toBe(WorkoutSessionDetailComponent);
     }

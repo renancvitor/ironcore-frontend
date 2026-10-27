@@ -15,7 +15,9 @@ export class WorkoutSessionsService {
   private readonly apiBaseUrl = inject(API_BASE_URL);
   private readonly sessionsUrl = `${this.apiBaseUrl}/api/users/me/workout-sessions`;
 
-  startWorkoutSession(request: StartWorkoutSessionRequest): Observable<StartWorkoutSessionResponse> {
+  startWorkoutSession(
+    request: StartWorkoutSessionRequest,
+  ): Observable<StartWorkoutSessionResponse> {
     return this.http.post<StartWorkoutSessionResponse>(this.sessionsUrl, request);
   }
 

@@ -1,4 +1,7 @@
-<section class="ic-workout-detail" [attr.aria-busy]="lifecycleState() === 'saving' || sessionStartBusy()">
+<section
+  class="ic-workout-detail"
+  [attr.aria-busy]="lifecycleState() === 'saving' || sessionStartBusy()"
+>
   <header class="ic-workout-detail__header">
     <div>
       <h1>Detalhes do ciclo de treino</h1>

@@ -1,4 +1,3 @@
-import { WorkoutSessionsService } from '../workout-sessions/workout-sessions.service';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, Routes, RouteReuseStrategy } from '@angular/router';
 import { Location } from '@angular/common';
@@ -13,6 +12,7 @@ import { routes } from '../../app.routes';
 import { HomeComponent } from '../home/home.component';
 import { BodyMetricsService } from '../body-metrics/body-metrics.service';
 import { WorkoutPlanningService } from './workout-planning.service';
+import { WorkoutSessionsService } from '../workout-sessions/workout-sessions.service';
 import { cycleDetail, cyclePage } from './workout-planning.testing';
 import { WorkoutCycleCatalogComponent } from './catalog/workout-cycle-catalog.component';
 import { WorkoutCycleDetailComponent } from './detail/workout-cycle-detail.component';

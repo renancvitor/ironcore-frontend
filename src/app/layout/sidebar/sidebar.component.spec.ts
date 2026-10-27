@@ -41,7 +41,9 @@ describe('SidebarComponent', () => {
   });
 
   it('recovers the current session and stays active on its detail route', async () => {
-    const link = fixture.nativeElement.querySelector('a[href="/workout-sessions"]') as HTMLAnchorElement;
+    const link = fixture.nativeElement.querySelector(
+      'a[href="/workout-sessions"]',
+    ) as HTMLAnchorElement;
     expect(link.textContent).toContain('Sessão de treino');
     link.click();
     await fixture.whenStable();

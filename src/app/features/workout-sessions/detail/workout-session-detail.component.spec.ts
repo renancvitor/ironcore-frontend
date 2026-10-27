@@ -25,7 +25,10 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     params = new BehaviorSubject(convertToParamMap({ id: '100' }));
     await TestBed.configureTestingModule({
       imports: [WorkoutSessionDetailComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
         { provide: API_BASE_URL, useValue: '' },
         { provide: ActivatedRoute, useValue: { paramMap: params } },
         { provide: DialogService, useValue: dialog },
@@ -50,8 +53,9 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     fixture.detectChanges();
   }
   function button(text: string): HTMLButtonElement {
-    return Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
-      .find((element) => element.textContent?.trim() === text)!;
+    return Array.from(
+      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+    ).find((element) => element.textContent?.trim() === text)!;
   }
 
   it('loads independently on refresh and renders only historical prescriptions', () => {
@@ -61,15 +65,29 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     const request = http.expectOne(`${url}/100`);
     request.flush(sessionDetail);
     fixture.detectChanges();
-    for (const text of ['Ciclo preservado', 'Treino preservado', 'Exercício preservado',
-      'Prescrição planejada', 'não representam execução registrada', 'Carga moderada',
-      'Orientação histórica', '22.5 kg', '15 min', '2.5 km', '60 s', 'Moderada', '27/10/2026']) {
+    for (const text of [
+      'Ciclo preservado',
+      'Treino preservado',
+      'Exercício preservado',
+      'Prescrição planejada',
+      'não representam execução registrada',
+      'Carga moderada',
+      'Orientação histórica',
+      '22.5 kg',
+      '15 min',
+      '2.5 km',
+      '60 s',
+      'Moderada',
+      '27/10/2026',
+    ]) {
       expect(fixture.nativeElement.textContent).toContain(text);
     }
     expect(fixture.nativeElement.querySelectorAll('input, textarea, select')).toHaveLength(0);
     expect(component.session()?.activities[0].sets).toEqual([]);
     expect(component.session()?.activities[0].actualDurationMinutes).toBeNull();
-    http.expectNone((request) => request.url.includes('workout-cycles') || request.url.includes('exercise'));
+    http.expectNone(
+      (request) => request.url.includes('workout-cycles') || request.url.includes('exercise'),
+    );
     fixture.destroy();
     create();
     http.expectOne(`${url}/100`).flush(sessionDetail);
@@ -92,10 +110,16 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
   it('keeps missing prescriptions absent and preserves zero values', () => {
     const data = structuredClone(sessionDetail);
     Object.assign(data.activities[0], {
-      plannedSetsSnapshot: null, plannedRepRangeMinSnapshot: null, plannedRepRangeMaxSnapshot: null,
-      plannedTargetLoadKgSnapshot: 0, plannedTargetLoadTextSnapshot: null,
-      plannedDurationMinutesSnapshot: null, plannedDistanceKmSnapshot: null,
-      plannedIntensityTextSnapshot: null, plannedRestSecondsSnapshot: 0, plannedNotesSnapshot: null,
+      plannedSetsSnapshot: null,
+      plannedRepRangeMinSnapshot: null,
+      plannedRepRangeMaxSnapshot: null,
+      plannedTargetLoadKgSnapshot: 0,
+      plannedTargetLoadTextSnapshot: null,
+      plannedDurationMinutesSnapshot: null,
+      plannedDistanceKmSnapshot: null,
+      plannedIntensityTextSnapshot: null,
+      plannedRestSecondsSnapshot: 0,
+      plannedNotesSnapshot: null,
     });
     load(data);
     const activity = fixture.nativeElement.querySelector('article');
@@ -109,14 +133,28 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     const data = structuredClone(sessionDetail);
     data.activities[0].actualDurationMinutes = 7;
     data.activities[0].actualDistanceKm = 1.2;
-    data.activities[0].sets = [{ id: 300, setNumber: 1, actualLoadKg: 20,
-      actualLoadMode: 'PER_SIDE', actualReps: 9, notes: 'Registro real',
-      createdAt: data.createdAt, updatedAt: null }];
-    data.activities.push({ ...structuredClone(data.activities[0]), id: 201,
-      orderIndexSnapshot: 2, exerciseNameSnapshot: 'Segundo exercício' });
+    data.activities[0].sets = [
+      {
+        id: 300,
+        setNumber: 1,
+        actualLoadKg: 20,
+        actualLoadMode: 'PER_SIDE',
+        actualReps: 9,
+        notes: 'Registro real',
+        createdAt: data.createdAt,
+        updatedAt: null,
+      },
+    ];
+    data.activities.push({
+      ...structuredClone(data.activities[0]),
+      id: 201,
+      orderIndexSnapshot: 2,
+      exerciseNameSnapshot: 'Segundo exercício',
+    });
     load(data);
-    const titles = Array.from(fixture.nativeElement.querySelectorAll('article h3') as NodeListOf<HTMLElement>)
-      .map((element) => element.textContent!.trim());
+    const titles = Array.from(
+      fixture.nativeElement.querySelectorAll('article h3') as NodeListOf<HTMLElement>,
+    ).map((element) => element.textContent!.trim());
     expect(titles).toEqual(['Exercício preservado', 'Segundo exercício']);
     expect(component.session()?.activities).toEqual(data.activities);
     expect(fixture.nativeElement.querySelectorAll('input, textarea, select')).toHaveLength(0);
@@ -127,9 +165,13 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
 
   it.each([400, 403, 500])('retries detail load error %s without mutations', (status) => {
     create();
-    http.expectOne(`${url}/100`).flush({ message: 'Falha ao consultar' }, { status, statusText: 'Error' });
+    http
+      .expectOne(`${url}/100`)
+      .flush({ message: 'Falha ao consultar' }, { status, statusText: 'Error' });
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Falha ao consultar');
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(
+      'Falha ao consultar',
+    );
     button('Tentar novamente').click();
     http.expectOne(`${url}/100`).flush(sessionDetail);
     expect(component.canClose()).toBe(true);
@@ -149,14 +191,18 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     create();
     http.expectOne(`${url}/in-progress`).flush(sessionDetail);
-    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/workout-sessions', 100], { replaceUrl: true });
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/workout-sessions', 100], {
+      replaceUrl: true,
+    });
   });
 
   it('renders expected absence with access to planning and a fresh lookup', () => {
     params.next(convertToParamMap({}));
     create();
     http.expectOne(`${url}/in-progress`).flush(
-      { message: 'Sessão de treino em andamento não encontrada.' }, { status: 404, statusText: 'Not Found' });
+      { message: 'Sessão de treino em andamento não encontrada.' },
+      { status: 404, statusText: 'Not Found' },
+    );
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Nenhuma sessão de treino em andamento.');
     expect(fixture.nativeElement.querySelector('[role="alert"]')).toBeNull();
@@ -170,9 +216,13 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
   it.each([400, 403, 404, 409, 500])('keeps unexpected recovery error %s recoverable', (status) => {
     params.next(convertToParamMap({}));
     create();
-    http.expectOne(`${url}/in-progress`).flush({ message: 'Falha real' }, { status, statusText: 'Error' });
+    http
+      .expectOne(`${url}/in-progress`)
+      .flush({ message: 'Falha real' }, { status, statusText: 'Error' });
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Falha real');
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(
+      'Falha real',
+    );
     expect(component.empty()).toBe(false);
     button('Tentar novamente').click();
     http.expectOne(`${url}/in-progress`).flush(null);
@@ -190,73 +240,97 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     http.expectNone(() => true);
   });
 
-  it.each([false, undefined])('does not close after confirmation is dismissed with %s', (confirmed) => {
-    load();
-    dialog.open.mockReturnValue(of(confirmed));
-    button('Encerrar sessão').click();
-    expect(dialog.open).toHaveBeenCalledWith(expect.objectContaining({ secondaryAction: 'Voltar' }));
-    http.expectNone(`${url}/100/close`);
-    expect(component.canClose()).toBe(true);
-  });
+  it.each([false, undefined])(
+    'does not close after confirmation is dismissed with %s',
+    (confirmed) => {
+      load();
+      dialog.open.mockReturnValue(of(confirmed));
+      button('Encerrar sessão').click();
+      expect(dialog.open).toHaveBeenCalledWith(
+        expect.objectContaining({ secondaryAction: 'Voltar' }),
+      );
+      http.expectNone(`${url}/100/close`);
+      expect(component.canClose()).toBe(true);
+    },
+  );
 
-  it.each(['MANUAL', 'AUTO_EXPIRED'] as const)('confirms once and applies real %s lifecycle without losing snapshots', (closeReason) => {
-    load();
-    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    const confirmed = new Subject<boolean>();
-    dialog.open.mockReturnValue(confirmed);
-    button('Encerrar sessão').click();
-    fixture.detectChanges();
-    expect(component.closeState()).toBe('confirming');
-    component.closeSession();
-    component.loadSession();
-    component.backToPlanning();
-    component.openSourceCycle();
-    expect(dialog.open).toHaveBeenCalledTimes(1);
-    expect(navigate).not.toHaveBeenCalled();
-    http.expectNone(() => true);
-    confirmed.next(true);
-    confirmed.next(true);
-    const request = http.expectOne(`${url}/100/close`);
-    expect(request.request.body).toBeNull();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Encerrando sessão');
-    expect(fixture.nativeElement.querySelector('section').getAttribute('aria-busy')).toBe('true');
-    component.closeSession();
-    component.loadSession();
-    http.expectNone(() => true);
-    const lifecycle = { id: 100, status: 'CLOSED', closeReason,
-      performedOn: sessionDetail.performedOn, startedAt: sessionDetail.startedAt,
-      finishedAt: '2026-10-28T06:00:00Z', updatedAt: '2026-10-28T06:05:00Z' };
-    request.flush(lifecycle);
-    fixture.detectChanges();
-    expect(component.session()).toEqual({ ...sessionDetail, ...lifecycle });
-    expect(button('Encerrar sessão')).toBeUndefined();
-    expect(fixture.nativeElement.textContent).toContain('Encerrada');
-    expect(closeReason === 'MANUAL' ? toast.success : toast.info).toHaveBeenCalledTimes(1);
-  });
+  it.each(['MANUAL', 'AUTO_EXPIRED'] as const)(
+    'confirms once and applies real %s lifecycle without losing snapshots',
+    (closeReason) => {
+      load();
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const confirmed = new Subject<boolean>();
+      dialog.open.mockReturnValue(confirmed);
+      button('Encerrar sessão').click();
+      fixture.detectChanges();
+      expect(component.closeState()).toBe('confirming');
+      component.closeSession();
+      component.loadSession();
+      component.backToPlanning();
+      component.openSourceCycle();
+      expect(dialog.open).toHaveBeenCalledTimes(1);
+      expect(navigate).not.toHaveBeenCalled();
+      http.expectNone(() => true);
+      confirmed.next(true);
+      confirmed.next(true);
+      const request = http.expectOne(`${url}/100/close`);
+      expect(request.request.body).toBeNull();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain('Encerrando sessão');
+      expect(fixture.nativeElement.querySelector('section').getAttribute('aria-busy')).toBe('true');
+      component.closeSession();
+      component.loadSession();
+      http.expectNone(() => true);
+      const lifecycle = {
+        id: 100,
+        status: 'CLOSED',
+        closeReason,
+        performedOn: sessionDetail.performedOn,
+        startedAt: sessionDetail.startedAt,
+        finishedAt: '2026-10-28T06:00:00Z',
+        updatedAt: '2026-10-28T06:05:00Z',
+      };
+      request.flush(lifecycle);
+      fixture.detectChanges();
+      expect(component.session()).toEqual({ ...sessionDetail, ...lifecycle });
+      expect(button('Encerrar sessão')).toBeUndefined();
+      expect(fixture.nativeElement.textContent).toContain('Encerrada');
+      expect(closeReason === 'MANUAL' ? toast.success : toast.info).toHaveBeenCalledTimes(1);
+    },
+  );
 
-  it.each(['MANUAL', 'AUTO_EXPIRED'] as const)('opens an already closed %s session without allowing closure', (closeReason) => {
-    load({ ...sessionDetail, status: 'CLOSED', closeReason, finishedAt: '2026-10-28T06:00:00Z' });
-    component.closeSession();
-    expect(button('Encerrar sessão')).toBeUndefined();
-    expect(dialog.open).not.toHaveBeenCalled();
-    http.expectNone(() => true);
-  });
+  it.each(['MANUAL', 'AUTO_EXPIRED'] as const)(
+    'opens an already closed %s session without allowing closure',
+    (closeReason) => {
+      load({ ...sessionDetail, status: 'CLOSED', closeReason, finishedAt: '2026-10-28T06:00:00Z' });
+      component.closeSession();
+      expect(button('Encerrar sessão')).toBeUndefined();
+      expect(dialog.open).not.toHaveBeenCalled();
+      http.expectNone(() => true);
+    },
+  );
 
-  it.each([400, 403, 404, 409, 500, 0])('reconciles close failure %s before another mutation', (status) => {
-    load();
-    component.closeSession();
-    const request = http.expectOne(`${url}/100/close`);
-    if (status === 0) request.error(new ProgressEvent('error'));
-    else request.flush({ message: 'Sessão já encerrada.' }, { status, statusText: 'Error' });
-    expect(component.canClose()).toBe(false);
-    component.closeSession();
-    http.expectNone(`${url}/100/close`);
-    http.expectOne(`${url}/100`).flush({ ...sessionDetail, status: 'CLOSED', closeReason: 'AUTO_EXPIRED',
-      finishedAt: '2026-10-28T06:00:00Z' });
-    expect(component.session()?.closeReason).toBe('AUTO_EXPIRED');
-    expect(toast.success).not.toHaveBeenCalled();
-  });
+  it.each([400, 403, 404, 409, 500, 0])(
+    'reconciles close failure %s before another mutation',
+    (status) => {
+      load();
+      component.closeSession();
+      const request = http.expectOne(`${url}/100/close`);
+      if (status === 0) request.error(new ProgressEvent('error'));
+      else request.flush({ message: 'Sessão já encerrada.' }, { status, statusText: 'Error' });
+      expect(component.canClose()).toBe(false);
+      component.closeSession();
+      http.expectNone(`${url}/100/close`);
+      http.expectOne(`${url}/100`).flush({
+        ...sessionDetail,
+        status: 'CLOSED',
+        closeReason: 'AUTO_EXPIRED',
+        finishedAt: '2026-10-28T06:00:00Z',
+      });
+      expect(component.session()?.closeReason).toBe('AUTO_EXPIRED');
+      expect(toast.success).not.toHaveBeenCalled();
+    },
+  );
 
   it('retains stale data and blocks closure if reconciliation fails, then retries only GET', () => {
     load();
@@ -280,7 +354,9 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
     document.dispatchEvent(new Event('visibilitychange'));
     document.dispatchEvent(new Event('visibilitychange'));
-    http.expectOne(`${url}/100`).flush({ ...sessionDetail, status: 'CLOSED', closeReason: 'AUTO_EXPIRED' });
+    http
+      .expectOne(`${url}/100`)
+      .flush({ ...sessionDetail, status: 'CLOSED', closeReason: 'AUTO_EXPIRED' });
     expect(component.session()?.status).toBe('CLOSED');
     fixture.destroy();
     document.dispatchEvent(new Event('visibilitychange'));

@@ -1,12 +1,12 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
+import { AuthStateService } from '../../core/auth/auth-state.service';
 import { API_BASE_URL } from '../../core/http/api-base-url.token';
+import { provideCoreHttp } from '../../core/http/http.providers';
 import { WorkoutSessionsService } from './workout-sessions.service';
 import { sessionDetail } from './workout-sessions.testing';
-import { provideCoreHttp } from '../../core/http/http.providers';
-import { AuthStateService } from '../../core/auth/auth-state.service';
-import { provideRouter, Router } from '@angular/router';
 
 describe('WorkoutSessionsService', () => {
   const url = 'https://api.ironcore.test/api/users/me/workout-sessions';
@@ -14,10 +14,13 @@ describe('WorkoutSessionsService', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [
-      provideHttpClient(), provideHttpClientTesting(),
-      { provide: API_BASE_URL, useValue: 'https://api.ironcore.test' },
-    ] });
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_BASE_URL, useValue: 'https://api.ironcore.test' },
+      ],
+    });
     service = TestBed.inject(WorkoutSessionsService);
     http = TestBed.inject(HttpTestingController);
   });
@@ -30,23 +33,34 @@ describe('WorkoutSessionsService', () => {
     const request = http.expectOne(url);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual(body);
-    const response = { id: 100, ...body, performedOn: sessionDetail.performedOn,
-      startedAt: sessionDetail.startedAt, status: 'IN_PROGRESS', createdAt: sessionDetail.createdAt };
+    const response = {
+      id: 100,
+      ...body,
+      performedOn: sessionDetail.performedOn,
+      startedAt: sessionDetail.startedAt,
+      status: 'IN_PROGRESS',
+      createdAt: sessionDetail.createdAt,
+    };
     request.flush(response, { status: 201, statusText: 'Created' });
     expect(next).toHaveBeenCalledExactlyOnceWith(response);
   });
 
-  it.each(['in-progress', '100'])('gets the complete response from %s without planning queries', (path) => {
-    const next = vi.fn();
-    const operation = path === 'in-progress'
-      ? service.getInProgressWorkoutSession() : service.getWorkoutSessionDetail(100);
-    operation.subscribe(next);
-    const request = http.expectOne(`${url}/${path}`);
-    expect(request.request.method).toBe('GET');
-    expect(request.request.params.keys()).toEqual([]);
-    request.flush(sessionDetail);
-    expect(next).toHaveBeenCalledExactlyOnceWith(sessionDetail);
-  });
+  it.each(['in-progress', '100'])(
+    'gets the complete response from %s without planning queries',
+    (path) => {
+      const next = vi.fn();
+      const operation =
+        path === 'in-progress'
+          ? service.getInProgressWorkoutSession()
+          : service.getWorkoutSessionDetail(100);
+      operation.subscribe(next);
+      const request = http.expectOne(`${url}/${path}`);
+      expect(request.request.method).toBe('GET');
+      expect(request.request.params.keys()).toEqual([]);
+      request.flush(sessionDetail);
+      expect(next).toHaveBeenCalledExactlyOnceWith(sessionDetail);
+    },
+  );
 
   it('maps only the expected missing open session to null', () => {
     const next = vi.fn();
@@ -58,25 +72,39 @@ describe('WorkoutSessionsService', () => {
     expect(next).toHaveBeenCalledExactlyOnceWith(null);
   });
 
-  it.each([400, 401, 403, 404, 409, 500])('propagates real HTTP %s errors instead of returning empty', (status) => {
-    const error = vi.fn();
-    service.getInProgressWorkoutSession().subscribe({ error });
-    http.expectOne(`${url}/in-progress`).flush({ message: 'Falha real' }, { status, statusText: 'Error' });
-    expect(error).toHaveBeenCalledWith(expect.objectContaining({ status }));
-  });
+  it.each([400, 401, 403, 404, 409, 500])(
+    'propagates real HTTP %s errors instead of returning empty',
+    (status) => {
+      const error = vi.fn();
+      service.getInProgressWorkoutSession().subscribe({ error });
+      http
+        .expectOne(`${url}/in-progress`)
+        .flush({ message: 'Falha real' }, { status, statusText: 'Error' });
+      expect(error).toHaveBeenCalledWith(expect.objectContaining({ status }));
+    },
+  );
 
-  it.each(['MANUAL', 'AUTO_EXPIRED'] as const)('closes without client lifecycle fields and preserves %s', (closeReason) => {
-    const next = vi.fn();
-    service.closeWorkoutSession(100).subscribe(next);
-    const request = http.expectOne(`${url}/100/close`);
-    expect(request.request.method).toBe('PATCH');
-    expect(request.request.body).toBeNull();
-    const response = { id: 100, performedOn: sessionDetail.performedOn,
-      startedAt: sessionDetail.startedAt, finishedAt: '2026-10-28T06:00:00Z',
-      status: 'CLOSED', closeReason, updatedAt: '2026-10-28T06:01:00Z' };
-    request.flush(response);
-    expect(next).toHaveBeenCalledExactlyOnceWith(response);
-  });
+  it.each(['MANUAL', 'AUTO_EXPIRED'] as const)(
+    'closes without client lifecycle fields and preserves %s',
+    (closeReason) => {
+      const next = vi.fn();
+      service.closeWorkoutSession(100).subscribe(next);
+      const request = http.expectOne(`${url}/100/close`);
+      expect(request.request.method).toBe('PATCH');
+      expect(request.request.body).toBeNull();
+      const response = {
+        id: 100,
+        performedOn: sessionDetail.performedOn,
+        startedAt: sessionDetail.startedAt,
+        finishedAt: '2026-10-28T06:00:00Z',
+        status: 'CLOSED',
+        closeReason,
+        updatedAt: '2026-10-28T06:01:00Z',
+      };
+      request.flush(response);
+      expect(next).toHaveBeenCalledExactlyOnceWith(response);
+    },
+  );
 
   it.each([400, 401, 403, 404, 409, 500])('propagates HTTP %s from mutations', (status) => {
     const error = vi.fn();
@@ -94,10 +122,14 @@ describe('WorkoutSessionsService with the existing authentication and CSRF inter
   const url = '/api/users/me/workout-sessions';
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [
-      provideCoreHttp(), provideHttpClientTesting(), provideRouter([]),
-      { provide: API_BASE_URL, useValue: '' },
-    ] });
+    TestBed.configureTestingModule({
+      providers: [
+        provideCoreHttp(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: API_BASE_URL, useValue: '' },
+      ],
+    });
     http = TestBed.inject(HttpTestingController);
     service = TestBed.inject(WorkoutSessionsService);
     vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
@@ -122,7 +154,12 @@ describe('WorkoutSessionsService with the existing authentication and CSRF inter
 
   it('preserves global 401 handling instead of treating authentication loss as absence', () => {
     const auth = TestBed.inject(AuthStateService);
-    auth.setUser({ userId: 1, email: 'person@test.dev', nickname: 'Person', mustChangePassword: false });
+    auth.setUser({
+      userId: 1,
+      email: 'person@test.dev',
+      nickname: 'Person',
+      mustChangePassword: false,
+    });
     const error = vi.fn();
     service.getInProgressWorkoutSession().subscribe({ error });
     const request = http.expectOne(`${url}/in-progress`);

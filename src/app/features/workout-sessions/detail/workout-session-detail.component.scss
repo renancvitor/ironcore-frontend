@@ -21,15 +21,25 @@
   display: flex;
   flex-shrink: 0;
 }
-h1, h2, h3, h4, p, dt, dd {
+h1,
+h2,
+h3,
+h4,
+p,
+dt,
+dd {
   min-width: 0;
   overflow-wrap: anywhere;
 }
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   margin: 0;
   color: var(--ic-text-primary);
 }
-h2, h3 {
+h2,
+h3 {
   font-size: 1.125rem;
 }
 p {
@@ -88,12 +98,14 @@ p {
   gap: var(--ic-space-3);
 }
 @include responsive.tablet {
-  .ic-session, .ic-session__activities {
+  .ic-session,
+  .ic-session__activities {
     gap: var(--ic-space-4);
   }
 }
 @include responsive.mobile {
-  .ic-session, .ic-session__activities {
+  .ic-session,
+  .ic-session__activities {
     gap: var(--ic-space-3);
   }
   .ic-session__header {

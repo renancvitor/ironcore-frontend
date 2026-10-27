@@ -5,12 +5,24 @@
       <p>Consulte a ficha preservada no início da sessão.</p>
     </div>
     <div class="ic-session__header-actions">
-      <button matIconButton type="button" aria-label="Atualizar sessão de treino"
-        matTooltip="Atualizar sessão" [disabled]="busy() || notFound()" (click)="loadSession()">
+      <button
+        matIconButton
+        type="button"
+        aria-label="Atualizar sessão de treino"
+        matTooltip="Atualizar sessão"
+        [disabled]="busy() || notFound()"
+        (click)="loadSession()"
+      >
         <mat-icon>refresh</mat-icon>
       </button>
-      <button matIconButton type="button" aria-label="Voltar ao planejamento de treinos"
-        matTooltip="Voltar ao planejamento" [disabled]="busy()" (click)="backToPlanning()">
+      <button
+        matIconButton
+        type="button"
+        aria-label="Voltar ao planejamento de treinos"
+        matTooltip="Voltar ao planejamento"
+        [disabled]="busy()"
+        (click)="backToPlanning()"
+      >
         <mat-icon>arrow_back</mat-icon>
       </button>
     </div>
@@ -36,7 +48,9 @@
   @if (empty()) {
     <app-empty-state icon="fitness_center" message="Nenhuma sessão de treino em andamento." />
     <div class="ic-session__actions">
-      <app-button variant="secondary" [disabled]="busy()" (click)="loadSession()">Consultar novamente</app-button>
+      <app-button variant="secondary" [disabled]="busy()" (click)="loadSession()">
+        Consultar novamente
+      </app-button>
       <app-button [disabled]="busy()" (click)="backToPlanning()">Ir ao planejamento</app-button>
     </div>
   }
@@ -60,11 +74,11 @@
         </div>
         <div>
           <dt>Início</dt>
-          <dd>{{ session.startedAt | date: 'dd/MM/yyyy HH:mm': '-0300' }} (São Paulo)</dd>
+          <dd>{{ session.startedAt | date: 'dd/MM/yyyy HH:mm' : '-0300' }} (São Paulo)</dd>
         </div>
         <div>
           <dt>Encerramento</dt>
-          <dd>{{ (session.finishedAt | date: 'dd/MM/yyyy HH:mm': '-0300') ?? '—' }}</dd>
+          <dd>{{ (session.finishedAt | date: 'dd/MM/yyyy HH:mm' : '-0300') ?? '—' }}</dd>
         </div>
       </dl>
       @if (session.closeReason; as reason) {
@@ -72,7 +86,9 @@
       }
       <div class="ic-session__actions">
         @if (session.workoutCycleId !== null) {
-          <app-button variant="secondary" [disabled]="busy()" (click)="openSourceCycle()">Ver ciclo de origem</app-button>
+          <app-button variant="secondary" [disabled]="busy()" (click)="openSourceCycle()">
+            Ver ciclo de origem
+          </app-button>
         }
         @if (session.status === 'IN_PROGRESS') {
           <app-button [disabled]="!canClose()" (click)="closeSession()">Encerrar sessão</app-button>
@@ -82,11 +98,15 @@
     <section aria-labelledby="session-activities-title" class="ic-session__activities">
       <div>
         <h2 id="session-activities-title">Exercícios da sessão</h2>
-        <p class="ic-session__reference">Prescrição planejada — referência. Os valores abaixo não representam execução registrada.</p>
+        <p class="ic-session__reference">
+          Prescrição planejada — referência. Os valores abaixo não representam execução registrada.
+        </p>
       </div>
       @for (activity of session.activities; track activity.id) {
         <article class="ic-session__card">
-          <header class="ic-session__card-header"><h3>{{ activity.exerciseNameSnapshot }}</h3></header>
+          <header class="ic-session__card-header">
+            <h3>{{ activity.exerciseNameSnapshot }}</h3>
+          </header>
           <dl class="ic-session__fields">
             @if (activity.plannedSetsSnapshot !== null) {
               <div>
@@ -144,11 +164,17 @@
             }
           </dl>
           @if (activity.plannedNotesSnapshot) {
-            <div class="ic-session__notes"><h4>Observações planejadas</h4><p>{{ activity.plannedNotesSnapshot }}</p></div>
+            <div class="ic-session__notes">
+              <h4>Observações planejadas</h4>
+              <p>{{ activity.plannedNotesSnapshot }}</p>
+            </div>
           }
         </article>
       } @empty {
-        <app-empty-state icon="fitness_center" message="Nenhum exercício preservado nesta sessão." />
+        <app-empty-state
+          icon="fitness_center"
+          message="Nenhum exercício preservado nesta sessão."
+        />
       }
     </section>
   }
