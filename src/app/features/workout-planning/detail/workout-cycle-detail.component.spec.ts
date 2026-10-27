@@ -1,6 +1,13 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
+import { API_BASE_URL } from '../../../core/http/api-base-url.token';
+import { DialogService } from '../../../shared/components/dialog/dialog.service';
+import { ToastService } from '../../../shared/components/toast/toast.service';
+import { WorkoutSessionsService } from '../../workout-sessions/workout-sessions.service';
+import { sessionDetail } from '../../workout-sessions/workout-sessions.testing';
 import { WorkoutPlanningService } from '../workout-planning.service';
 import { GetWorkoutCycleDetailResponse } from '../workout-planning.models';
 import { cycleDetail } from '../workout-planning.testing';
@@ -22,6 +29,7 @@ describe('WorkoutCycleDetailComponent', () => {
       imports: [WorkoutCycleDetailComponent],
       providers: [
         provideRouter([]),
+        { provide: WorkoutSessionsService, useValue: {} },
         { provide: WorkoutPlanningService, useValue: service },
         {
           provide: ActivatedRoute,
@@ -256,6 +264,244 @@ describe('WorkoutCycleDetailComponent', () => {
         [3, 'SUNDAY', 1],
         [4, 'MONDAY', 1],
       ]);
+    },
+  );
+});
+
+describe('WorkoutCycleDetailComponent session start with HTTP', () => {
+  let fixture: ComponentFixture<WorkoutCycleDetailComponent>;
+  let component: WorkoutCycleDetailComponent;
+  let http: HttpTestingController;
+  const cycleUrl = '/api/users/me/workout-cycles/9';
+  const sessionsUrl = '/api/users/me/workout-sessions';
+  const dialog = { open: vi.fn() };
+  const toast = { success: vi.fn() };
+
+  beforeEach(async () => {
+    vi.resetAllMocks();
+    dialog.open.mockReturnValue(of(true));
+    await TestBed.configureTestingModule({
+      imports: [WorkoutCycleDetailComponent],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: API_BASE_URL, useValue: '' },
+        { provide: DialogService, useValue: dialog },
+        { provide: ToastService, useValue: toast },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: convertToParamMap({ id: '9' }) } },
+        },
+      ],
+    }).compileComponents();
+    http = TestBed.inject(HttpTestingController);
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+  });
+  afterEach(() => http.verify());
+
+  function create(data = structuredClone(cycleDetail)) {
+    fixture = TestBed.createComponent(WorkoutCycleDetailComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    http.expectOne(cycleUrl).flush(data);
+    fixture.detectChanges();
+  }
+  function startButton(): HTMLButtonElement | undefined {
+    return Array.from(
+      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+    ).find((button) => button.textContent?.trim() === 'Iniciar sessão');
+  }
+
+  it.each(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const)(
+    'offers session start only for an eligible day in %s',
+    (workoutStatus) => {
+      create({ ...cycleDetail, workoutStatus });
+      expect(!!startButton()).toBe(workoutStatus === 'IN_PROGRESS');
+      expect(component.canStartSession(cycleDetail.days[1])).toBe(false);
+      component.startSession(cycleDetail.days[1]);
+      component.startSession({ ...cycleDetail.days[0], id: 999 });
+      if (workoutStatus !== 'IN_PROGRESS') component.startSession(cycleDetail.days[0]);
+      http.expectNone(sessionsUrl);
+    },
+  );
+
+  it('starts the selected day once and blocks all conflicting planning operations', () => {
+    create();
+    const before = component.cycle();
+    startButton()!.click();
+    fixture.detectChanges();
+    const request = http.expectOne(sessionsUrl);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      workoutCycleId: 9,
+      workoutDayId: cycleDetail.days[0].id,
+    });
+    expect(fixture.nativeElement.textContent).toContain('Iniciando ou recuperando sessão');
+    expect(fixture.nativeElement.querySelector('section').getAttribute('aria-busy')).toBe('true');
+    for (const button of fixture.nativeElement.querySelectorAll('button'))
+      expect(button.disabled).toBe(true);
+    component.startSession(cycleDetail.days[0]);
+    component.startEdit();
+    component.completeCycle();
+    component.cancelCycle();
+    component.openDayForm('create');
+    component.openDayForm('reorder', cycleDetail.days[0]);
+    component.deleteDay(cycleDetail.days[0]);
+    component.openActivitySelector(cycleDetail.days[0]);
+    component.openActivityForm('reorder', cycleDetail.days[0], cycleDetail.days[0].activities[0]);
+    component.deleteActivity(cycleDetail.days[0], cycleDetail.days[0].activities[0]);
+    component.saveDay();
+    component.saveActivity();
+    component.backToCycles();
+    component.loadCycle();
+    http.expectNone(() => true);
+    expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+    expect(dialog.open).not.toHaveBeenCalled();
+    request.flush({ id: 100, status: 'IN_PROGRESS' }, { status: 201, statusText: 'Created' });
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledExactlyOnceWith([
+      '/workout-sessions',
+      100,
+    ]);
+    expect(component.cycle()).toEqual(before);
+    expect(toast.success).toHaveBeenCalledExactlyOnceWith('Sessão de treino iniciada com sucesso.');
+  });
+
+  it('uses the chosen eligible day rather than the first day or the current weekday', () => {
+    const data = structuredClone(cycleDetail);
+    data.days[1].activities = structuredClone(data.days[0].activities);
+    create(data);
+    component.startSession(data.days[1]);
+    const request = http.expectOne(sessionsUrl);
+    expect(request.request.body).toEqual({ workoutCycleId: 9, workoutDayId: data.days[1].id });
+    request.flush({ id: 101 });
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/workout-sessions', 101]);
+  });
+
+  it.each([
+    'editing',
+    'saving',
+    'loading',
+    'daySaving',
+    'daysLoading',
+    'confirmingDelete',
+    'activitySaving',
+    'activitiesLoading',
+    'confirmingActivityDelete',
+  ] as const)('blocks session start while %s is active', (state) => {
+    create();
+    component[state].set(true);
+    component.startSession(cycleDetail.days[0]);
+    expect(component.sessionStartBusy()).toBe(false);
+    http.expectNone(sessionsUrl);
+  });
+
+  it('blocks session start during forms and lifecycle confirmation', () => {
+    create();
+    component.dayMode.set('reorder');
+    component.startSession(cycleDetail.days[0]);
+    component.dayMode.set(null);
+    component.activityMode.set('select');
+    component.startSession(cycleDetail.days[0]);
+    component.activityMode.set(null);
+    component.lifecycleState.set('confirming');
+    component.startSession(cycleDetail.days[0]);
+    component.lifecycleState.set('saving');
+    component.startSession(cycleDetail.days[0]);
+    http.expectNone(sessionsUrl);
+  });
+
+  it('recovers a conflicting open session and asks before navigating', () => {
+    create();
+    const confirmed = new Subject<boolean>();
+    dialog.open.mockReturnValue(confirmed);
+    component.startSession(cycleDetail.days[0]);
+    http
+      .expectOne(sessionsUrl)
+      .flush(
+        { message: 'Já existe uma sessão em andamento para a pessoa.' },
+        { status: 409, statusText: 'Conflict' },
+      );
+    expect(component.sessionStartBusy()).toBe(true);
+    http.expectOne(`${sessionsUrl}/in-progress`).flush(sessionDetail);
+    expect(dialog.open).toHaveBeenCalledWith(
+      expect.objectContaining({ primaryAction: 'Continuar sessão' }),
+    );
+    expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+    component.startSession(cycleDetail.days[0]);
+    http.expectNone(sessionsUrl);
+    confirmed.next(true);
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/workout-sessions', 100]);
+    http.expectOne(cycleUrl).flush(cycleDetail);
+    expect(toast.success).not.toHaveBeenCalled();
+  });
+
+  it('does not mistake a planning conflict for an existing session or retry POST automatically', () => {
+    create();
+    component.startSession(cycleDetail.days[0]);
+    http
+      .expectOne(sessionsUrl)
+      .flush(
+        { message: 'Prescrição foi alterada. Recarregue a ficha.' },
+        { status: 409, statusText: 'Conflict' },
+      );
+    http.expectOne(`${sessionsUrl}/in-progress`).flush(
+      { message: 'Sessão de treino em andamento não encontrada.' },
+      { status: 404, statusText: 'Not Found' },
+    );
+    expect(dialog.open).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('Prescrição foi alterada'),
+        primaryAction: 'Ok',
+      }),
+    );
+    http.expectOne(cycleUrl).flush(cycleDetail);
+    http.expectNone(sessionsUrl);
+    expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+  });
+
+  it.each([0, 500])(
+    'keeps uncertain opening error %s in recovery mode until a successful read allows retry',
+    (status) => {
+      create();
+      component.startSession(cycleDetail.days[0]);
+      const request = http.expectOne(sessionsUrl);
+      if (status === 0) request.error(new ProgressEvent('error'));
+      else request.flush({}, { status, statusText: 'Error' });
+      http.expectOne(`${sessionsUrl}/in-progress`).error(new ProgressEvent('error'));
+      fixture.detectChanges();
+      expect(component.sessionNeedsRecovery()).toBe(true);
+      expect(fixture.nativeElement.textContent).toContain('Verificar sessão');
+      component.startSession(cycleDetail.days[0]);
+      http.expectNone(sessionsUrl);
+      http.expectOne(`${sessionsUrl}/in-progress`).flush(
+        { message: 'Sessão de treino em andamento não encontrada.' },
+        { status: 404, statusText: 'Not Found' },
+      );
+      expect(component.sessionNeedsRecovery()).toBe(false);
+      component.startSession(cycleDetail.days[0]);
+      http.expectOne(sessionsUrl).flush({ id: 100 });
+    },
+  );
+
+  it.each([400, 401, 403, 404])(
+    'handles start error %s without changing cycle lifecycle',
+    (status) => {
+      create();
+      component.startSession(cycleDetail.days[0]);
+      http
+        .expectOne(sessionsUrl)
+        .flush({ message: 'Recusa da API' }, { status, statusText: 'Error' });
+      if (status === 400 || status === 404) http.expectOne(cycleUrl).flush(cycleDetail);
+      expect(component.sessionStartBusy()).toBe(false);
+      expect(component.cycle()?.workoutStatus).toBe('IN_PROGRESS');
+      expect(toast.success).not.toHaveBeenCalled();
+      if (status !== 401)
+        expect(dialog.open).toHaveBeenCalledWith(
+          expect.objectContaining({ message: 'Recusa da API' }),
+        );
+      else expect(dialog.open).not.toHaveBeenCalled();
+      http.expectNone(`${sessionsUrl}/in-progress`);
     },
   );
 });

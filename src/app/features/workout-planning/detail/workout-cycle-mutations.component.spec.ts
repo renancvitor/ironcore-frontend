@@ -13,6 +13,7 @@ import {
   WorkoutStatus,
 } from '../workout-planning.models';
 import { WorkoutCycleDetailComponent } from './workout-cycle-detail.component';
+import { WorkoutSessionsService } from '../../workout-sessions/workout-sessions.service';
 
 describe('Workout cycle detail mutations', () => {
   let fixture: ComponentFixture<WorkoutCycleDetailComponent>;
@@ -39,6 +40,7 @@ describe('Workout cycle detail mutations', () => {
       imports: [WorkoutCycleDetailComponent],
       providers: [
         provideRouter([]),
+        { provide: WorkoutSessionsService, useValue: {} },
         { provide: WorkoutPlanningService, useValue: service },
         { provide: DialogService, useValue: dialog },
         { provide: ToastService, useValue: toast },

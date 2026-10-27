@@ -5,7 +5,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { finalize, Observable, take } from 'rxjs';
+import { catchError, EMPTY, finalize, map, Observable, of, switchMap, take } from 'rxjs';
+import { WorkoutSessionsService } from '../../workout-sessions/workout-sessions.service';
 import { ExerciseCatalogComponent } from '../../exercise/catalog/exercise-catalog.component';
 import { ExerciseCatalogStateService } from '../../exercise/catalog/exercise-catalog-state.service';
 import { ListExercisesItemResponse } from '../../exercise/exercise.models';
@@ -63,6 +64,7 @@ import { createWorkoutDayForm } from '../workout-day.form';
 })
 export class WorkoutCycleDetailComponent implements OnInit {
   private readonly workoutPlanningService = inject(WorkoutPlanningService);
+  private readonly workoutSessionsService = inject(WorkoutSessionsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -85,8 +87,12 @@ export class WorkoutCycleDetailComponent implements OnInit {
   readonly canCancel = computed(() => this.canEdit());
   readonly lifecycleState = signal<'confirming' | 'saving' | null>(null);
   readonly lifecycleBusy = computed(() => this.lifecycleState() !== null);
+  readonly sessionStartingDayId = signal<number | null>(null);
+  readonly sessionStartBusy = computed(() => this.sessionStartingDayId() !== null);
+  readonly sessionNeedsRecovery = signal(false);
   readonly contextualActionsDisabled = computed(
     () =>
+      this.sessionStartBusy() ||
       this.lifecycleBusy() ||
       this.loading() ||
       !!this.error() ||
@@ -144,6 +150,98 @@ export class WorkoutCycleDetailComponent implements OnInit {
   );
   activityForm = createWorkoutActivityForm();
   activityOrderForm = createWorkoutActivityOrderForm(0);
+
+  canStartSession(day: WorkoutDayDetailResponse): boolean {
+    const cycle = this.cycle();
+    return (
+      cycle?.workoutStatus === 'IN_PROGRESS' &&
+      !!cycle.days.find((item) => item.id === day.id)?.activities.length
+    );
+  }
+
+  startSession(day: WorkoutDayDetailResponse): void {
+    if (!this.canStartSession(day) || this.contextualActionsDisabled()) return;
+    this.sessionStartingDayId.set(day.id);
+    let refreshCycle = false;
+    const operation = this.sessionNeedsRecovery()
+      ? this.recoverSession(
+          'Confira se a abertura anterior foi efetivada antes de iniciar outra sessão.',
+        )
+      : this.workoutSessionsService
+          .startWorkoutSession({
+            workoutCycleId: this.cycle()!.id,
+            workoutDayId: day.id,
+          })
+          .pipe(
+            catchError((error) => {
+              if (error.status === 401) return EMPTY;
+              const message =
+                error.error?.message ?? 'Não foi possível confirmar a abertura da sessão.';
+              if (error.status === 409 || error.status === 0 || error.status >= 500) {
+                refreshCycle = error.status === 409;
+                this.sessionNeedsRecovery.set(true);
+                return this.recoverSession(message);
+              }
+              refreshCycle = error.status === 400 || error.status === 404;
+              this.dialogService.open({
+                title: 'Não foi possível iniciar a sessão de treino',
+                message,
+                primaryAction: 'Ok',
+              });
+              return of(null);
+            }),
+          );
+    operation
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.sessionStartingDayId.set(null)),
+      )
+      .subscribe((response) => {
+        if (response) {
+          this.toastService.success('Sessão de treino iniciada com sucesso.');
+          void this.router.navigate(['/workout-sessions', response.id]);
+        } else if (refreshCycle) {
+          this.sessionStartingDayId.set(null);
+          this.loadCycle();
+        }
+      });
+  }
+
+  private recoverSession(message: string): Observable<null> {
+    return this.workoutSessionsService.getInProgressWorkoutSession().pipe(
+      switchMap((session) => {
+        this.sessionNeedsRecovery.set(false);
+        return this.dialogService
+          .open({
+            title: session ? 'Sessão de treino em andamento' : 'Abertura da sessão de treino',
+            message: session
+              ? `${message} Há uma sessão de “${session.workoutDayTitleSnapshot}” em andamento. Deseja continuar visualizando essa sessão?`
+              : `${message} Nenhuma sessão em andamento foi encontrada. Confira o planejamento antes de tentar novamente.`,
+            primaryAction: session ? 'Continuar sessão' : 'Ok',
+            ...(session ? { secondaryAction: 'Voltar' } : {}),
+          })
+          .pipe(
+            take(1),
+            map((confirmed) => {
+              if (confirmed && session)
+                void this.router.navigate(['/workout-sessions', session.id]);
+              return null;
+            }),
+          );
+      }),
+      catchError((error) => {
+        if (error.status === 401) return EMPTY;
+        this.sessionNeedsRecovery.set(true);
+        this.dialogService.open({
+          title: 'Não foi possível recuperar a sessão de treino',
+          message:
+            error.error?.message ?? 'Consulte novamente antes de tentar iniciar outra sessão.',
+          primaryAction: 'Ok',
+        });
+        return of(null);
+      }),
+    );
+  }
 
   startCycle(): void {
     if (!this.canStart() || this.contextualActionsDisabled()) return;
@@ -381,6 +479,7 @@ export class WorkoutCycleDetailComponent implements OnInit {
 
   private canMutateActivities(): boolean {
     return (
+      !this.sessionStartBusy() &&
       !this.lifecycleBusy() &&
       !!this.cycle() &&
       this.canEdit() &&
@@ -457,6 +556,7 @@ export class WorkoutCycleDetailComponent implements OnInit {
 
   loadCycle(): void {
     if (
+      this.sessionStartBusy() ||
       this.lifecycleBusy() ||
       this.loading() ||
       this.saving() ||
@@ -496,7 +596,14 @@ export class WorkoutCycleDetailComponent implements OnInit {
   }
 
   backToCycles(): void {
-    if (this.lifecycleBusy() || this.saving() || this.dayBusy() || this.activityBusy()) return;
+    if (
+      this.sessionStartBusy() ||
+      this.lifecycleBusy() ||
+      this.saving() ||
+      this.dayBusy() ||
+      this.activityBusy()
+    )
+      return;
     const destination =
       this.route.snapshot.queryParamMap?.get('from') === 'home' ? '/' : '/workout-planning';
     void this.router.navigate([destination]);
@@ -507,6 +614,7 @@ export class WorkoutCycleDetailComponent implements OnInit {
     if (
       !cycle ||
       !this.canEdit() ||
+      this.sessionStartBusy() ||
       this.lifecycleBusy() ||
       this.saving() ||
       this.editing() ||
@@ -629,6 +737,7 @@ export class WorkoutCycleDetailComponent implements OnInit {
 
   private canMutateDays(): boolean {
     return (
+      !this.sessionStartBusy() &&
       !this.lifecycleBusy() &&
       !!this.cycle() &&
       this.canEdit() &&
@@ -711,6 +820,7 @@ export class WorkoutCycleDetailComponent implements OnInit {
     if (
       !cycle ||
       !this.editing() ||
+      this.sessionStartBusy() ||
       this.lifecycleBusy() ||
       !this.canEdit() ||
       this.saving() ||

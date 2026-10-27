@@ -30,6 +30,7 @@ import { AppShellComponent } from './layout/app-shell/app-shell.component';
 import { ToastService } from './shared/components/toast/toast.service';
 import { ExerciseCatalogComponent } from './features/exercise/catalog/exercise-catalog.component';
 import { ExerciseDetailComponent } from './features/exercise/catalog/detail/exercise-detail.component';
+import { WorkoutSessionDetailComponent } from './features/workout-sessions/detail/workout-session-detail.component';
 
 function flushEmptyWorkoutSummary(http: HttpTestingController): void {
   for (const status of ['IN_PROGRESS', 'NOT_STARTED']) {
@@ -46,6 +47,20 @@ function flushEmptyWorkoutSummary(http: HttpTestingController): void {
 }
 
 describe('application routes', () => {
+  it('lazy loads session recovery and detail inside the existing protected shell', async () => {
+    const shell = routes.find((route) => route.path === '')!;
+    expect(shell.canActivate).toEqual([authGuard]);
+    const sessionRoutes = shell.children!.filter((route) =>
+      route.path?.startsWith('workout-sessions'),
+    );
+    expect(sessionRoutes.map((route) => route.path)).toEqual([
+      'workout-sessions',
+      'workout-sessions/:id',
+    ]);
+    for (const route of sessionRoutes) {
+      expect(await route.loadComponent?.()).toBe(WorkoutSessionDetailComponent);
+    }
+  });
   it('lazy loads the exercise catalog and detail inside the protected shell', async () => {
     const shell = routes.find((route) => route.path === '')!;
     expect(shell.canActivate).toEqual([authGuard]);

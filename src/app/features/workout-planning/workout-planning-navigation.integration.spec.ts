@@ -12,6 +12,7 @@ import { routes } from '../../app.routes';
 import { HomeComponent } from '../home/home.component';
 import { BodyMetricsService } from '../body-metrics/body-metrics.service';
 import { WorkoutPlanningService } from './workout-planning.service';
+import { WorkoutSessionsService } from '../workout-sessions/workout-sessions.service';
 import { cycleDetail, cyclePage } from './workout-planning.testing';
 import { WorkoutCycleCatalogComponent } from './catalog/workout-cycle-catalog.component';
 import { WorkoutCycleDetailComponent } from './detail/workout-cycle-detail.component';
@@ -41,6 +42,7 @@ describe('Workout Planning navigation', () => {
       const summaryCycles = [cycle, { ...cycle, id: 12, name: 'Corrida' }];
       await TestBed.configureTestingModule({
         providers: [
+          { provide: WorkoutSessionsService, useValue: {} },
           provideRouter(featureRoutes),
           {
             provide: BodyMetricsService,
@@ -133,6 +135,7 @@ describe('Workout Planning navigation', () => {
         .children!.filter((route) => route.path?.startsWith('workout-planning'));
       await TestBed.configureTestingModule({
         providers: [
+          { provide: WorkoutSessionsService, useValue: {} },
           provideRouter(featureRoutes),
           { provide: ToastService, useValue: { success: vi.fn() } },
           {
@@ -202,6 +205,7 @@ describe('Workout Planning navigation', () => {
     async (action) => {
       await TestBed.configureTestingModule({
         providers: [
+          { provide: WorkoutSessionsService, useValue: {} },
           provideRouter([{ path: 'workout-planning/:id', component: WorkoutCycleDetailComponent }]),
           {
             provide: WorkoutPlanningService,
@@ -313,6 +317,7 @@ describe('Workout Planning navigation', () => {
     };
     await TestBed.configureTestingModule({
       providers: [
+        { provide: WorkoutSessionsService, useValue: {} },
         provideRouter(featureRoutes),
         { provide: WorkoutPlanningService, useValue: service },
         { provide: ToastService, useValue: { success } },
@@ -420,6 +425,7 @@ describe('Workout Planning navigation', () => {
     const detail = vi.fn(() => of(cycleDetail));
     await TestBed.configureTestingModule({
       providers: [
+        { provide: WorkoutSessionsService, useValue: {} },
         provideRouter(featureRoutes),
         {
           provide: WorkoutPlanningService,

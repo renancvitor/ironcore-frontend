@@ -19,6 +19,8 @@ describe('SidebarComponent', () => {
           { path: 'exercises', component: SidebarComponent },
           { path: 'workout-planning', component: SidebarComponent },
           { path: 'workout-planning/:id', component: SidebarComponent },
+          { path: 'workout-sessions', component: SidebarComponent },
+          { path: 'workout-sessions/:id', component: SidebarComponent },
         ]),
       ],
     }).compileComponents();
@@ -36,6 +38,21 @@ describe('SidebarComponent', () => {
     const nav = fixture.nativeElement.querySelector('.ic-sidebar') as HTMLElement;
 
     expect(nav).toBeTruthy();
+  });
+
+  it('recovers the current session and stays active on its detail route', async () => {
+    const link = fixture.nativeElement.querySelector(
+      'a[href="/workout-sessions"]',
+    ) as HTMLAnchorElement;
+    expect(link.textContent).toContain('Sessão de treino');
+    link.click();
+    await fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe('/workout-sessions');
+    await TestBed.inject(Router).navigateByUrl('/workout-sessions/100');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(link.classList.contains('ic-sidebar__link--active')).toBe(true);
+    expect(link.getAttribute('aria-current')).toBe('page');
   });
 
   it('opens the exercise catalog from the sidebar and highlights its link', async () => {

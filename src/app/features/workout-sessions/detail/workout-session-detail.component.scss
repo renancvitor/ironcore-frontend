@@ -1,0 +1,130 @@
+@use '../../../../styles/responsive' as responsive;
+@use '../../../../styles/actions' as actions;
+
+:host {
+  display: block;
+  min-width: 0;
+}
+.ic-session,
+.ic-session__activities {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ic-space-5);
+}
+.ic-session__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--ic-space-4);
+}
+.ic-session__header-actions {
+  display: flex;
+  flex-shrink: 0;
+}
+h1,
+h2,
+h3,
+h4,
+p,
+dt,
+dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  color: var(--ic-text-primary);
+}
+h2,
+h3 {
+  font-size: 1.125rem;
+}
+p {
+  margin: var(--ic-space-2) 0 0;
+  color: var(--ic-text-secondary);
+}
+.ic-session__card {
+  background: var(--ic-surface);
+  border: var(--ic-border-width-default) solid var(--ic-border-soft);
+  border-radius: var(--ic-radius-md);
+  overflow: hidden;
+}
+.ic-session__card-header {
+  background: var(--ic-surface-elevated);
+  border-bottom: var(--ic-border-width-default) solid var(--ic-border-soft);
+  padding: var(--ic-space-4);
+}
+.ic-session__fields {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--ic-space-4);
+    padding: var(--ic-space-4);
+    min-width: 0;
+  }
+  dt {
+    color: var(--ic-text-secondary);
+  }
+  dd {
+    margin: 0;
+    text-align: right;
+    font-weight: 600;
+  }
+}
+.ic-session__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--ic-space-3);
+}
+.ic-session__card > .ic-session__actions,
+.ic-session__notes,
+.ic-session__notice {
+  padding: var(--ic-space-4);
+}
+.ic-session__notes p {
+  white-space: pre-wrap;
+}
+.ic-session__error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ic-space-3);
+}
+@include responsive.tablet {
+  .ic-session,
+  .ic-session__activities {
+    gap: var(--ic-space-4);
+  }
+}
+@include responsive.mobile {
+  .ic-session,
+  .ic-session__activities {
+    gap: var(--ic-space-3);
+  }
+  .ic-session__header {
+    @include actions.header;
+  }
+  .ic-session__header-actions {
+    @include actions.icons;
+  }
+  .ic-session__actions {
+    @include actions.form;
+  }
+  .ic-session__fields {
+    grid-template-columns: 1fr;
+  }
+  .ic-session__card-header,
+  .ic-session__fields > div,
+  .ic-session__card > .ic-session__actions,
+  .ic-session__notes,
+  .ic-session__notice {
+    padding: var(--ic-space-3);
+  }
+}
