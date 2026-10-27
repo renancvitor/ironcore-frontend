@@ -96,6 +96,20 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'workout-sessions',
+        loadComponent: () =>
+          import('./features/workout-sessions/detail/workout-session-detail.component').then(
+            (m) => m.WorkoutSessionDetailComponent,
+          ),
+      },
+      {
+        path: 'workout-sessions/:id',
+        loadComponent: () =>
+          import('./features/workout-sessions/detail/workout-session-detail.component').then(
+            (m) => m.WorkoutSessionDetailComponent,
+          ),
+      },
+      {
         path: 'exercises',
         loadComponent: () =>
           import('./features/exercise/catalog/exercise-catalog.component').then(

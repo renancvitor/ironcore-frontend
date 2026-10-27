@@ -43,6 +43,18 @@
   display: flex;
   flex-shrink: 0;
 }
+.ic-workout-detail__session-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--ic-space-3);
+  padding: var(--ic-space-3) var(--ic-space-4);
+  p {
+    margin: 0;
+    color: var(--ic-text-secondary);
+  }
+}
 .ic-workout-detail__delete:not(:disabled) {
   color: var(--ic-button-danger-bg);
 }
@@ -172,6 +184,10 @@ dd {
   }
 }
 @include responsive.mobile {
+  .ic-workout-detail__session-actions {
+    @include actions.form;
+    padding: var(--ic-space-3);
+  }
   .ic-workout-detail__day-header {
     flex-wrap: wrap;
   }

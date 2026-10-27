@@ -1,4 +1,4 @@
-<section class="ic-workout-detail" [attr.aria-busy]="lifecycleState() === 'saving'">
+<section class="ic-workout-detail" [attr.aria-busy]="lifecycleState() === 'saving' || sessionStartBusy()">
   <header class="ic-workout-detail__header">
     <div>
       <h1>Detalhes do ciclo de treino</h1>
@@ -24,7 +24,7 @@
         type="button"
         [attr.aria-label]="backLabel"
         [matTooltip]="backLabel"
-        [disabled]="lifecycleBusy() || saving() || dayBusy() || activityBusy()"
+        [disabled]="sessionStartBusy() || lifecycleBusy() || saving() || dayBusy() || activityBusy()"
         (click)="backToCycles()"
       >
         <mat-icon>arrow_back</mat-icon>
@@ -269,6 +269,16 @@
               </div>
             }
           </header>
+          @if (canStartSession(day)) {
+            <div class="ic-workout-detail__session-actions">
+              @if (sessionStartingDayId() === day.id) {
+                <p role="status">Iniciando ou recuperando sessão…</p>
+              }
+              <app-button [disabled]="contextualActionsDisabled()" (click)="startSession(day)">
+                {{ sessionNeedsRecovery() ? 'Verificar sessão' : 'Iniciar sessão' }}
+              </app-button>
+            </div>
+          }
           <ol class="ic-workout-detail__activities">
             @for (activity of day.activities; track activity.id) {
               <li class="ic-workout-detail__activity">

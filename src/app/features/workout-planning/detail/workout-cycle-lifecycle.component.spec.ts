@@ -103,6 +103,7 @@ describe('Workout cycle lifecycle with the HTTP service', () => {
     component.startEdit();
     component.openDayForm('create');
     component.openActivitySelector(cycleDetail.days[0]);
+    component.startSession(cycleDetail.days[0]);
     component.deleteDay(cycleDetail.days[0]);
     component.deleteActivity(cycleDetail.days[0], cycleDetail.days[0].activities[0]);
     component.saveDay();
