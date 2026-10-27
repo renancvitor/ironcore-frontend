@@ -1,11 +1,14 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, computed, DestroyRef, DOCUMENT, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { filter, finalize, fromEvent, Subject, take, takeUntil } from 'rxjs';
+import { catchError, defaultIfEmpty, defer, filter, finalize, fromEvent, map, Observable, of, Subject, take, takeUntil } from 'rxjs';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
@@ -16,14 +19,21 @@ import {
   WORKOUT_SESSION_CLOSE_REASON_LABELS,
   WORKOUT_SESSION_STATUS_LABELS,
 } from '../workout-sessions.labels';
-import { GetWorkoutSessionDetailResponse } from '../workout-sessions.models';
 import { WorkoutSessionsService } from '../workout-sessions.service';
+import { WorkoutSessionEditorState } from './workout-session-editor-state.service';
+import { WorkoutSessionNavigation } from './workout-session-pending-changes.guard';
+import { WorkoutSessionActivityComponent } from './activity/workout-session-activity.component';
+import { executionFieldError } from '../workout-session-execution.form';
 
 @Component({
   selector: 'app-workout-session-detail',
+  providers: [WorkoutSessionEditorState],
   imports: [
     DatePipe,
-    DecimalPipe,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    WorkoutSessionActivityComponent,
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
@@ -42,39 +52,48 @@ export class WorkoutSessionDetailComponent implements OnInit {
   private readonly document = inject(DOCUMENT);
   private readonly dialogService = inject(DialogService);
   private readonly toastService = inject(ToastService);
+  private readonly navigation = inject(WorkoutSessionNavigation);
+  readonly editor = inject(WorkoutSessionEditorState);
   private readonly contextChanged = new Subject<void>();
   private sessionId: number | null = null;
   private validRoute = true;
+  private initialized = false;
+  private acceptedRawId: string | null = null;
+  private contextRequest = 0;
+  readonly navigationConfirming = signal(false);
 
-  readonly session = signal<GetWorkoutSessionDetailResponse | null>(null);
+  readonly session = this.editor.session;
   readonly loading = signal(false);
-  readonly error = signal('');
+  readonly error = this.editor.loadError;
   readonly empty = signal(false);
-  readonly notFound = signal(false);
+  readonly notFound = this.editor.notFound;
   readonly closeState = signal<'confirming' | 'saving' | null>(null);
-  readonly busy = computed(() => this.loading() || this.closeState() !== null);
+  readonly editingBlocked = computed(() => this.loading() || this.closeState() !== null ||
+    this.navigationConfirming() || this.navigation.pending() || this.editor.confirming());
+  readonly busy = computed(() => this.editingBlocked() || this.editor.busy());
   readonly canClose = computed(
-    () => this.session()?.status === 'IN_PROGRESS' && !this.busy() && !this.error(),
+    () => this.session()?.status === 'IN_PROGRESS' && !this.busy() && !this.error() &&
+      !this.editor.needsRefresh() && !this.editor.hasUncertainCreation(),
   );
   readonly statusLabels = WORKOUT_SESSION_STATUS_LABELS;
   readonly closeReasonLabels = WORKOUT_SESSION_CLOSE_REASON_LABELS;
   readonly weekDayLabels = WEEK_DAY_LABELS;
+  readonly fieldError = executionFieldError;
 
   ngOnInit(): void {
+    this.editor.isBlocked = () => this.editingBlocked();
+    this.navigation.register(this, () => this.confirmLeave());
+    this.destroyRef.onDestroy(() => this.navigation.unregister(this));
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
-      this.contextChanged.next();
-      this.session.set(null);
-      this.closeState.set(null);
-      this.loading.set(false);
-      this.error.set('');
-      this.empty.set(false);
-      this.notFound.set(false);
       const rawId = params.get('id');
-      this.sessionId = rawId === null ? null : Number(rawId);
-      this.validRoute =
-        rawId === null || (Number.isSafeInteger(this.sessionId) && this.sessionId! > 0);
-      if (this.validRoute) this.loadSession();
-      else this.notFound.set(true);
+      if (this.initialized && rawId === this.acceptedRawId) return;
+      const request = ++this.contextRequest;
+      if (!this.initialized || this.navigation.approvedFor(rawId)) this.acceptContext(rawId);
+      else this.confirmLeave().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((accepted) => {
+        if (request !== this.contextRequest) return;
+        if (accepted) this.acceptContext(rawId);
+        else this.restoreContextUrl();
+      });
     });
     fromEvent(this.document, 'visibilitychange')
       .pipe(
@@ -84,10 +103,55 @@ export class WorkoutSessionDetailComponent implements OnInit {
       .subscribe(() => {
         if (this.session()?.status !== 'CLOSED') this.loadSession();
       });
+    fromEvent<BeforeUnloadEvent>(this.document.defaultView!, 'beforeunload')
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe((event) => {
+        if (this.editor.hasPending() || this.editor.busy() || this.closeState() !== null) {
+          event.preventDefault();
+          event.returnValue = '';
+        }
+      });
   }
 
-  loadSession(): void {
-    if (this.busy() || !this.validRoute) return;
+  private acceptContext(rawId: string | null): void {
+    this.contextChanged.next();
+    this.editor.reset();
+    this.initialized = true;
+    this.acceptedRawId = rawId;
+    this.closeState.set(null);
+    this.loading.set(false);
+    this.error.set('');
+    this.empty.set(false);
+    this.notFound.set(false);
+    this.sessionId = rawId === null ? null : Number(rawId);
+    this.validRoute = rawId === null || (Number.isSafeInteger(this.sessionId) && this.sessionId! > 0);
+    if (this.validRoute) this.loadSession(true);
+    else this.notFound.set(true);
+  }
+
+  private restoreContextUrl(): void {
+    const url = this.acceptedRawId === null ? '/workout-sessions' : `/workout-sessions/${this.acceptedRawId}`;
+    if (this.router.url !== url) void this.router.navigateByUrl(url, { replaceUrl: true }).catch(() => {
+      this.error.set('Não foi possível restaurar a navegação. Seus rascunhos permanecem nesta página.');
+    });
+  }
+
+  confirmLeave(): Observable<boolean> {
+    if (this.editor.busy() || this.closeState() !== null || this.navigationConfirming()) return of(false);
+    if (!this.editor.hasPending()) return of(true);
+    this.navigationConfirming.set(true);
+    return defer(() => this.dialogService.open({
+      title: 'Sair com alterações não salvas',
+      message: 'Há rascunhos não salvos. Sair descartará as alterações locais; não desfaz gravações já enviadas ao servidor.',
+      primaryAction: 'Sair sem salvar', secondaryAction: 'Continuar preenchendo',
+    })).pipe(take(1), defaultIfEmpty(false), map((accepted) => {
+      this.navigationConfirming.set(false);
+      return accepted === true;
+    }), catchError(() => of(false)),
+      finalize(() => this.navigationConfirming.set(false)), takeUntilDestroyed(this.destroyRef));
+  }
+
+  loadSession(acceptingContext = false): void {
+    if ((!acceptingContext && this.busy()) || !this.validRoute) return;
     this.loading.set(true);
     this.error.set('');
     this.empty.set(false);
@@ -109,13 +173,15 @@ export class WorkoutSessionDetailComponent implements OnInit {
             void this.router.navigate(['/workout-sessions', session.id], { replaceUrl: true });
             return;
           }
-          this.session.set(session);
+          if (session) this.editor.reconcile(session);
+          else this.session.set(null);
           this.empty.set(session === null);
         },
         error: (error) => {
           if (error.status === 401) return;
           if (id !== null && error.status === 404) {
-            this.session.set(null);
+            if (!this.editor.hasPending()) this.session.set(null);
+            this.editor.needsRefresh.set(true);
             this.notFound.set(true);
             return;
           }
@@ -127,15 +193,15 @@ export class WorkoutSessionDetailComponent implements OnInit {
   closeSession(): void {
     if (!this.canClose()) return;
     const session = this.session()!;
+    const pending = this.editor.hasPending();
     this.closeState.set('confirming');
-    this.dialogService
-      .open({
+    defer(() => this.dialogService.open({
         title: 'Encerrar sessão de treino',
-        message: `Deseja encerrar a sessão de “${session.workoutDayTitleSnapshot}”? O encerramento não confirma a execução dos exercícios planejados.`,
-        primaryAction: 'Encerrar sessão',
+        message: `Deseja encerrar a sessão de “${session.workoutDayTitleSnapshot}”? O encerramento não confirma a execução dos exercícios planejados.${pending ? ' Há alterações não salvas. Volte para salvá-las individualmente ou encerre descartando esses rascunhos.' : ''}`,
+        primaryAction: pending ? 'Encerrar sem salvar alterações' : 'Encerrar sessão',
         secondaryAction: 'Voltar',
-      })
-      .pipe(take(1), takeUntil(this.contextChanged), takeUntilDestroyed(this.destroyRef))
+      }))
+      .pipe(take(1), defaultIfEmpty(false), catchError(() => of(false)), takeUntil(this.contextChanged), takeUntilDestroyed(this.destroyRef))
       .subscribe((confirmed) => {
         this.closeState.set(null);
         if (!confirmed || !this.canClose()) return;
@@ -155,6 +221,7 @@ export class WorkoutSessionDetailComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.session.update((current) => (current ? { ...current, ...response } : null));
+          this.editor.discardAll();
           if (response.closeReason === 'AUTO_EXPIRED') {
             this.toastService.info('A sessão foi encerrada automaticamente por expiração.');
           } else {

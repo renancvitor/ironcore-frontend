@@ -91,6 +91,11 @@ p {
 .ic-session__notes p {
   white-space: pre-wrap;
 }
+.ic-session__notes {
+  fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+  legend { margin-block: var(--ic-space-3); color: var(--ic-text-secondary); }
+  mat-form-field { width: 100%; min-width: 0; }
+}
 .ic-session__error {
   display: flex;
   flex-direction: column;

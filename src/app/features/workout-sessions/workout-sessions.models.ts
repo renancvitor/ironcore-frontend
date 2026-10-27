@@ -4,6 +4,35 @@ export type WorkoutSessionStatus = 'IN_PROGRESS' | 'CLOSED';
 export type WorkoutSessionCloseReason = 'MANUAL' | 'AUTO_EXPIRED';
 export type ActualLoadMode = 'TOTAL' | 'PER_SIDE';
 
+export interface UpdateWorkoutSessionNotesRequest {
+  notes: string | null;
+}
+
+export interface UpdateWorkoutSessionActivityExecutionRequest {
+  actualDurationMinutes?: number | null;
+  actualDistanceKm?: number | null;
+  notes?: string | null;
+}
+
+export interface CreateWorkoutSessionSetRequest {
+  setNumber: number;
+  actualLoadKg?: number | null;
+  actualLoadMode?: ActualLoadMode | null;
+  actualReps?: number | null;
+  notes?: string | null;
+}
+
+export interface UpdateWorkoutSessionSetRequest {
+  actualLoadKg?: number | null;
+  actualLoadMode?: ActualLoadMode | null;
+  actualReps?: number | null;
+  notes?: string | null;
+}
+
+export interface ChangeWorkoutSessionActivityLoadModeRequest {
+  actualLoadMode: ActualLoadMode;
+}
+
 export interface StartWorkoutSessionRequest {
   workoutCycleId: number;
   workoutDayId: number;
@@ -67,6 +96,7 @@ export interface WorkoutSessionActivityDetailResponse {
   plannedNotesSnapshot: string | null;
   actualDurationMinutes: number | null;
   actualDistanceKm: number | null;
+  actualLoadMode: ActualLoadMode | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string | null;
@@ -79,6 +109,7 @@ export interface WorkoutSessionSetDetailResponse {
   actualLoadKg: number | null;
   actualLoadMode: ActualLoadMode | null;
   actualReps: number | null;
+  normalizedLoadKg: number | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string | null;

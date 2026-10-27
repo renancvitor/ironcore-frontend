@@ -1,4 +1,12 @@
-import { GetWorkoutSessionDetailResponse } from './workout-sessions.models';
+import { GetWorkoutSessionDetailResponse, WorkoutSessionSetDetailResponse } from './workout-sessions.models';
+
+export function sessionSet(overrides: Partial<WorkoutSessionSetDetailResponse> = {}): WorkoutSessionSetDetailResponse {
+  return {
+    id: 300, setNumber: 1, actualLoadKg: null, actualLoadMode: null, actualReps: 8,
+    normalizedLoadKg: null, notes: null, createdAt: '2026-10-27T13:01:00Z', updatedAt: null,
+    ...overrides,
+  };
+}
 
 export const sessionDetail: GetWorkoutSessionDetailResponse = {
   id: 100,
@@ -36,6 +44,7 @@ export const sessionDetail: GetWorkoutSessionDetailResponse = {
       plannedNotesSnapshot: 'Orientação histórica',
       actualDurationMinutes: null,
       actualDistanceKm: null,
+      actualLoadMode: null,
       notes: null,
       createdAt: '2026-10-27T13:00:00Z',
       updatedAt: null,

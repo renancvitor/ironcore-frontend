@@ -1,0 +1,24 @@
+@use '../../../../../styles/responsive' as responsive;
+@use '../../../../../styles/actions' as actions;
+
+:host { display: block; min-width: 0; }
+.ic-set {
+  padding: var(--ic-space-4);
+  border: 1px solid var(--ic-border-soft);
+  border-radius: var(--ic-radius-md);
+  header, footer { display: flex; flex-wrap: wrap; gap: var(--ic-space-3); align-items: center; }
+  h4, p { margin: 0; overflow-wrap: anywhere; }
+  header { justify-content: space-between; margin-bottom: var(--ic-space-3); }
+  header span { color: var(--ic-text-secondary); }
+  footer { justify-content: flex-end; margin-top: var(--ic-space-3); }
+  fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+  mat-form-field { width: 100%; min-width: 0; }
+  summary { cursor: pointer; margin-bottom: var(--ic-space-3); }
+  p { margin-top: var(--ic-space-2); white-space: pre-wrap; }
+}
+.ic-set__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ic-space-3); }
+.ic-set__legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@include responsive.mobile {
+  .ic-set { padding: var(--ic-space-3); footer { @include actions.form; } }
+  .ic-set__fields { grid-template-columns: 1fr; }
+}
