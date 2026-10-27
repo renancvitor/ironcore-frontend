@@ -7,6 +7,13 @@ import {
   GetWorkoutSessionDetailResponse,
   StartWorkoutSessionRequest,
   StartWorkoutSessionResponse,
+  UpdateWorkoutSessionNotesRequest,
+  UpdateWorkoutSessionActivityExecutionRequest,
+  CreateWorkoutSessionSetRequest,
+  UpdateWorkoutSessionSetRequest,
+  ChangeWorkoutSessionActivityLoadModeRequest,
+  WorkoutSessionActivityDetailResponse,
+  WorkoutSessionSetDetailResponse,
 } from './workout-sessions.models';
 
 @Injectable({ providedIn: 'root' })
@@ -38,5 +45,43 @@ export class WorkoutSessionsService {
 
   closeWorkoutSession(id: number): Observable<CloseWorkoutSessionResponse> {
     return this.http.patch<CloseWorkoutSessionResponse>(`${this.sessionsUrl}/${id}/close`, null);
+  }
+
+  updateWorkoutSessionNotes(id: number, request: UpdateWorkoutSessionNotesRequest) {
+    return this.http.patch<GetWorkoutSessionDetailResponse>(`${this.sessionsUrl}/${id}/notes`, request);
+  }
+
+  updateWorkoutSessionActivityExecution(
+    id: number, activityId: number, request: UpdateWorkoutSessionActivityExecutionRequest,
+  ) {
+    return this.http.patch<WorkoutSessionActivityDetailResponse>(
+      `${this.sessionsUrl}/${id}/activities/${activityId}/execution`, request,
+    );
+  }
+
+  createWorkoutSessionSet(id: number, activityId: number, request: CreateWorkoutSessionSetRequest) {
+    return this.http.post<WorkoutSessionSetDetailResponse>(
+      `${this.sessionsUrl}/${id}/activities/${activityId}/sets`, request,
+    );
+  }
+
+  updateWorkoutSessionSet(
+    id: number, activityId: number, setId: number, request: UpdateWorkoutSessionSetRequest,
+  ) {
+    return this.http.patch<WorkoutSessionSetDetailResponse>(
+      `${this.sessionsUrl}/${id}/activities/${activityId}/sets/${setId}`, request,
+    );
+  }
+
+  deleteWorkoutSessionSet(id: number, activityId: number, setId: number): Observable<void> {
+    return this.http.delete<void>(`${this.sessionsUrl}/${id}/activities/${activityId}/sets/${setId}`);
+  }
+
+  changeWorkoutSessionActivityLoadMode(
+    id: number, activityId: number, request: ChangeWorkoutSessionActivityLoadModeRequest,
+  ) {
+    return this.http.patch<WorkoutSessionActivityDetailResponse>(
+      `${this.sessionsUrl}/${id}/activities/${activityId}/load-mode`, request,
+    );
   }
 }

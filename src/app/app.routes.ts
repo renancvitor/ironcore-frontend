@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { authGuard } from './core/guards/auth.guard';
 import { bodyMetricsHistoryGuard } from './features/body-metrics/history/body-metrics-history.guard';
+import { workoutSessionEntryGuard, workoutSessionPendingChangesGuard } from './features/workout-sessions/detail/workout-session-pending-changes.guard';
 
 export const routes: Routes = [
   {
@@ -97,6 +98,9 @@ export const routes: Routes = [
       },
       {
         path: 'workout-sessions',
+        canActivate: [workoutSessionEntryGuard],
+        canDeactivate: [workoutSessionPendingChangesGuard],
+        runGuardsAndResolvers: 'always',
         loadComponent: () =>
           import('./features/workout-sessions/detail/workout-session-detail.component').then(
             (m) => m.WorkoutSessionDetailComponent,
@@ -104,6 +108,9 @@ export const routes: Routes = [
       },
       {
         path: 'workout-sessions/:id',
+        canActivate: [workoutSessionEntryGuard],
+        canDeactivate: [workoutSessionPendingChangesGuard],
+        runGuardsAndResolvers: 'always',
         loadComponent: () =>
           import('./features/workout-sessions/detail/workout-session-detail.component').then(
             (m) => m.WorkoutSessionDetailComponent,

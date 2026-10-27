@@ -2,12 +2,12 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import { BehaviorSubject, of, Subject } from 'rxjs';
+import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 import { API_BASE_URL } from '../../../core/http/api-base-url.token';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { ToastService } from '../../../shared/components/toast/toast.service';
 import { GetWorkoutSessionDetailResponse } from '../workout-sessions.models';
-import { sessionDetail } from '../workout-sessions.testing';
+import { sessionDetail, sessionSet } from '../workout-sessions.testing';
 import { WorkoutSessionDetailComponent } from './workout-session-detail.component';
 
 describe('WorkoutSessionDetailComponent with HTTP', () => {
@@ -36,6 +36,7 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
       ],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
+    vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
   });
   afterEach(() => {
     http.verify();
@@ -58,7 +59,7 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     ).find((element) => element.textContent?.trim() === text)!;
   }
 
-  it('loads independently on refresh and renders only historical prescriptions', () => {
+  it('loads independently on refresh and renders historical prescriptions with empty execution controls', () => {
     create();
     expect(fixture.nativeElement.querySelector('app-loading')).not.toBeNull();
     component.loadSession();
@@ -82,7 +83,15 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     ]) {
       expect(fixture.nativeElement.textContent).toContain(text);
     }
-    expect(fixture.nativeElement.querySelectorAll('input, textarea, select')).toHaveLength(0);
+    expect(component.editor.activities()[0].rows).toHaveLength(3);
+    for (const row of component.editor.activities()[0].rows) {
+      expect(row.form.getRawValue()).toEqual({ actualLoadKg: null, actualReps: null, notes: '' });
+      expect(row.persisted).toBeNull();
+    }
+    expect(component.editor.activities()[0].form.getRawValue()).toEqual({
+      actualDurationMinutes: null, actualDistanceKm: null, notes: '',
+    });
+    http.expectNone((request) => ['POST', 'PATCH', 'DELETE'].includes(request.method));
     expect(component.session()?.activities[0].sets).toEqual([]);
     expect(component.session()?.activities[0].actualDurationMinutes).toBeNull();
     http.expectNone(
@@ -125,11 +134,11 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     const activity = fixture.nativeElement.querySelector('article');
     expect(activity.textContent).toContain('0 kg');
     expect(activity.textContent).toContain('0 s');
-    expect(activity.textContent).not.toContain('Repetições');
+    expect(activity.querySelector('.ic-activity__reference').textContent).not.toContain('Repetições');
     expect(activity.textContent).not.toMatch(/null|undefined/);
   });
 
-  it('preserves activity order and existing execution without creating execution controls', () => {
+  it('preserves activity order and existing execution in their historical rows', () => {
     const data = structuredClone(sessionDetail);
     data.activities[0].actualDurationMinutes = 7;
     data.activities[0].actualDistanceKm = 1.2;
@@ -140,11 +149,13 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
         actualLoadKg: 20,
         actualLoadMode: 'PER_SIDE',
         actualReps: 9,
+        normalizedLoadKg: 40,
         notes: 'Registro real',
         createdAt: data.createdAt,
         updatedAt: null,
       },
     ];
+    data.activities[0].actualLoadMode = 'PER_SIDE';
     data.activities.push({
       ...structuredClone(data.activities[0]),
       id: 201,
@@ -157,7 +168,13 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     ).map((element) => element.textContent!.trim());
     expect(titles).toEqual(['Exercício preservado', 'Segundo exercício']);
     expect(component.session()?.activities).toEqual(data.activities);
-    expect(fixture.nativeElement.querySelectorAll('input, textarea, select')).toHaveLength(0);
+    expect(component.editor.activities()[0].rows[0].persisted?.id).toBe(300);
+    expect(component.editor.activities()[0].rows[0].form.getRawValue()).toEqual({
+      actualLoadKg: 20, actualReps: 9, notes: 'Registro real',
+    });
+    expect(component.editor.activities()[0].form.getRawValue()).toEqual({
+      actualDurationMinutes: 7, actualDistanceKm: 1.2, notes: '',
+    });
     component.closeSession();
     http.expectOne(`${url}/100/close`).flush({ id: 100, status: 'CLOSED', closeReason: 'MANUAL' });
     expect(component.session()?.activities).toEqual(data.activities);
@@ -363,7 +380,7 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     http.expectNone(() => true);
   });
 
-  it('cancels old reads and old closures when the route changes to another session', () => {
+  it('cancels old reads but refuses context changes while closure is in progress', () => {
     create();
     const first = http.expectOne(`${url}/100`);
     params.next(convertToParamMap({ id: '101' }));
@@ -372,22 +389,172 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     component.closeSession();
     const close = http.expectOne(`${url}/101/close`);
     params.next(convertToParamMap({ id: '102' }));
-    expect(close.cancelled).toBe(true);
-    expect(component.session()).toBeNull();
-    http.expectOne(`${url}/102`).flush({ ...sessionDetail, id: 102 });
-    expect(component.session()?.id).toBe(102);
-    expect(component.canClose()).toBe(true);
-    expect(toast.success).not.toHaveBeenCalled();
+    expect(close.cancelled).toBe(false);
+    expect(component.session()?.id).toBe(101);
+    http.expectNone(`${url}/102`);
+    close.flush({ id: 101, status: 'CLOSED', closeReason: 'MANUAL' });
+    expect(component.session()?.id).toBe(101);
+    expect(component.canClose()).toBe(false);
+    expect(toast.success).toHaveBeenCalledTimes(1);
   });
 
-  it('ignores a confirmation from a previous route', () => {
+  it('keeps the previous route while its closure confirmation is open', () => {
     load();
     const confirmed = new Subject<boolean>();
     dialog.open.mockReturnValue(confirmed);
     component.closeSession();
     params.next(convertToParamMap({ id: '101' }));
-    http.expectOne(`${url}/101`).flush({ ...sessionDetail, id: 101 });
-    confirmed.next(true);
+    http.expectNone(`${url}/101`);
+    expect(component.session()?.id).toBe(100);
+    confirmed.next(false);
     http.expectNone((request) => request.method === 'PATCH');
+  });
+
+  it.each([false, undefined, 'error'])(
+    'preserves the accepted context and forms when parameter confirmation returns %s', (result) => {
+      load();
+      const form = component.editor.activities()[0].rows[0].form;
+      form.controls.actualReps.setValue(7);
+      dialog.open.mockReturnValue(result === 'error' ? throwError(() => new Error('Falha')) : of(result));
+      vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      params.next(convertToParamMap({ id: '101' }));
+      expect(component.session()?.id).toBe(100);
+      expect(component.editor.activities()[0].rows[0].form).toBe(form);
+      expect(form.controls.actualReps.value).toBe(7);
+      expect(component.navigationConfirming()).toBe(false);
+      http.expectNone(`${url}/101`);
+    },
+  );
+
+  it('changes a reused parameter context only after explicit discard confirmation', () => {
+    load();
+    component.editor.notes.setValue('Não perder silenciosamente');
+    const confirmed = new Subject<boolean>();
+    dialog.open.mockReturnValue(confirmed);
+    params.next(convertToParamMap({ id: '101' }));
+    expect(component.session()?.id).toBe(100);
+    http.expectNone(`${url}/101`);
+    confirmed.next(true);
+    http.expectOne(`${url}/101`).flush({ ...sessionDetail, id: 101 });
+    expect(component.session()?.id).toBe(101);
+    expect(component.editor.notes.value).toBe('');
+  });
+
+  it('does not reset a writing editor when paramMap changes without a navigation approval', () => {
+    load();
+    const activity = component.editor.activities()[0];
+    const form = activity.rows[0].form;
+    form.controls.actualReps.setValue(8);
+    component.editor.saveSet(activity, activity.rows[0]);
+    const writing = http.expectOne(`${url}/100/activities/200/sets`);
+    params.next(convertToParamMap({ id: '101' }));
+    expect(writing.cancelled).toBe(false);
+    expect(component.session()?.id).toBe(100);
+    expect(component.editor.activities()[0].rows[0].form).toBe(form);
+    http.expectNone(`${url}/101`);
+    writing.flush(sessionSet());
+    http.expectOne(`${url}/100`).flush({ ...sessionDetail, activities: [
+      { ...sessionDetail.activities[0], sets: [sessionSet()] },
+    ] });
+    expect(component.session()?.id).toBe(100);
+    expect(component.editor.activities()[0].rows[0].persisted?.id).toBe(300);
+  });
+
+  it('preserves the same edited form on visibility refresh and exposes real expiration', () => {
+    load();
+    const form = component.editor.activities()[0].rows[0].form;
+    form.controls.notes.setValue('Rascunho');
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    document.dispatchEvent(new Event('visibilitychange'));
+    http.expectOne(`${url}/100`).flush({ ...sessionDetail, status: 'CLOSED', closeReason: 'AUTO_EXPIRED' });
+    fixture.detectChanges();
+    expect(component.editor.activities()[0].rows[0].form).toBe(form);
+    expect(form.controls.notes.value).toBe('Rascunho');
+    expect(component.editor.canWrite()).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('rascunhos não enviados foram preservados');
+  });
+
+  it('requires explicit closure without saving and retains drafts until success', () => {
+    load();
+    component.editor.notes.setValue('Relato ainda não salvo');
+    component.closeSession();
+    expect(dialog.open).toHaveBeenCalledWith(expect.objectContaining({
+      primaryAction: 'Encerrar sem salvar alterações', message: expect.stringContaining('alterações não salvas'),
+    }));
+    const close = http.expectOne(`${url}/100/close`);
+    expect(component.editor.notes.value).toBe('Relato ainda não salvo');
+    http.expectNone(`${url}/100/notes`);
+    close.flush({ id: 100, status: 'CLOSED', closeReason: 'MANUAL' });
+    expect(component.editor.hasPending()).toBe(false);
+    expect(component.editor.notes.value).toBe('');
+  });
+
+  it('saves the general report through the real form submit without saving other drafts', () => {
+    load();
+    component.editor.activities()[0].rows[0].form.controls.actualReps.setValue(7);
+    const textarea = fixture.nativeElement.querySelector('#session-execution-notes') as HTMLTextAreaElement;
+    textarea.value = 'Relato geral informado';
+    textarea.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('form.ic-session__notes').dispatchEvent(new Event('submit', { cancelable: true }));
+    const request = http.expectOne(`${url}/100/notes`);
+    expect(request.request.body).toEqual({ notes: 'Relato geral informado' });
+    const saved = { ...sessionDetail, notes: 'Relato geral informado' };
+    request.flush(saved);
+    http.expectOne(`${url}/100`).flush(saved);
+    expect(component.editor.activities()[0].rows[0].form.controls.actualReps.value).toBe(7);
+    http.expectNone((mutation) => mutation.method === 'POST');
+  });
+
+  it('keeps dirty values when closure confirmation is cancelled', () => {
+    load();
+    component.editor.notes.setValue('Continuar preenchendo');
+    dialog.open.mockReturnValue(of(false));
+    component.closeSession();
+    expect(component.editor.notes.value).toBe('Continuar preenchendo');
+    expect(component.editor.hasPending()).toBe(true);
+    expect(component.canClose()).toBe(true);
+    http.expectNone(`${url}/100/close`);
+  });
+
+  it('keeps drafts after a failed closure and reconciliation', () => {
+    load();
+    component.editor.notes.setValue('Preservar após falha');
+    component.closeSession();
+    http.expectOne(`${url}/100/close`).error(new ProgressEvent('error'));
+    http.expectOne(`${url}/100`).flush({ ...sessionDetail, status: 'CLOSED', closeReason: 'AUTO_EXPIRED' });
+    expect(component.editor.notes.value).toBe('Preservar após falha');
+    expect(component.editor.hasPending()).toBe(true);
+    expect(component.canClose()).toBe(false);
+  });
+
+  it('prevents closure while a set is saving, being reconciled, or still uncertain', () => {
+    load();
+    const activity = component.editor.activities()[0];
+    activity.rows[0].form.controls.actualReps.setValue(8);
+    component.editor.saveSet(activity, activity.rows[0]);
+    component.closeSession();
+    expect(dialog.open).not.toHaveBeenCalled();
+    http.expectOne(`${url}/100/activities/200/sets`).error(new ProgressEvent('error'));
+    expect(component.canClose()).toBe(false);
+    http.expectOne(`${url}/100`).flush(sessionDetail);
+    expect(component.canClose()).toBe(false);
+    component.closeSession();
+    http.expectNone(`${url}/100/close`);
+  });
+
+  it('warns before unload only with drafts or pending operations and removes its listener', () => {
+    load();
+    const clean = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(clean);
+    expect(clean.defaultPrevented).toBe(false);
+    component.editor.notes.setValue('Pendente');
+    const dirty = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(dirty);
+    expect(dirty.defaultPrevented).toBe(true);
+    fixture.destroy();
+    const destroyed = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(destroyed);
+    expect(destroyed.defaultPrevented).toBe(false);
   });
 });
