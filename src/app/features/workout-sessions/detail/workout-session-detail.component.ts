@@ -247,6 +247,18 @@ export class WorkoutSessionDetailComponent implements OnInit {
     if (!this.busy()) void this.router.navigate(['/workout-planning']);
   }
 
+  returnToList(): void {
+    if (this.busy()) return;
+    if (this.route.snapshot.queryParamMap.get('from') === 'history' || this.session()?.status === 'CLOSED') {
+      void this.router.navigate(['/workout-sessions/history']);
+    } else this.backToPlanning();
+  }
+
+  get returnLabel(): string {
+    return this.route.snapshot.queryParamMap.get('from') === 'history' || this.session()?.status === 'CLOSED'
+      ? 'Voltar ao histórico de sessões' : 'Voltar ao planejamento de treinos';
+  }
+
   openSourceCycle(): void {
     const id = this.session()?.workoutCycleId;
     if (!this.busy() && id !== null && id !== undefined) {

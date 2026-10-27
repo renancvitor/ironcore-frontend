@@ -470,14 +470,171 @@ describe('WorkoutSessionEditorState with HTTP', () => {
     expect(editor.session()?.activities[0].sets).toEqual([]);
   });
 
-  it('stops writes on CLOSED while keeping unsent data available for review', () => {
+  it('keeps unsent data editable after expiration without inventing executed sets', () => {
     row().form.controls.notes.setValue('Rascunho preservado');
     editor.reconcile({ ...detail, status: 'CLOSED', closeReason: 'AUTO_EXPIRED' });
     expect(row().form.controls.notes.value).toBe('Rascunho preservado');
     expect(editor.hasPending()).toBe(true);
-    expect(editor.canWrite()).toBe(false);
+    expect(editor.canWrite()).toBe(true);
+    expect(activity().rows).toHaveLength(1);
     editor.saveSet(activity(), row());
-    http.expectNone(() => true);
+    const request = http.expectOne(`${url}/activities/200/sets`);
+    expect(request.request.body).toEqual({ setNumber: 1, notes: 'Rascunho preservado' });
+    request.flush({}, { status: 400, statusText: 'Bad Request' });
+  });
+
+  describe.each(['MANUAL', 'AUTO_EXPIRED'] as const)('historical corrections after %s closure', (closeReason) => {
+    beforeEach(() => {
+      editor.reset();
+      detail.status = 'CLOSED';
+      detail.closeReason = closeReason;
+      detail.finishedAt = '2026-10-28T06:00:00Z';
+      detail.workoutCycleId = null;
+      detail.workoutDayId = null;
+      detail.activities[0].workoutActivityId = null;
+      detail.activities[0].exerciseId = null;
+      editor.reconcile(detail);
+    });
+
+    it('starts with no invented sets and retains explicit blank rows during unrelated saves', () => {
+      expect(activity().rows).toHaveLength(0);
+      expect(editor.canWrite()).toBe(true);
+      editor.addSet(activity());
+      const draft = row();
+      editor.notes.setValue('Correção histórica');
+      editor.saveNotes();
+      const request = http.expectOne(`${url}/notes`);
+      expect(request.request.body).toEqual({ notes: 'Correção histórica' });
+      detail.notes = 'Correção histórica';
+      request.flush(detail);
+      refresh();
+      expect(row()).toBe(draft);
+      expect(row().persisted).toBeNull();
+      expect(row().form.getRawValue()).toEqual({ actualLoadKg: null, actualReps: null, notes: '' });
+      editor.saveSet(activity(), row());
+      http.expectNone((req) => req.method === 'POST');
+      expect(editor.session()?.finishedAt).toBe('2026-10-28T06:00:00Z');
+      expect(editor.session()?.closeReason).toBe(closeReason);
+    });
+
+    it('creates only an explicitly added partial set, reconciles it and deletes it with confirmation', () => {
+      editor.addSet(activity());
+      row().form.controls.notes.setValue('Relato posterior');
+      editor.saveSet(activity(), row());
+      editor.saveSet(activity(), row());
+      const request = http.expectOne(`${url}/activities/200/sets`);
+      expect(request.request.body).toEqual({ setNumber: 1, notes: 'Relato posterior' });
+      const saved = sessionSet({ actualReps: null, notes: 'Relato posterior' });
+      request.flush(saved);
+      detail.activities[0].sets = [saved];
+      refresh();
+      expect(activity().rows).toHaveLength(1);
+      expect(row().persisted?.actualReps).toBeNull();
+      expect(editor.hasPending()).toBe(false);
+      editor.deleteSet(activity(), row());
+      expect(dialog.open).toHaveBeenCalledWith(expect.objectContaining({ title: 'Excluir série' }));
+      http.expectOne(`${url}/activities/200/sets/300`).flush(null);
+      detail.activities[0].sets = [];
+      refresh();
+      expect(activity().rows).toHaveLength(0);
+      expect(editor.session()?.status).toBe('CLOSED');
+    });
+
+    it('updates independent activity fields, preserves set drafts and reconciles a failed save', () => {
+      editor.addSet(activity());
+      row().form.controls.actualReps.setValue(7);
+      activity().form.patchValue({ actualDurationMinutes: 12, actualDistanceKm: 0, notes: 'Correção da atividade' });
+      editor.saveActivity(activity());
+      const request = http.expectOne(`${url}/activities/200/execution`);
+      expect(request.request.body).toEqual({ actualDurationMinutes: 12, actualDistanceKm: 0, notes: 'Correção da atividade' });
+      request.error(new ProgressEvent('error'));
+      refresh();
+      expect(activity().form.getRawValue()).toEqual({ actualDurationMinutes: 12, actualDistanceKm: 0, notes: 'Correção da atividade' });
+      expect(row().form.controls.actualReps.value).toBe(7);
+      editor.saveActivity(activity());
+      detail.activities[0] = { ...detail.activities[0], actualDurationMinutes: 12, actualDistanceKm: 0, notes: 'Correção da atividade' };
+      http.expectOne(`${url}/activities/200/execution`).flush(detail.activities[0]);
+      refresh();
+      expect(editor.activityPending(activity())).toBe(false);
+      expect(editor.setPending(row())).toBe(true);
+      http.expectNone((req) => req.method === 'POST');
+    });
+
+    it('updates reps, load and report using the same PATCH and changes mode without numeric conversion', () => {
+      loaded();
+      row().form.patchValue({ actualReps: 9, actualLoadKg: 22.5, notes: 'Ajuste histórico' });
+      editor.saveSet(activity(), row());
+      const request = http.expectOne(`${url}/activities/200/sets/300`);
+      expect(request.request.body).toEqual({ actualReps: 9, actualLoadKg: 22.5, notes: 'Ajuste histórico' });
+      detail.activities[0].sets = [sessionSet({ actualReps: 9, actualLoadKg: 22.5, actualLoadMode: 'TOTAL', normalizedLoadKg: 22.5, notes: 'Ajuste histórico' })];
+      request.flush(detail.activities[0].sets[0]);
+      refresh();
+      activity().selectedMode.setValue('PER_SIDE');
+      editor.applyMode(activity());
+      const mode = http.expectOne(`${url}/activities/200/load-mode`);
+      expect(mode.request.body).toEqual({ actualLoadMode: 'PER_SIDE' });
+      detail.activities[0].actualLoadMode = 'PER_SIDE';
+      detail.activities[0].sets[0].actualLoadMode = 'PER_SIDE';
+      detail.activities[0].sets[0].normalizedLoadKg = 45;
+      mode.flush(detail.activities[0]);
+      refresh();
+      expect(row().form.controls.actualLoadKg.value).toBe(22.5);
+      expect(editor.hasPending()).toBe(false);
+      expect(editor.session()?.status).toBe('CLOSED');
+    });
+
+    it('keeps an uncertain POST until GET confirms the original ID and never repeats it automatically', () => {
+      editor.addSet(activity());
+      row().form.controls.actualReps.setValue(8);
+      editor.saveSet(activity(), row());
+      http.expectOne(`${url}/activities/200/sets`).error(new ProgressEvent('error'));
+      http.expectOne(url).error(new ProgressEvent('error'));
+      expect(editor.canWrite()).toBe(false);
+      expect(row().uncertain?.reviewed).toBe(false);
+      editor.saveSet(activity(), row());
+      http.expectNone((req) => req.method === 'POST');
+      editor.recover();
+      refresh();
+      expect(row().uncertain?.reviewed).toBe(true);
+      expect(editor.hasPending()).toBe(true);
+      editor.recover();
+      detail.activities[0].sets = [sessionSet({ id: 787 })];
+      refresh();
+      expect(row().persisted?.id).toBe(787);
+      expect(row().uncertain).toBeNull();
+      expect(editor.hasPending()).toBe(false);
+      http.expectNone((req) => req.method === 'POST');
+    });
+
+    it('preserves conflicts and requires review before writing over a remote correction', () => {
+      loaded();
+      row().form.controls.actualReps.setValue(9);
+      detail.activities[0].sets[0].actualReps = 10;
+      editor.reconcile(detail);
+      expect(row().conflict).toBe(true);
+      expect(row().form.controls.actualReps.value).toBe(9);
+      editor.saveSet(activity(), row());
+      http.expectNone(() => true);
+      editor.acknowledge(row());
+      editor.saveSet(activity(), row());
+      const correction = http.expectOne(`${url}/activities/200/sets/300`);
+      expect(correction.request.body).toEqual({ actualReps: 9 });
+      detail.activities[0].sets[0].actualReps = 9;
+      correction.flush(detail.activities[0].sets[0]);
+      refresh();
+      expect(editor.hasPending()).toBe(false);
+    });
+
+    it('discards explicit rows only after confirmation and does not restore planned placeholders', () => {
+      editor.addSet(activity());
+      row().form.controls.notes.setValue('Rascunho');
+      dialog.open.mockReturnValueOnce(of(false));
+      editor.discardSet(activity(), row());
+      expect(row().form.controls.notes.value).toBe('Rascunho');
+      editor.discardSet(activity(), row());
+      expect(activity().rows).toHaveLength(0);
+      http.expectNone(() => true);
+    });
   });
 
   it('does not apply confirmations or responses from an old context', () => {

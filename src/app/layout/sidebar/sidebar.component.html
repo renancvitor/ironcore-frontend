@@ -70,12 +70,29 @@
   <a
     routerLink="/workout-sessions"
     routerLinkActive="ic-sidebar__link--active"
+    [routerLinkActiveOptions]="{ exact: true }"
+    [class.ic-sidebar__link--active]="sessionDetailActive"
+    [attr.aria-current]="sessionDetailActive ? 'page' : null"
     ariaCurrentWhenActive="page"
     class="ic-sidebar__link"
   >
     <span class="ic-sidebar__link-content">
       <mat-icon>play_circle</mat-icon>
-      <span>Sessão de treino</span>
+      <span>Sessão de treino em andamento</span>
+    </span>
+  </a>
+  <a
+    routerLink="/workout-sessions/history"
+    routerLinkActive="ic-sidebar__link--active"
+    [routerLinkActiveOptions]="{ exact: true }"
+    [class.ic-sidebar__link--active]="historyDetailActive"
+    [attr.aria-current]="historyDetailActive ? 'page' : null"
+    ariaCurrentWhenActive="page"
+    class="ic-sidebar__link"
+  >
+    <span class="ic-sidebar__link-content">
+      <mat-icon>history</mat-icon>
+      <span>Histórico de sessões</span>
     </span>
   </a>
 </nav>

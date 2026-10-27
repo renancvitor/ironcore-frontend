@@ -31,6 +31,7 @@ import { ToastService } from './shared/components/toast/toast.service';
 import { ExerciseCatalogComponent } from './features/exercise/catalog/exercise-catalog.component';
 import { ExerciseDetailComponent } from './features/exercise/catalog/detail/exercise-detail.component';
 import { WorkoutSessionDetailComponent } from './features/workout-sessions/detail/workout-session-detail.component';
+import { WorkoutSessionHistoryComponent } from './features/workout-sessions/history/workout-session-history.component';
 import { workoutSessionEntryGuard, workoutSessionPendingChangesGuard } from './features/workout-sessions/detail/workout-session-pending-changes.guard';
 
 function flushEmptyWorkoutSummary(http: HttpTestingController): void {
@@ -56,9 +57,14 @@ describe('application routes', () => {
     );
     expect(sessionRoutes.map((route) => route.path)).toEqual([
       'workout-sessions',
+      'workout-sessions/history',
       'workout-sessions/:id',
     ]);
     for (const route of sessionRoutes) {
+      if (route.path === 'workout-sessions/history') {
+        expect(await route.loadComponent?.()).toBe(WorkoutSessionHistoryComponent);
+        continue;
+      }
       expect(await route.loadComponent?.()).toBe(WorkoutSessionDetailComponent);
       expect(route.canActivate).toEqual([workoutSessionEntryGuard]);
       expect(route.canDeactivate).toEqual([workoutSessionPendingChangesGuard]);

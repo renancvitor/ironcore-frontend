@@ -22,6 +22,7 @@ Os documentos descrevem estruturas já implementadas. Convenções e evoluções
 - [Avaliação corporal](body-metrics/README.md): contratos, histórico, detalhe, resumos na Home, cadastro, edição, exclusão, evolução, comparativo e navegação contextual.
 - [Catálogo de Exercícios](exercises/README.md): contratos, classificações auxiliares, busca, filtros combinados, paginação, contexto de navegação, detalhe e músculos-alvo.
 - [Workout Planning](workout-planning/README.md): objetivos, ciclos, dias, atividades, seleção de exercícios, prescrição híbrida, reorder, lifecycle e integração com a Home.
+- [Histórico de sessões](workout-sessions/README.md): listagem, filtros, paginação, detalhe e correções históricas com o editor de execução existente.
 
 ### Releases
 

@@ -1,4 +1,30 @@
 import { WeekDay } from '../workout-planning/workout-planning.models';
+import { PageResult } from '../../shared/models/page-result.model';
+
+export interface WorkoutSessionHistoryFilters {
+  workoutCycleId?: number;
+  workoutDayId?: number;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface WorkoutSessionHistoryItem {
+  id: number;
+  workoutCycleId: number | null;
+  workoutDayId: number | null;
+  workoutCycleNameSnapshot: string;
+  workoutDayTitleSnapshot: string;
+  weekDaySnapshot: WeekDay;
+  performedOn: string;
+  startedAt: string;
+  finishedAt: string;
+  status: 'CLOSED';
+  closeReason: WorkoutSessionCloseReason;
+}
+
+export interface ListWorkoutSessionsResponse {
+  sessions: PageResult<WorkoutSessionHistoryItem>;
+}
 
 export type WorkoutSessionStatus = 'IN_PROGRESS' | 'CLOSED';
 export type WorkoutSessionCloseReason = 'MANUAL' | 'AUTO_EXPIRED';

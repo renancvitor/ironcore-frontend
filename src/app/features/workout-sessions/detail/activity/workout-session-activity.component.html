@@ -1,6 +1,6 @@
 @let model = activity();
 @let snapshot = model.confirmed;
-@let closed = editor.session()?.status === 'CLOSED';
+
 <article class="ic-activity" [attr.data-revision]="revision()">
   <header><h3>{{ snapshot.exerciseNameSnapshot }}</h3></header>
   <section class="ic-activity__reference" [attr.aria-labelledby]="prefix() + '-planned'">
@@ -30,7 +30,7 @@
             <mat-label>Duração executada (minutos)</mat-label>
             <input matInput type="number" inputmode="numeric" step="1" min="1" max="2147483647"
               #durationInput [id]="prefix() + '-duration'" formControlName="actualDurationMinutes"
-              [readOnly]="closed || model.removed"
+              [readOnly]="model.removed"
               (blur)="validateNumber(durationInput, model.form.controls.actualDurationMinutes)" />
             <mat-error>{{ fieldError(model.form.controls.actualDurationMinutes) }}</mat-error>
           </mat-form-field>
@@ -38,14 +38,14 @@
             <mat-label>Distância executada (km)</mat-label>
             <input matInput type="number" inputmode="decimal" step="0.01" min="0" max="999999.99"
               #distanceInput [id]="prefix() + '-distance'" formControlName="actualDistanceKm"
-              [readOnly]="closed || model.removed"
+              [readOnly]="model.removed"
               (blur)="validateNumber(distanceInput, model.form.controls.actualDistanceKm)" />
             <mat-error>{{ fieldError(model.form.controls.actualDistanceKm) }}</mat-error>
           </mat-form-field>
         </div>
         <mat-form-field appearance="outline">
           <mat-label>Relato do exercício (opcional)</mat-label>
-          <textarea matInput rows="2" [id]="prefix() + '-notes'" formControlName="notes" [readOnly]="closed || model.removed"></textarea>
+          <textarea matInput rows="2" [id]="prefix() + '-notes'" formControlName="notes" [readOnly]="model.removed"></textarea>
           <mat-error>{{ fieldError(model.form.controls.notes) }}</mat-error>
         </mat-form-field>
       </fieldset>
@@ -57,7 +57,7 @@
         <app-button variant="secondary" [disabled]="blocked() || editor.busy()" (click)="editor.acknowledge(model)">Revisei; manter meu rascunho</app-button>
       }
       <footer>
-        @if (!closed && !model.removed) {
+        @if (!model.removed) {
           <app-button type="submit" [disabled]="!editor.canWrite() || model.conflict || !editor.activityPending(model)">
             {{ editor.operation() === 'activity:' + snapshot.id ? 'Salvando…' : 'Salvar dados da atividade' }}
           </app-button>
@@ -71,7 +71,7 @@
       <mat-form-field appearance="outline">
         <mat-label>Modo da carga deste exercício</mat-label>
         <mat-select [id]="prefix() + '-load-mode'" [formControl]="model.selectedMode"
-          [disabled]="blocked() || editor.busy() || closed || model.removed"
+          [disabled]="blocked() || editor.busy() || model.removed"
           [attr.aria-describedby]="prefix() + '-mode-help'">
           <mat-option [value]="null">Selecione ao informar carga</mat-option>
           <mat-option value="TOTAL">TOTAL — carga total</mat-option>
@@ -92,7 +92,7 @@
     <div class="ic-activity__sets">
       @for (row of model.rows; track row.key) {
         <app-workout-session-set-form [row]="row" [activityId]="snapshot.id" [revision]="revision()"
-          [pending]="editor.setPending(row)" [readOnly]="closed || model.removed"
+          [pending]="editor.setPending(row)" [readOnly]="model.removed"
           [planned]="row.setNumber <= (snapshot.plannedSetsSnapshot ?? 0)"
           [blocked]="blocked() || editor.confirming()"
           [saving]="editor.operation() === 'set:' + row.key" [deleting]="editor.operation() === 'delete:' + row.key"
@@ -102,7 +102,7 @@
           (discarded)="editor.discardSet(model, row)" (reviewed)="editor.acknowledge(row)" (recovered)="editor.recover()" />
       } @empty { <p>Nenhuma série registrada.</p> }
     </div>
-    @if (!closed && !model.removed) {
+    @if (!model.removed) {
       <app-button [id]="prefix() + '-add-set'" variant="secondary" [disabled]="!editor.canWrite()" (click)="editor.addSet(model)">Adicionar série</app-button>
     }
   </section>

@@ -1,4 +1,19 @@
-import { GetWorkoutSessionDetailResponse, WorkoutSessionSetDetailResponse } from './workout-sessions.models';
+import { GetWorkoutSessionDetailResponse, WorkoutSessionSetDetailResponse, WorkoutSessionHistoryItem, ListWorkoutSessionsResponse } from './workout-sessions.models';
+
+export const sessionHistoryItem: WorkoutSessionHistoryItem = {
+  id: 100, workoutCycleId: null, workoutDayId: null,
+  workoutCycleNameSnapshot: 'Ciclo preservado', workoutDayTitleSnapshot: 'Treino preservado',
+  weekDaySnapshot: 'TUESDAY', performedOn: '2026-10-27', startedAt: '2026-10-27T13:00:00Z',
+  finishedAt: '2026-10-27T14:00:00Z', status: 'CLOSED', closeReason: 'MANUAL',
+};
+
+export function sessionHistory(
+  content: WorkoutSessionHistoryItem[] = [sessionHistoryItem],
+  page = 0, size = 20, totalElements = content.length,
+): ListWorkoutSessionsResponse {
+  return { sessions: { content, page, size, totalElements,
+    totalPages: Math.ceil(totalElements / size), last: (page + 1) * size >= totalElements } };
+}
 
 export function sessionSet(overrides: Partial<WorkoutSessionSetDetailResponse> = {}): WorkoutSessionSetDetailResponse {
   return {

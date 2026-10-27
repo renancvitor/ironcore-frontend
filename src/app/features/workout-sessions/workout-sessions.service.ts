@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, Observable, of, throwError } from 'rxjs';
 import { API_BASE_URL } from '../../core/http/api-base-url.token';
@@ -14,6 +14,8 @@ import {
   ChangeWorkoutSessionActivityLoadModeRequest,
   WorkoutSessionActivityDetailResponse,
   WorkoutSessionSetDetailResponse,
+  WorkoutSessionHistoryFilters,
+  ListWorkoutSessionsResponse,
 } from './workout-sessions.models';
 
 @Injectable({ providedIn: 'root' })
@@ -21,6 +23,17 @@ export class WorkoutSessionsService {
   private readonly http = inject(HttpClient);
   private readonly apiBaseUrl = inject(API_BASE_URL);
   private readonly sessionsUrl = `${this.apiBaseUrl}/api/users/me/workout-sessions`;
+
+  listWorkoutSessions(
+    page = 0, size = 20, filters: WorkoutSessionHistoryFilters = {},
+  ): Observable<ListWorkoutSessionsResponse> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    for (const key of ['workoutCycleId', 'workoutDayId', 'startDate', 'endDate'] as const) {
+      const value = filters[key];
+      if (value !== undefined && value !== '') params = params.set(key, value);
+    }
+    return this.http.get<ListWorkoutSessionsResponse>(this.sessionsUrl, { params });
+  }
 
   startWorkoutSession(
     request: StartWorkoutSessionRequest,

@@ -1,7 +1,7 @@
 <section class="ic-session" [attr.aria-busy]="busy()" [attr.data-editor-revision]="editor.revision()">
   <header class="ic-session__header">
     <div>
-      <h1>Sessão de treino</h1>
+      <h1>{{ session()?.status === 'CLOSED' ? 'Sessão encerrada' : 'Sessão de treino' }}</h1>
       <p>Consulte a ficha preservada no início da sessão.</p>
     </div>
     <div class="ic-session__header-actions">
@@ -18,10 +18,10 @@
       <button
         matIconButton
         type="button"
-        aria-label="Voltar ao planejamento de treinos"
-        matTooltip="Voltar ao planejamento"
+        [attr.aria-label]="returnLabel"
+        [matTooltip]="returnLabel"
         [disabled]="busy()"
-        (click)="backToPlanning()"
+        (click)="returnToList()"
       >
         <mat-icon>arrow_back</mat-icon>
       </button>
@@ -40,7 +40,7 @@
     <div role="alert" class="ic-session__error">
       <p>{{ error() }}</p>
       @if (session()) {
-        <p>Os dados exibidos podem estar desatualizados. Atualize antes de encerrar a sessão.</p>
+        <p>Os dados exibidos podem estar desatualizados. Atualize antes de salvar ou encerrar a sessão.</p>
       }
       <app-button [disabled]="busy()" (click)="loadSession()">Tentar novamente</app-button>
     </div>
@@ -101,16 +101,12 @@
         <app-button [disabled]="busy()" (click)="editor.recover()">Consultar registros</app-button>
       </div>
     }
-    @if (session.status === 'CLOSED' && editor.hasPending()) {
-      <p role="alert">A sessão foi encerrada. Seus rascunhos não enviados foram preservados para revisão ou descarte. A edição histórica não está disponível aqui.</p>
+    @if (session.status === 'CLOSED') {
+      <p role="status">Você pode corrigir os registros de execução desta sessão. O encerramento permanece preservado.</p>
     }
     @if (editor.hasPending()) {
       <p role="status">
-        @if (session.status === 'IN_PROGRESS') {
-          Há alterações não salvas. Salve cada série, os dados da atividade e o relato geral separadamente.
-        } @else {
-          Revise, copie ou descarte os rascunhos preservados.
-        }
+        Há alterações não salvas. Salve cada série, os dados da atividade e o relato geral separadamente.
         Rascunhos ficam somente nesta página.
       </p>
     }
@@ -121,8 +117,7 @@
         <legend>Como foi a sessão</legend>
         <mat-form-field appearance="outline">
           <mat-label>Relato geral da sessão</mat-label>
-          <textarea matInput id="session-execution-notes" rows="3" [formControl]="editor.notes"
-            [readOnly]="session.status === 'CLOSED'"></textarea>
+          <textarea matInput id="session-execution-notes" rows="3" [formControl]="editor.notes"></textarea>
           <mat-error>{{ fieldError(editor.notes) }}</mat-error>
         </mat-form-field>
       </fieldset>
@@ -133,9 +128,7 @@
         <app-button variant="secondary" [disabled]="busy()" (click)="editor.acknowledge(editor.notesFeedback)">Revisei; manter meu rascunho</app-button>
       }
       <div class="ic-session__actions">
-        @if (session.status === 'IN_PROGRESS') {
-          <app-button type="submit" [disabled]="!editor.canWrite() || !editor.notesPending() || editor.notesFeedback.conflict">Salvar relato</app-button>
-        }
+        <app-button type="submit" [disabled]="!editor.canWrite() || !editor.notesPending() || editor.notesFeedback.conflict">Salvar relato</app-button>
         @if (editor.notesPending() || editor.notesFeedback.conflict) {
           <app-button variant="secondary" [disabled]="busy()" (click)="editor.discardNotes()">Descartar alterações do relato</app-button>
         }
