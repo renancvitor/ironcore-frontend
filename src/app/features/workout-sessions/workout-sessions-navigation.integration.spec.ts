@@ -241,15 +241,28 @@ describe('Workout Sessions navigation with HTTP', () => {
     component.editor.saveSet(activity, activity.rows[0]);
     const persisted = sessionSet({ id: 901 });
     http.expectOne(`${url}/100/activities/200/sets`).flush(persisted);
+    expect(component.editor.busy()).toBe(true);
     const saved = { ...structuredClone(sessionDetail), activities: [
       { ...structuredClone(sessionDetail.activities[0]), sets: [persisted] },
     ] };
     http.expectOne(`${url}/100`).flush(saved);
-    await router.navigateByUrl('/workout-planning/9');
+    expect(component.editor.operation()).toBeNull();
+    expect(component.editor.busy()).toBe(false);
+    expect(component.editor.needsRefresh()).toBe(false);
+    expect(component.editor.hasPending()).toBe(false);
+    expect(await router.navigateByUrl('/workout-planning/9')).toBe(true);
+    expect(router.url).toBe('/workout-planning/9');
+    harness.detectChanges();
     http.expectOne('/api/users/me/workout-cycles/9').flush(cycleDetail);
-    await router.navigateByUrl('/workout-sessions/100');
+    expect(dialog.open).not.toHaveBeenCalled();
+    expect(await router.navigateByUrl('/workout-sessions/100')).toBe(true);
+    expect(router.url).toBe('/workout-sessions/100');
+    harness.detectChanges();
     http.expectOne(`${url}/100`).flush(saved);
+    expect(current(harness)).not.toBe(component);
     expect(current(harness).editor.activities()[0].rows[0].persisted?.id).toBe(901);
+    expect(current(harness).editor.activities()[0].rows.filter((row) => row.persisted?.id === 901)).toHaveLength(1);
+    expect(current(harness).editor.hasPending()).toBe(false);
     http.expectNone((request) => request.method === 'POST');
   });
 });

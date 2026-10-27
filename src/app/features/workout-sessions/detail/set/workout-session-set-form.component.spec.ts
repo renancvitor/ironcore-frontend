@@ -65,13 +65,16 @@ describe('WorkoutSessionSetFormComponent', () => {
   });
 
   it('exposes explicit uncertain-result recovery and keeps submission disabled until a read', () => {
-    row.uncertain = { request: { setNumber: 2, notes: 'Relato' }, reviewed: false };
+    const uncertain = { request: { setNumber: 2, notes: 'Relato' }, reviewed: false };
+    row = { ...row, uncertain };
+    fixture.componentRef.setInput('row', row);
     fixture.detectChanges();
     const save = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
     expect(save.disabled).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('Gravação não confirmada');
     expect(fixture.nativeElement.textContent).toContain('Consultar registros');
-    row.uncertain.reviewed = true;
-    fixture.componentRef.setInput('revision', 1);
+    row = { ...row, uncertain: { ...uncertain, reviewed: true } };
+    fixture.componentRef.setInput('row', row);
     fixture.detectChanges();
     expect(save.disabled).toBe(false);
     expect(save.textContent).toContain('Tentar registrar novamente');

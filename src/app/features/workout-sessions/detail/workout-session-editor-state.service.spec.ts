@@ -297,13 +297,16 @@ describe('WorkoutSessionEditorState with HTTP', () => {
     refresh();
     expect(row().persisted).toBeNull();
     expect(row().uncertain?.reviewed).toBe(true);
-    expect(row().message).toContain('ainda pode');
+    expect(row().message).toContain('A gravação original pode estar em andamento.');
+    expect(editor.hasUncertainCreation()).toBe(true);
     expect(editor.canWrite()).toBe(true);
     http.expectNone((req) => req.method === 'POST');
     editor.recover();
     detail.activities[0].sets = [sessionSet({ id: 778 })];
     refresh();
     expect(row().persisted?.id).toBe(778);
+    expect(row().uncertain).toBeNull();
+    expect(editor.hasUncertainCreation()).toBe(false);
   });
 
   it('requires review when uncertain creation finds a different partial record at the same number', () => {
