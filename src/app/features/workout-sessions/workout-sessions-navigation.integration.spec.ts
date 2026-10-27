@@ -16,6 +16,8 @@ import { WorkoutCycleDetailComponent } from '../workout-planning/detail/workout-
 import { cycleDetail } from '../workout-planning/workout-planning.testing';
 import { WorkoutSessionDetailComponent } from './detail/workout-session-detail.component';
 import { sessionDetail, sessionSet } from './workout-sessions.testing';
+import { sessionHistory } from './workout-sessions.testing';
+import { WorkoutSessionHistoryComponent } from './history/workout-session-history.component';
 
 describe('Workout Sessions navigation with HTTP', () => {
   let http: HttpTestingController;
@@ -118,7 +120,7 @@ describe('Workout Sessions navigation with HTTP', () => {
     expect(harness.routeNativeElement!.textContent).toContain('Encerrada automaticamente');
   });
 
-  it.each(['/workout-sessions', '/workout-sessions/100'])(
+  it.each(['/workout-sessions', '/workout-sessions/history', '/workout-sessions/100'])(
     'rejects unauthenticated direct navigation to %s without a session request',
     async (path) => {
       TestBed.inject(AuthStateService).clear();
@@ -202,7 +204,7 @@ describe('Workout Sessions navigation with HTTP', () => {
     expect(dialog.open).not.toHaveBeenCalled();
   });
 
-  it('protects sidebar and browser back navigation without changing the accepted session URL', async () => {
+  it.each(['IN_PROGRESS', 'CLOSED'] as const)('protects sidebar and browser back navigation for %s without changing the accepted session URL', async (status) => {
     const router = TestBed.inject(Router);
     router.setUpLocationChangeListener();
     const harness = await RouterTestingHarness.create();
@@ -211,6 +213,8 @@ describe('Workout Sessions navigation with HTTP', () => {
     await harness.navigateByUrl('/workout-sessions/100');
     http.expectOne(`${url}/100`).flush(sessionDetail);
     const component = current(harness);
+    if (status === 'CLOSED') component.editor.reconcile({ ...structuredClone(sessionDetail),
+      status, closeReason: 'AUTO_EXPIRED', finishedAt: '2026-10-28T06:00:00Z' });
     component.editor.notes.setValue('Pendente');
     dialog.open.mockReturnValue(of(false));
     expect(await router.navigateByUrl('/workout-planning/9')).toBe(false);
@@ -231,6 +235,101 @@ describe('Workout Sessions navigation with HTTP', () => {
     TestBed.inject(AuthStateService).clear();
     expect(await router.navigateByUrl('/login')).toBe(true);
     expect(router.url).toBe('/login');
+    expect(dialog.open).not.toHaveBeenCalled();
+  });
+
+  it('opens history from the sidebar without interpreting history as a numeric session ID', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/workout-sessions');
+    http.expectOne(`${url}/in-progress`).flush(null);
+    const menu = harness.fixture.nativeElement.querySelector('button[aria-label="Abrir menu"]') as HTMLButtonElement;
+    menu.click();
+    harness.detectChanges();
+    const link = harness.fixture.nativeElement.querySelector('a[href="/workout-sessions/history"]') as HTMLAnchorElement;
+    link.click();
+    await harness.fixture.whenStable();
+    http.expectOne((req) => req.url === url).flush(sessionHistory());
+    harness.detectChanges();
+    expect(TestBed.inject(Router).url).toBe('/workout-sessions/history');
+    expect(link.getAttribute('aria-current')).toBe('page');
+    expect(harness.fixture.nativeElement.querySelector('a[href="/workout-sessions"]').getAttribute('aria-current')).toBeNull();
+    expect(harness.routeNativeElement!.textContent).toContain('Histórico de sessões');
+    http.expectNone(`${url}/history`);
+  });
+
+  it.each(['MANUAL', 'AUTO_EXPIRED'] as const)('returns to history after a %s correction with filters and page preserved', async (closeReason) => {
+    const harness = await RouterTestingHarness.create();
+    const router = TestBed.inject(Router);
+    await harness.navigateByUrl('/workout-sessions/history');
+    http.expectOne((req) => req.url === url).flush(sessionHistory());
+    const history = harness.fixture.debugElement.query(By.directive(WorkoutSessionHistoryComponent)).componentInstance as WorkoutSessionHistoryComponent;
+    history.filtersForm.controls.startDate.setValue('2026-10-01');
+    history.applyFilters();
+    http.expectOne((req) => req.url === url).flush(sessionHistory());
+    history.onPageChange({ pageIndex: 1, pageSize: 10, length: 30 });
+    http.expectOne((req) => req.url === url).flush(sessionHistory([], 0, 10, 30));
+    history.onPageChange({ pageIndex: 1, pageSize: 10, length: 30 });
+    http.expectOne((req) => req.url === url).flush(sessionHistory(undefined, 1, 10, 30));
+    history.openSession(100);
+    await harness.fixture.whenStable();
+    const saved = { ...structuredClone(sessionDetail), status: 'CLOSED', closeReason,
+      finishedAt: '2026-10-28T06:00:00Z' } as const;
+    http.expectOne(`${url}/100`).flush(saved);
+    const component = current(harness);
+    expect(router.url).toBe('/workout-sessions/100?from=history');
+    expect(component.editor.activities()[0].rows).toHaveLength(0);
+    component.editor.notes.setValue('Relato histórico corrigido');
+    component.editor.saveNotes();
+    const writing = http.expectOne(`${url}/100/notes`);
+    expect(await router.navigateByUrl('/workout-sessions/history')).toBe(false);
+    expect(writing.cancelled).toBe(false);
+    writing.flush({ ...saved, notes: 'Relato histórico corrigido' });
+    http.expectOne(`${url}/100`).flush({ ...saved, notes: 'Relato histórico corrigido' });
+    component.returnToList();
+    await harness.fixture.whenStable();
+    const returned = http.expectOne((req) => req.url === url);
+    expect(returned.request.params.get('startDate')).toBe('2026-10-01');
+    expect(returned.request.params.get('page')).toBe('1');
+    expect(returned.request.params.get('size')).toBe('10');
+    returned.flush(sessionHistory(undefined, 1, 10, 30));
+    expect(router.url).toBe('/workout-sessions/history');
+    expect(dialog.open).not.toHaveBeenCalled();
+    http.expectNone((req) => req.method === 'POST' || req.url.endsWith('/close'));
+  });
+
+  it.each(['MANUAL', 'AUTO_EXPIRED'] as const)('guards %s drafts on history exit and reused IDs without duplicate confirmations', async (closeReason) => {
+    const { harness, component, router } = await openSession();
+    component.editor.reconcile({ ...structuredClone(sessionDetail), status: 'CLOSED', closeReason,
+      finishedAt: '2026-10-28T06:00:00Z' });
+    component.editor.addSet(component.editor.activities()[0]);
+    const form = component.editor.activities()[0].rows[0].form;
+    form.controls.notes.setValue('Correção pendente');
+    dialog.open.mockReturnValue(of(false));
+    expect(await router.navigateByUrl('/workout-sessions/history')).toBe(false);
+    expect(component.editor.activities()[0].rows[0].form).toBe(form);
+    expect(dialog.open).toHaveBeenCalledTimes(1);
+    http.expectNone((req) => req.url === url);
+    dialog.open.mockReturnValue(of(true));
+    expect(await router.navigateByUrl('/workout-sessions/101')).toBe(true);
+    http.expectOne(`${url}/101`).flush({ ...structuredClone(sessionDetail), id: 101, status: 'CLOSED', closeReason,
+      finishedAt: '2026-10-28T06:00:00Z' });
+    expect(current(harness)).toBe(component);
+    expect(component.editor.activities()[0].rows).toHaveLength(0);
+    expect(component.editor.hasPending()).toBe(false);
+    expect(dialog.open).toHaveBeenCalledTimes(2);
+    component.editor.notes.setValue('Outro rascunho');
+    expect(await router.navigateByUrl('/workout-sessions/history')).toBe(true);
+    http.expectOne((req) => req.url === url).flush(sessionHistory());
+    expect(dialog.open).toHaveBeenCalledTimes(3);
+    expect(router.url).toBe('/workout-sessions/history');
+  });
+
+  it('preserves authentication redirection from historical editing', async () => {
+    const { component, router } = await openSession();
+    component.editor.reconcile({ ...structuredClone(sessionDetail), status: 'CLOSED', closeReason: 'MANUAL' });
+    component.editor.notes.setValue('Correção pendente');
+    TestBed.inject(AuthStateService).clear();
+    expect(await router.navigateByUrl('/login')).toBe(true);
     expect(dialog.open).not.toHaveBeenCalled();
   });
 

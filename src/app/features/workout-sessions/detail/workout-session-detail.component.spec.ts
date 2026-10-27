@@ -30,7 +30,7 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
         provideHttpClientTesting(),
         provideRouter([]),
         { provide: API_BASE_URL, useValue: '' },
-        { provide: ActivatedRoute, useValue: { paramMap: params } },
+        { provide: ActivatedRoute, useValue: { paramMap: params, snapshot: { queryParamMap: convertToParamMap({}) } } },
         { provide: DialogService, useValue: dialog },
         { provide: ToastService, useValue: toast },
       ],
@@ -470,8 +470,10 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     fixture.detectChanges();
     expect(component.editor.activities()[0].rows[0].form).toBe(form);
     expect(form.controls.notes.value).toBe('Rascunho');
-    expect(component.editor.canWrite()).toBe(false);
-    expect(fixture.nativeElement.textContent).toContain('rascunhos não enviados foram preservados');
+    expect(component.editor.canWrite()).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('Você pode corrigir os registros');
+    expect(component.editor.activities()[0].rows).toHaveLength(1);
+    expect(button('Encerrar sessão')).toBeUndefined();
   });
 
   it('requires explicit closure without saving and retains drafts until success', () => {
@@ -515,6 +517,65 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     expect(component.editor.hasPending()).toBe(true);
     expect(component.canClose()).toBe(true);
     http.expectNone(`${url}/100/close`);
+  });
+
+  it.each(['MANUAL', 'AUTO_EXPIRED'] as const)('edits the historical %s sheet through existing forms without reopening it', (closeReason) => {
+    const detail: GetWorkoutSessionDetailResponse = { ...structuredClone(sessionDetail),
+      status: 'CLOSED', closeReason, finishedAt: '2026-10-28T06:00:00Z',
+      workoutCycleId: null, workoutDayId: null };
+    load(detail);
+    expect(button('Encerrar sessão')).toBeUndefined();
+    expect(button('Ver ciclo de origem')).toBeUndefined();
+    expect(fixture.nativeElement.querySelectorAll('app-workout-session-set-form')).toHaveLength(0);
+    const notes = fixture.nativeElement.querySelector('#session-execution-notes') as HTMLTextAreaElement;
+    expect(notes.readOnly).toBe(false);
+    notes.value = 'Correção posterior';
+    notes.dispatchEvent(new Event('input'));
+    fixture.nativeElement.querySelector('form.ic-session__notes').dispatchEvent(new Event('submit', { cancelable: true }));
+    const report = http.expectOne(`${url}/100/notes`);
+    expect(report.request.body).toEqual({ notes: 'Correção posterior' });
+    detail.notes = 'Correção posterior';
+    report.flush(detail);
+    http.expectOne(`${url}/100`).flush(detail);
+    fixture.detectChanges();
+    const duration = fixture.nativeElement.querySelector('#activity-200-duration') as HTMLInputElement;
+    expect(duration.readOnly).toBe(false);
+    expect(duration.value).toBe('');
+    duration.value = '12';
+    duration.dispatchEvent(new Event('input'));
+    fixture.nativeElement.querySelector('article form').dispatchEvent(new Event('submit', { cancelable: true }));
+    const execution = http.expectOne(`${url}/100/activities/200/execution`);
+    expect(execution.request.body).toEqual({ actualDurationMinutes: 12 });
+    detail.activities[0].actualDurationMinutes = 12;
+    execution.flush(detail.activities[0]);
+    http.expectOne(`${url}/100`).flush(detail);
+    fixture.detectChanges();
+    button('Adicionar série').click();
+    fixture.detectChanges();
+    const reps = fixture.nativeElement.querySelector('input[id$="-reps"]') as HTMLInputElement;
+    expect(reps.readOnly).toBe(false);
+    expect(reps.value).toBe('');
+    expect((fixture.nativeElement.querySelector('input[id$="-load"]') as HTMLInputElement).value).toBe('');
+    http.expectNone((req) => req.method === 'POST');
+    reps.value = '7';
+    reps.dispatchEvent(new Event('input'));
+    fixture.nativeElement.querySelector('form.ic-set').dispatchEvent(new Event('submit', { cancelable: true }));
+    const creation = http.expectOne(`${url}/100/activities/200/sets`);
+    expect(creation.request.body).toEqual({ setNumber: 1, actualReps: 7 });
+    const saved = sessionSet({ actualReps: 7 });
+    creation.flush(saved);
+    detail.activities[0].sets = [saved];
+    http.expectOne(`${url}/100`).flush(detail);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Registrada');
+    expect(component.session()?.status).toBe('CLOSED');
+    expect(component.session()?.closeReason).toBe(closeReason);
+    expect(component.session()?.finishedAt).toBe('2026-10-28T06:00:00Z');
+    expect(component.editor.hasPending()).toBe(false);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    component.returnToList();
+    expect(navigate).toHaveBeenCalledWith(['/workout-sessions/history']);
+    http.expectNone((req) => req.url.endsWith('/close'));
   });
 
   it('keeps drafts after a failed closure and reconciliation', () => {

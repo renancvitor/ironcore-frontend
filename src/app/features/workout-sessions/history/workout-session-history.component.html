@@ -1,0 +1,201 @@
+<section class="ic-history" aria-labelledby="history-title" [attr.aria-busy]="loading()">
+  <header>
+    <h1 id="history-title">Histórico de sessões</h1>
+    <p>Consulte seus treinos encerrados e corrija os registros de execução quando precisar.</p>
+  </header>
+  <form
+    class="ic-history__panel"
+    [formGroup]="filtersForm"
+    (ngSubmit)="applyFilters()"
+    aria-labelledby="history-filters-title"
+  >
+    <h2 id="history-filters-title">Filtrar sessões</h2>
+    <p>
+      O período considera a data em que o treino foi realizado. Os nomes exibidos nas sessões são os
+      preservados na época.
+    </p>
+    <details>
+      <summary>Buscar ciclo de origem pelo nome</summary>
+      <div class="ic-history__search">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Nome do ciclo</mat-label>
+          <input
+            matInput
+            id="history-cycle-search"
+            [formControl]="cycleSearch"
+            (keydown.enter)="$event.preventDefault(); searchCycles()"
+          />
+        </mat-form-field>
+        <app-button variant="secondary" (click)="searchCycles()">Buscar ciclos</app-button>
+      </div>
+      <p>
+        Busque pelo nome ou deixe vazio para consultar os ciclos disponíveis. A busca é paginada;
+        carregue mais opções quando necessário. Origens removidas continuam visíveis nos registros
+        históricos, mas não podem ser selecionadas.
+      </p>
+      @if (cyclesLoading()) {
+        <p role="status">Buscando ciclos…</p>
+      }
+      @if (cyclesError()) {
+        <p role="alert">{{ cyclesError() }}</p>
+      }
+      @if (cyclePage(); as page) {
+        <p role="status">{{ cycles().length }} de {{ page.totalElements }} ciclos encontrados.</p>
+        @if (!page.last) {
+          <app-button variant="secondary" [disabled]="cyclesLoading()" (click)="moreCycles()"
+            >Carregar mais ciclos</app-button
+          >
+        }
+      }
+    </details>
+    <div class="ic-history__grid">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Ciclo de origem</mat-label>
+        <mat-select
+          id="history-cycle"
+          formControlName="workoutCycleId"
+          aria-describedby="history-cycle-help"
+        >
+          <mat-option [value]="null">Todos os ciclos</mat-option>
+          @for (cycle of cycleOptions(); track cycle.id) {
+            <mat-option [value]="cycle.id">{{ cycle.name }} ({{ cycle.id }})</mat-option>
+          }
+        </mat-select>
+        <mat-hint id="history-cycle-help">Use a busca por nome para encontrar opções.</mat-hint>
+      </mat-form-field>
+      @if (days().length) {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Treino de origem</mat-label>
+          <mat-select id="history-day" formControlName="workoutDayId">
+            <mat-option [value]="null">Todos os treinos</mat-option>
+            @for (day of days(); track day.id) {
+              <mat-option [value]="day.id"
+                >{{ day.title }} · {{ weekDayLabels[day.weekDay] }}</mat-option
+              >
+            }
+          </mat-select>
+        </mat-form-field>
+      } @else {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Código do treino</mat-label>
+          <input
+            matInput
+            id="history-day-id"
+            type="number"
+            min="1"
+            step="1"
+            formControlName="workoutDayId"
+          />
+          <mat-hint>Opcional. Selecione um ciclo para escolher pelo nome.</mat-hint>
+          <mat-error>Informe um código inteiro positivo.</mat-error>
+        </mat-form-field>
+      }
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Data inicial</mat-label>
+        <input matInput id="history-start-date" type="date" formControlName="startDate" />
+        <mat-error>Informe uma data válida.</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Data final</mat-label>
+        <input matInput id="history-end-date" type="date" formControlName="endDate" />
+        <mat-error>Informe uma data válida.</mat-error>
+      </mat-form-field>
+    </div>
+    @if (daysLoading()) {
+      <p role="status">Consultando treinos do ciclo…</p>
+    }
+    @if (daysError()) {
+      <div role="alert">
+        <p>{{ daysError() }}</p>
+        <app-button variant="secondary" (click)="retryDays()"
+          >Consultar treinos novamente</app-button
+        >
+      </div>
+    }
+    @if (filtersForm.touched && filtersForm.hasError('dateRange')) {
+      <p role="alert">A data inicial deve ser anterior ou igual à data final.</p>
+    }
+    <div class="ic-history__actions">
+      <app-button variant="secondary" (click)="clearFilters()">Limpar filtros</app-button>
+      <app-button type="submit">Aplicar filtros</app-button>
+    </div>
+  </form>
+  @if (loading()) {
+    <div role="status" aria-label="Carregando histórico de sessões"><app-loading /></div>
+  }
+  @if (error()) {
+    <div class="ic-history__panel" role="alert">
+      <p>{{ error() }}</p>
+      <app-button (click)="load()">Tentar novamente</app-button>
+    </div>
+  }
+  @if (!loading() && !error()) {
+    @if (result(); as page) {
+      <div class="ic-history__sessions">
+        @for (session of page.content; track session.id) {
+          <article
+            class="ic-history__panel"
+            [attr.aria-labelledby]="'history-session-' + session.id"
+          >
+            <h2 [id]="'history-session-' + session.id">{{ session.workoutDayTitleSnapshot }}</h2>
+            <p>
+              {{ session.workoutCycleNameSnapshot }} · {{ weekDayLabels[session.weekDaySnapshot] }}
+            </p>
+            <dl>
+              <div>
+                <dt>Data do treino</dt>
+                <dd>{{ session.performedOn | date: 'dd/MM/yyyy' }}</dd>
+              </div>
+              <div>
+                <dt>Início (São Paulo)</dt>
+                <dd>{{ session.startedAt | date: 'dd/MM/yyyy HH:mm' : '-0300' }}</dd>
+              </div>
+              <div>
+                <dt>Encerramento (São Paulo)</dt>
+                <dd>{{ session.finishedAt | date: 'dd/MM/yyyy HH:mm' : '-0300' }}</dd>
+              </div>
+              <div>
+                <dt>Motivo do encerramento</dt>
+                <dd>{{ closeReasonLabels[session.closeReason] }}</dd>
+              </div>
+            </dl>
+            <app-button
+              variant="secondary"
+              [attr.aria-label]="
+                'Consultar sessão de ' +
+                session.workoutDayTitleSnapshot +
+                ' em ' +
+                (session.performedOn | date: 'dd/MM/yyyy')
+              "
+              (click)="openSession(session.id)"
+              >Consultar sessão</app-button
+            >
+          </article>
+        } @empty {
+          <app-empty-state
+            icon="history"
+            [message]="
+              page.totalElements > 0
+                ? 'Nenhuma sessão nesta página. Volte para uma página anterior.'
+                : filtered()
+                  ? 'Nenhuma sessão encontrada para os filtros informados.'
+                  : 'Você ainda não tem sessões encerradas.'
+            "
+          />
+        }
+      </div>
+    }
+  }
+  @if (result(); as page) {
+    <mat-paginator
+      aria-label="Paginação do histórico de sessões"
+      [length]="page.totalElements"
+      [pageIndex]="page.page"
+      [pageSize]="page.size"
+      [pageSizeOptions]="[10, 20, 50, 100]"
+      [disabled]="loading()"
+      showFirstLastButtons
+      (page)="onPageChange($event)"
+    />
+  }
+</section>

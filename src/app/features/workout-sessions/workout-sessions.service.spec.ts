@@ -7,7 +7,7 @@ import { AuthStateService } from '../../core/auth/auth-state.service';
 import { API_BASE_URL } from '../../core/http/api-base-url.token';
 import { provideCoreHttp } from '../../core/http/http.providers';
 import { WorkoutSessionsService } from './workout-sessions.service';
-import { sessionDetail, sessionSet } from './workout-sessions.testing';
+import { sessionDetail, sessionSet, sessionHistory } from './workout-sessions.testing';
 
 describe('WorkoutSessionsService', () => {
   const url = 'https://api.ironcore.test/api/users/me/workout-sessions';
@@ -26,6 +26,34 @@ describe('WorkoutSessionsService', () => {
     http = TestBed.inject(HttpTestingController);
   });
   afterEach(() => http.verify());
+
+  it('gets a typed history page with every combined filter', () => {
+    const response = sessionHistory();
+    const next = vi.fn();
+    service.listWorkoutSessions(2, 50, {
+      workoutCycleId: 9, workoutDayId: 30, startDate: '2026-10-01', endDate: '2026-10-27',
+    }).subscribe(next);
+    const request = http.expectOne((req) => req.url === url);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.toString()).toBe('page=2&size=50&workoutCycleId=9&workoutDayId=30&startDate=2026-10-01&endDate=2026-10-27');
+    request.flush(response);
+    expect(next).toHaveBeenCalledExactlyOnceWith(response);
+  });
+
+  it('uses pagination defaults and omits empty filters', () => {
+    service.listWorkoutSessions(undefined, undefined, { startDate: '', endDate: '', workoutCycleId: undefined }).subscribe();
+    const request = http.expectOne((req) => req.url === url);
+    expect(request.request.params.toString()).toBe('page=0&size=20');
+    request.flush(sessionHistory([]));
+  });
+
+  it.each([400, 403, 404, 422, 500])('propagates history HTTP %s without hiding errors or retrying', (status) => {
+    const error = vi.fn();
+    service.listWorkoutSessions().subscribe({ error });
+    http.expectOne((req) => req.url === url).flush({ message: 'Falha' }, { status, statusText: 'Error' });
+    expect(error).toHaveBeenCalledWith(expect.objectContaining({ status }));
+    http.expectNone((req) => req.url === url);
+  });
 
   it('starts with only the selected cycle and day IDs and preserves the response', () => {
     const next = vi.fn();

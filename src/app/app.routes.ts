@@ -107,6 +107,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'workout-sessions/history',
+        loadComponent: () =>
+          import('./features/workout-sessions/history/workout-session-history.component').then(
+            (m) => m.WorkoutSessionHistoryComponent,
+          ),
+      },
+      {
         path: 'workout-sessions/:id',
         canActivate: [workoutSessionEntryGuard],
         canDeactivate: [workoutSessionPendingChangesGuard],

@@ -28,6 +28,7 @@ export interface SessionSetEditor extends ExecutionFeedback {
   form: SessionSetForm;
   removed: boolean;
   uncertain: { request: CreateWorkoutSessionSetRequest; reviewed: boolean } | null;
+  explicit?: boolean;
 }
 
 export interface SessionActivityEditor extends ExecutionFeedback {
@@ -66,7 +67,7 @@ export class WorkoutSessionEditorState {
   readonly notes = this.notesForm.controls.notes;
   readonly notesFeedback = feedback();
   isBlocked: () => boolean = () => false;
-  readonly canWrite = computed(() => this.session()?.status === 'IN_PROGRESS' &&
+  readonly canWrite = computed(() => this.session() !== null &&
     !this.busy() && !this.needsRefresh() && !this.loadError() && !this.notFound() && !this.isBlocked());
   readonly hasUncertainCreation = computed(() => {
     this.revision();
@@ -261,7 +262,7 @@ export class WorkoutSessionEditorState {
         row.uncertain.reviewed = true;
         row.message = 'A série ainda não apareceu na consulta. A gravação original pode estar em andamento. Consulte novamente ou confirme uma tentativa com o mesmo número.';
       }
-      if (active || this.setPending(row) || row.uncertain || row.conflict) rows.push(row);
+      if (active || row.explicit || this.setPending(row) || row.uncertain || row.conflict) rows.push(row);
     }
     if (active) {
       for (let number = 1; number <= (incoming.plannedSetsSnapshot ?? 0); number++) {
@@ -275,7 +276,7 @@ export class WorkoutSessionEditorState {
     if (!this.canWrite() || activity.removed) return;
     const number = Math.max(0, ...activity.rows.map((row) => row.setNumber)) + 1;
     if (number > 2147483647) return;
-    activity.rows.push(this.createRow(number));
+    activity.rows.push({ ...this.createRow(number), explicit: true });
     this.touch();
   }
 
@@ -415,7 +416,7 @@ export class WorkoutSessionEditorState {
     if (this.busy() || this.isBlocked()) return;
     this.confirm('Descartar rascunho da série',
       'As alterações locais serão descartadas. Isso não exclui nem desfaz uma possível gravação no servidor.', 'Descartar rascunho', () => {
-        if (row.removed || !row.persisted && row.setNumber > (activity.confirmed.plannedSetsSnapshot ?? 0)) {
+        if (row.removed || !row.persisted && (this.session()?.status === 'CLOSED' || row.setNumber > (activity.confirmed.plannedSetsSnapshot ?? 0))) {
           activity.rows = activity.rows.filter((value) => value !== row);
         } else {
           row.form.reset({ ...row.baseline, notes: row.baseline.notes ?? '' });

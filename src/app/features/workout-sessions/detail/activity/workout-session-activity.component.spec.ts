@@ -70,7 +70,9 @@ describe('WorkoutSessionActivityComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelectorAll('app-workout-session-set-form')).toHaveLength(1);
     expect(fixture.nativeElement.querySelector('textarea[id$="-notes"]')).not.toBeNull();
-    expect(fixture.nativeElement.textContent).not.toContain('Adicionar série');
+    expect(fixture.nativeElement.textContent).toContain('Adicionar série');
+    expect(fixture.nativeElement.querySelector('input[id$="-reps"]').readOnly).toBe(false);
+    expect(fixture.nativeElement.querySelector('input[id$="-load"]').value).toBe('');
     expect(fixture.nativeElement.textContent).not.toContain('Registrar série');
     http.expectNone(() => true);
   });

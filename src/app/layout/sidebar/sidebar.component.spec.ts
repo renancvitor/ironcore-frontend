@@ -20,6 +20,7 @@ describe('SidebarComponent', () => {
           { path: 'workout-planning', component: SidebarComponent },
           { path: 'workout-planning/:id', component: SidebarComponent },
           { path: 'workout-sessions', component: SidebarComponent },
+          { path: 'workout-sessions/history', component: SidebarComponent },
           { path: 'workout-sessions/:id', component: SidebarComponent },
         ]),
       ],
@@ -63,6 +64,23 @@ describe('SidebarComponent', () => {
     fixture.detectChanges();
     expect(TestBed.inject(Router).url).toBe('/exercises');
     expect(link.classList.contains('ic-sidebar__link--active')).toBe(true);
+  });
+
+  it('opens history without highlighting the current-session entry', async () => {
+    const link = fixture.nativeElement.querySelector('a[href="/workout-sessions/history"]') as HTMLAnchorElement;
+    expect(link.textContent).toContain('Histórico de sessões');
+    link.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(TestBed.inject(Router).url).toBe('/workout-sessions/history');
+    expect(link.classList.contains('ic-sidebar__link--active')).toBe(true);
+    expect(fixture.nativeElement.querySelector('a[href="/workout-sessions"]').classList.contains('ic-sidebar__link--active')).toBe(false);
+    await TestBed.inject(Router).navigateByUrl('/workout-sessions/100?from=history');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(link.classList.contains('ic-sidebar__link--active')).toBe(true);
+    expect(link.getAttribute('aria-current')).toBe('page');
+    expect(fixture.nativeElement.querySelector('a[href="/workout-sessions"]').classList.contains('ic-sidebar__link--active')).toBe(false);
   });
 
   it('should render the profile navigation link', () => {
