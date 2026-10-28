@@ -310,7 +310,7 @@ describe('WorkoutCycleDetailComponent session start with HTTP', () => {
   function startButton(): HTMLButtonElement | undefined {
     return Array.from(
       fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
-    ).find((button) => button.textContent?.trim() === 'Iniciar sessão');
+    ).find((button) => button.getAttribute('aria-label') === 'Iniciar sessão');
   }
 
   it.each(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const)(
@@ -329,6 +329,8 @@ describe('WorkoutCycleDetailComponent session start with HTTP', () => {
   it('starts the selected day once and blocks all conflicting planning operations', () => {
     create();
     const before = component.cycle();
+    expect(startButton()!.type).toBe('button');
+    expect(startButton()!.querySelector('mat-icon')!.textContent!.trim()).toBe('play_circle');
     startButton()!.click();
     fixture.detectChanges();
     const request = http.expectOne(sessionsUrl);
@@ -472,13 +474,19 @@ describe('WorkoutCycleDetailComponent session start with HTTP', () => {
       fixture.detectChanges();
       expect(component.sessionNeedsRecovery()).toBe(true);
       expect(fixture.nativeElement.textContent).toContain('Verificar sessão');
-      component.startSession(cycleDetail.days[0]);
+      expect(startButton()).toBeUndefined();
+      const recoveryButton = Array.from(
+        fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+      ).find((button) => button.textContent?.trim() === 'Verificar sessão')!;
+      recoveryButton.click();
       http.expectNone(sessionsUrl);
       http.expectOne(`${sessionsUrl}/in-progress`).flush(
         { message: 'Sessão de treino em andamento não encontrada.' },
         { status: 404, statusText: 'Not Found' },
       );
       expect(component.sessionNeedsRecovery()).toBe(false);
+      fixture.detectChanges();
+      expect(startButton()).toBeDefined();
       component.startSession(cycleDetail.days[0]);
       http.expectOne(sessionsUrl).flush({ id: 100 });
     },

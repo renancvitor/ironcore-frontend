@@ -50,6 +50,10 @@
   flex-wrap: wrap;
   gap: var(--ic-space-3);
   padding: var(--ic-space-3) var(--ic-space-4);
+  > button {
+    flex: 0 0 auto;
+    align-self: center;
+  }
   p {
     margin: 0;
     color: var(--ic-text-secondary);

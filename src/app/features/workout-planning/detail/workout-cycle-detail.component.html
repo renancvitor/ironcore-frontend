@@ -277,9 +277,16 @@
               @if (sessionStartingDayId() === day.id) {
                 <p role="status">Iniciando ou recuperando sessão…</p>
               }
-              <app-button [disabled]="contextualActionsDisabled()" (click)="startSession(day)">
-                {{ sessionNeedsRecovery() ? 'Verificar sessão' : 'Iniciar sessão' }}
-              </app-button>
+              @if (sessionNeedsRecovery()) {
+                <app-button [disabled]="contextualActionsDisabled()" (click)="startSession(day)">
+                  Verificar sessão
+                </app-button>
+              } @else {
+                <button matIconButton type="button" aria-label="Iniciar sessão" matTooltip="Iniciar sessão"
+                  [disabled]="contextualActionsDisabled()" (click)="startSession(day)">
+                  <mat-icon>play_circle</mat-icon>
+                </button>
+              }
             </div>
           }
           <ol class="ic-workout-detail__activities">

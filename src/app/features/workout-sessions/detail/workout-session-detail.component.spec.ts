@@ -61,6 +61,10 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     return details;
   }
 
+  function closeButton(): HTMLButtonElement | null {
+    return fixture.nativeElement.querySelector('button[aria-label="Encerrar sessão"]') as HTMLButtonElement | null;
+  }
+
   function button(text: string): HTMLButtonElement {
     return Array.from(
       fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
@@ -303,7 +307,9 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     (confirmed) => {
       load();
       dialog.open.mockReturnValue(of(confirmed));
-      button('Encerrar sessão').click();
+      expect(closeButton()!.type).toBe('button');
+      expect(closeButton()!.querySelector('mat-icon')!.textContent!.trim()).toBe('check_circle');
+      closeButton()!.click();
       expect(dialog.open).toHaveBeenCalledWith(
         expect.objectContaining({ secondaryAction: 'Voltar' }),
       );
@@ -319,9 +325,10 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
       const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
       const confirmed = new Subject<boolean>();
       dialog.open.mockReturnValue(confirmed);
-      button('Encerrar sessão').click();
+      closeButton()!.click();
       fixture.detectChanges();
       expect(component.closeState()).toBe('confirming');
+      expect(closeButton()!.disabled).toBe(true);
       component.closeSession();
       component.loadSession();
       component.backToPlanning();
@@ -351,7 +358,7 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
       request.flush(lifecycle);
       fixture.detectChanges();
       expect(component.session()).toEqual({ ...sessionDetail, ...lifecycle });
-      expect(button('Encerrar sessão')).toBeUndefined();
+      expect(closeButton()).toBeNull();
       expect(fixture.nativeElement.textContent).toContain('Encerrada');
       expect(closeReason === 'MANUAL' ? toast.success : toast.info).toHaveBeenCalledTimes(1);
     },
@@ -362,7 +369,7 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     (closeReason) => {
       load({ ...sessionDetail, status: 'CLOSED', closeReason, finishedAt: '2026-10-28T06:00:00Z' });
       component.closeSession();
-      expect(button('Encerrar sessão')).toBeUndefined();
+      expect(closeButton()).toBeNull();
       expect(dialog.open).not.toHaveBeenCalled();
       http.expectNone(() => true);
     },
@@ -514,7 +521,7 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     expect(component.editor.canWrite()).toBe(true);
     expect(fixture.nativeElement.textContent).toContain('Você pode corrigir os registros');
     expect(component.editor.activities()[0].rows).toHaveLength(1);
-    expect(button('Encerrar sessão')).toBeUndefined();
+    expect(closeButton()).toBeNull();
   });
 
   it('requires explicit closure without saving and retains drafts until success', () => {
@@ -613,7 +620,7 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
       status: 'CLOSED', closeReason, finishedAt: '2026-10-28T06:00:00Z',
       workoutCycleId: null, workoutDayId: null };
     load(detail);
-    expect(button('Encerrar sessão')).toBeUndefined();
+    expect(closeButton()).toBeNull();
     expect(button('Ver ciclo de origem')).toBeUndefined();
     expect(fixture.nativeElement.querySelectorAll('app-workout-session-set-form')).toHaveLength(0);
     openDetails('details.ic-session__notes');

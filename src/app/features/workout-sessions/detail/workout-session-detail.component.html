@@ -92,7 +92,8 @@
             [disabled]="busy()" (click)="openSourceCycle()"><mat-icon>event_repeat</mat-icon></button>
         }
         @if (session.status === 'IN_PROGRESS') {
-          <app-button [disabled]="!canClose()" (click)="closeSession()">Encerrar sessão</app-button>
+          <button matIconButton type="button" aria-label="Encerrar sessão" matTooltip="Encerrar sessão"
+            [disabled]="!canClose()" (click)="closeSession()"><mat-icon>check_circle</mat-icon></button>
         }
       </div>
     </section>
