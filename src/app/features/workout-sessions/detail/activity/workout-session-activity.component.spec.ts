@@ -246,10 +246,41 @@ describe('WorkoutSessionActivityComponent', () => {
     expect(duration.required).toBe(false);
     expect(distance.required).toBe(false);
     expect(fixture.nativeElement.querySelector('#activity-200-notes')).not.toBeNull();
-    expect(fixture.nativeElement.querySelector('.ic-activity__planned-summary').textContent).toContain('3 séries');
-    expect(fixture.nativeElement.querySelector('.ic-activity__reference summary').textContent).toContain('Detalhes da prescrição planejada');
+    expect(fixture.nativeElement.querySelector('.ic-activity__reference h4').textContent).toBe('Prescrição planejada — referência');
     expect((fixture.nativeElement.querySelector('#activity-200-notes') as HTMLTextAreaElement).value).toBe('');
     expect((fixture.nativeElement.querySelector('#activity-200-notes') as HTMLTextAreaElement).required).toBe(false);
+  });
+
+  it('shows the complete prescription in a static section without expanding execution', () => {
+    const detail = structuredClone(sessionDetail);
+    const notes = 'Orientação histórica completa.\nManter a postura em todas as séries e respeitar o descanso prescrito.';
+    detail.activities[0].plannedNotesSnapshot = notes;
+    editor.reconcile(detail);
+    sync();
+    const reference = fixture.nativeElement.querySelector('.ic-activity__reference') as HTMLElement;
+    expect(reference.tagName).toBe('SECTION');
+    expect(reference.closest('details, [hidden]')).toBeNull();
+    expect(reference.querySelector('details, summary, button, [hidden]')).toBeNull();
+    expect(reference.querySelector('h4')!.textContent).toBe('Prescrição planejada — referência');
+    expect(reference.getAttribute('aria-labelledby')).toBe(reference.querySelector('h4')!.id);
+    const fields = Array.from(reference.querySelectorAll('dl > div')).map((field) => [
+      field.querySelector('dt')!.textContent!.trim(), field.querySelector('dd')!.textContent!.trim(),
+    ]);
+    expect(fields).toEqual([
+      ['Séries', '3'],
+      ['Repetições mínimas', '8'],
+      ['Repetições máximas', '12'],
+      ['Carga alvo', '22.5 kg'],
+      ['Orientação de carga', 'Carga moderada'],
+      ['Duração', '15 min'],
+      ['Distância', '2.5 km'],
+      ['Intensidade', 'Moderada'],
+      ['Descanso', '60 s'],
+    ]);
+    expect(reference.querySelector('p')!.textContent).toBe(notes);
+    expect(fixture.nativeElement.querySelector('.ic-activity__planned-summary')).toBeNull();
+    expect((fixture.nativeElement.querySelector('.ic-activity__execution') as HTMLDetailsElement).open).toBe(false);
+    http.expectNone(() => true);
   });
 
   it('preserves each row while adding another visual position without requests', () => {

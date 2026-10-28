@@ -110,6 +110,39 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     http.expectOne(`${url}/100`).flush(sessionDetail);
   });
 
+  it.each([null, 'MANUAL', 'AUTO_EXPIRED'] as const)('shows all session details without expansion (close reason: %s)', (closeReason) => {
+    const data = structuredClone(sessionDetail);
+    if (closeReason) {
+      data.status = 'CLOSED';
+      data.closeReason = closeReason;
+      data.finishedAt = '2026-10-28T06:00:00Z';
+    }
+    load(data);
+    const details = fixture.nativeElement.querySelector('.ic-session__details') as HTMLElement;
+    expect(details.tagName).toBe('SECTION');
+    expect(details.closest('details, [hidden]')).toBeNull();
+    expect(details.querySelector('details, summary, button, [hidden]')).toBeNull();
+    expect(details.querySelector('h3')!.textContent).toBe('Detalhes da sessão');
+    expect(details.getAttribute('aria-labelledby')).toBe(details.querySelector('h3')!.id);
+    const fields = Array.from(details.querySelectorAll('dl > div')).map((field) => [
+      field.querySelector('dt')!.textContent!.trim(), field.querySelector('dd')!.textContent!.trim(),
+    ]);
+    expect(fields).toEqual([
+      ['Status', closeReason ? 'Encerrada' : 'Em andamento'],
+      ['Data do treino', '27/10/2026'],
+      ['Início', '27/10/2026 10:00 (São Paulo)'],
+      ['Encerramento', closeReason ? '28/10/2026 03:00' : '—'],
+    ]);
+    const reason = details.querySelector('.ic-session__notice');
+    if (closeReason) {
+      expect(reason!.textContent!.trim()).toBe(closeReason === 'MANUAL'
+        ? 'Encerramento manual' : 'Encerrada automaticamente por expiração');
+    } else expect(reason).toBeNull();
+    expect(fixture.nativeElement.querySelector('.ic-session__summary')).toBeNull();
+    expect((fixture.nativeElement.querySelector('.ic-activity__execution') as HTMLDetailsElement).open).toBe(false);
+    http.expectNone(() => true);
+  });
+
   it('renders a snapshot after all optional origin references were removed', () => {
     const data = structuredClone(sessionDetail);
     data.workoutCycleId = null;

@@ -5,17 +5,6 @@
   <header class="ic-activity__header">
     <div>
       <h3>{{ snapshot.exerciseNameSnapshot }}</h3>
-      <p class="ic-activity__planned-summary">
-        Planejado:
-        @if (snapshot.plannedSetsSnapshot !== null) { <span>{{ snapshot.plannedSetsSnapshot }} séries</span> }
-        @if (snapshot.plannedRepRangeMinSnapshot !== null && snapshot.plannedRepRangeMaxSnapshot !== null) {
-          <span>{{ snapshot.plannedRepRangeMinSnapshot }}–{{ snapshot.plannedRepRangeMaxSnapshot }} rep.</span>
-        } @else if (snapshot.plannedRepRangeMinSnapshot !== null) { <span>Mín. {{ snapshot.plannedRepRangeMinSnapshot }} rep.</span> }
-        @else if (snapshot.plannedRepRangeMaxSnapshot !== null) { <span>Máx. {{ snapshot.plannedRepRangeMaxSnapshot }} rep.</span> }
-        @if (snapshot.plannedTargetLoadKgSnapshot !== null) { <span>Alvo {{ snapshot.plannedTargetLoadKgSnapshot | number: '1.0-2' }} kg</span> }
-        @if (snapshot.plannedTargetLoadTextSnapshot) { <span>{{ snapshot.plannedTargetLoadTextSnapshot }}</span> }
-        @if (snapshot.plannedRestSecondsSnapshot !== null) { <span>Descanso {{ snapshot.plannedRestSecondsSnapshot }} s</span> }
-      </p>
     </div>
     @if (editor.session()?.status === 'CLOSED' && snapshot.exerciseId !== null) {
       <button matIconButton type="button" aria-label="Ver evolução deste exercício"
@@ -23,8 +12,8 @@
         (click)="progressRequested.emit(snapshot.exerciseId)"><mat-icon>show_chart</mat-icon></button>
     }
   </header>
-  <details class="ic-activity__reference" [attr.aria-labelledby]="prefix() + '-planned'">
-    <summary [id]="prefix() + '-planned'">Detalhes da prescrição planejada</summary>
+  <section class="ic-activity__reference" [attr.aria-labelledby]="prefix() + '-planned'">
+    <h4 [id]="prefix() + '-planned'">Prescrição planejada — referência</h4>
     @if (snapshot.exerciseId === null) {
       <p>O vínculo deste exercício foi excluído. A evolução por exercício está indisponível; os registros históricos continuam preservados nesta sessão.</p>
     }
@@ -40,7 +29,7 @@
       @if (snapshot.plannedRestSecondsSnapshot !== null) { <div><dt>Descanso</dt><dd>{{ snapshot.plannedRestSecondsSnapshot }} s</dd></div> }
     </dl>
     @if (snapshot.plannedNotesSnapshot) { <h4>Observações planejadas</h4><p>{{ snapshot.plannedNotesSnapshot }}</p> }
-  </details>
+  </section>
   <details class="ic-activity__execution" [open]="executionOpen || executionAttention()"
     (toggle)="executionOpen = keepOpen($event, executionAttention())" [attr.aria-labelledby]="prefix() + '-execution'">
     <summary [id]="prefix() + '-execution'">Registrar execução</summary>

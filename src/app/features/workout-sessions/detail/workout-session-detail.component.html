@@ -61,13 +61,9 @@
       <header class="ic-session__card-header">
         <h2 id="session-title">{{ session.workoutDayTitleSnapshot }}</h2>
         <p>{{ session.workoutCycleNameSnapshot }} · {{ weekDayLabels[session.weekDaySnapshot] }}</p>
-        <p class="ic-session__summary">
-          <strong>{{ statusLabels[session.status] }}</strong> · {{ session.performedOn | date: 'dd/MM/yyyy' }}
-          <span>Início {{ session.startedAt | date: 'HH:mm' : '-0300' }}{{ session.finishedAt ? ' · Fim ' + (session.finishedAt | date: 'HH:mm' : '-0300') : '' }} (São Paulo)</span>
-        </p>
       </header>
-      <details class="ic-session__details">
-        <summary>Detalhes da sessão</summary>
+      <section class="ic-session__details" aria-labelledby="session-details-title">
+        <h3 id="session-details-title">Detalhes da sessão</h3>
         <dl class="ic-session__fields">
           <div>
             <dt>Status</dt>
@@ -89,7 +85,7 @@
         @if (session.closeReason; as reason) {
           <p class="ic-session__notice" role="status">{{ closeReasonLabels[reason] }}</p>
         }
-      </details>
+      </section>
       <div class="ic-session__actions">
         @if (session.workoutCycleId !== null) {
           <button matIconButton type="button" aria-label="Ver ciclo de origem" matTooltip="Ver ciclo de origem"
