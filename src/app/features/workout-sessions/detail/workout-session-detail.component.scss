@@ -82,7 +82,16 @@ p {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--ic-space-3);
+  align-items: center;
 }
+.ic-session summary { cursor: pointer; min-height: 44px; padding-block: var(--ic-space-3); box-sizing: border-box; overflow-wrap: anywhere; }
+.ic-session summary:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+.ic-session__details > summary { padding-inline: var(--ic-space-4); }
+.ic-session__summary span { display: block; margin-top: var(--ic-space-2); font-size: 0.875rem; }
+.ic-session__notes-summary { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: var(--ic-space-2); color: var(--ic-text-secondary); font-weight: normal; white-space: pre-wrap; }
+.ic-session__notes-action { display: block; margin-top: var(--ic-space-2); font-size: 0.875rem; color: var(--ic-text-secondary); }
+.ic-session__notes[open] .ic-session__notes-summary,
+.ic-session__notes[open] .ic-session__notes-action { display: none; }
 .ic-session__card > .ic-session__actions,
 .ic-session__notes,
 .ic-session__notice {
@@ -118,9 +127,6 @@ p {
   }
   .ic-session__header-actions {
     @include actions.icons;
-  }
-  .ic-session__actions {
-    @include actions.form;
   }
   .ic-session__fields {
     grid-template-columns: 1fr;

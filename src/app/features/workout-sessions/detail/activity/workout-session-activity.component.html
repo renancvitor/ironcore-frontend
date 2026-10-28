@@ -2,16 +2,32 @@
 @let snapshot = model.confirmed;
 
 <article class="ic-activity" [attr.data-revision]="revision()">
-  <header><h3>{{ snapshot.exerciseNameSnapshot }}</h3></header>
-  @if (editor.session()?.status === 'CLOSED') {
-    @if (snapshot.exerciseId !== null) {
-      <app-button variant="secondary" [disabled]="blocked() || editor.busy()" (click)="progressRequested.emit(snapshot.exerciseId)">Ver evolução deste exercício</app-button>
-    } @else {
+  <header class="ic-activity__header">
+    <div>
+      <h3>{{ snapshot.exerciseNameSnapshot }}</h3>
+      <p class="ic-activity__planned-summary">
+        Planejado:
+        @if (snapshot.plannedSetsSnapshot !== null) { <span>{{ snapshot.plannedSetsSnapshot }} séries</span> }
+        @if (snapshot.plannedRepRangeMinSnapshot !== null && snapshot.plannedRepRangeMaxSnapshot !== null) {
+          <span>{{ snapshot.plannedRepRangeMinSnapshot }}–{{ snapshot.plannedRepRangeMaxSnapshot }} rep.</span>
+        } @else if (snapshot.plannedRepRangeMinSnapshot !== null) { <span>Mín. {{ snapshot.plannedRepRangeMinSnapshot }} rep.</span> }
+        @else if (snapshot.plannedRepRangeMaxSnapshot !== null) { <span>Máx. {{ snapshot.plannedRepRangeMaxSnapshot }} rep.</span> }
+        @if (snapshot.plannedTargetLoadKgSnapshot !== null) { <span>Alvo {{ snapshot.plannedTargetLoadKgSnapshot | number: '1.0-2' }} kg</span> }
+        @if (snapshot.plannedTargetLoadTextSnapshot) { <span>{{ snapshot.plannedTargetLoadTextSnapshot }}</span> }
+        @if (snapshot.plannedRestSecondsSnapshot !== null) { <span>Descanso {{ snapshot.plannedRestSecondsSnapshot }} s</span> }
+      </p>
+    </div>
+    @if (editor.session()?.status === 'CLOSED' && snapshot.exerciseId !== null) {
+      <button matIconButton type="button" aria-label="Ver evolução deste exercício"
+        matTooltip="Ver evolução deste exercício" [disabled]="blocked() || editor.busy()"
+        (click)="progressRequested.emit(snapshot.exerciseId)"><mat-icon>show_chart</mat-icon></button>
+    }
+  </header>
+  <details class="ic-activity__reference" [attr.aria-labelledby]="prefix() + '-planned'">
+    <summary [id]="prefix() + '-planned'">Detalhes da prescrição planejada</summary>
+    @if (snapshot.exerciseId === null) {
       <p>O vínculo deste exercício foi excluído. A evolução por exercício está indisponível; os registros históricos continuam preservados nesta sessão.</p>
     }
-  }
-  <section class="ic-activity__reference" [attr.aria-labelledby]="prefix() + '-planned'">
-    <h4 [id]="prefix() + '-planned'">Prescrição planejada — referência</h4>
     <dl>
       @if (snapshot.plannedSetsSnapshot !== null) { <div><dt>Séries</dt><dd>{{ snapshot.plannedSetsSnapshot }}</dd></div> }
       @if (snapshot.plannedRepRangeMinSnapshot !== null) { <div><dt>Repetições mínimas</dt><dd>{{ snapshot.plannedRepRangeMinSnapshot }}</dd></div> }
@@ -24,37 +40,47 @@
       @if (snapshot.plannedRestSecondsSnapshot !== null) { <div><dt>Descanso</dt><dd>{{ snapshot.plannedRestSecondsSnapshot }} s</dd></div> }
     </dl>
     @if (snapshot.plannedNotesSnapshot) { <h4>Observações planejadas</h4><p>{{ snapshot.plannedNotesSnapshot }}</p> }
-  </section>
-  <section class="ic-activity__execution" [attr.aria-labelledby]="prefix() + '-execution'">
-    <h4 [id]="prefix() + '-execution'">Execução informada</h4>
+  </details>
+  <details class="ic-activity__execution" [open]="executionOpen || executionAttention()"
+    (toggle)="executionOpen = keepOpen($event, executionAttention())" [attr.aria-labelledby]="prefix() + '-execution'">
+    <summary [id]="prefix() + '-execution'">Registrar execução</summary>
     @if (model.removed) { <p role="alert">{{ model.error }}</p> }
     <form [formGroup]="model.form" (ngSubmit)="submit()"
       [attr.aria-busy]="editor.operation() === 'activity:' + snapshot.id">
       <fieldset [disabled]="blocked() || editor.operation() === 'activity:' + snapshot.id">
-        <legend>Duração, distância e relato (opcionais e independentes)</legend>
-        <div class="ic-activity__fields">
+        <legend class="ic-activity__legend">Dados opcionais e independentes da atividade</legend>
+        <details [open]="durationOpen || durationAttention()"
+          (toggle)="durationOpen = keepOpen($event, durationAttention())">
+          <summary>Duração e distância</summary>
+          <p>Registrado: {{ snapshot.actualDurationMinutes === null ? '—' : snapshot.actualDurationMinutes + ' min' }} · {{ snapshot.actualDistanceKm === null ? '—' : (snapshot.actualDistanceKm | number: '1.0-2') + ' km' }}</p>
+          <div class="ic-activity__fields">
+            <mat-form-field appearance="outline">
+              <mat-label>Duração executada (minutos)</mat-label>
+              <input matInput type="number" inputmode="numeric" step="1" min="1" max="2147483647"
+                #durationInput [id]="prefix() + '-duration'" formControlName="actualDurationMinutes"
+                [readOnly]="model.removed"
+                (blur)="validateNumber(durationInput, model.form.controls.actualDurationMinutes)" />
+              <mat-error>{{ fieldError(model.form.controls.actualDurationMinutes) }}</mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Distância executada (km)</mat-label>
+              <input matInput type="number" inputmode="decimal" step="0.01" min="0" max="999999.99"
+                #distanceInput [id]="prefix() + '-distance'" formControlName="actualDistanceKm"
+                [readOnly]="model.removed"
+                (blur)="validateNumber(distanceInput, model.form.controls.actualDistanceKm)" />
+              <mat-error>{{ fieldError(model.form.controls.actualDistanceKm) }}</mat-error>
+            </mat-form-field>
+          </div>
+        </details>
+        <details [open]="notesOpen || notesAttention()"
+          (toggle)="notesOpen = keepOpen($event, notesAttention())">
+          <summary>Observações do exercício{{ snapshot.notes ? ' · relato registrado' : ' (opcional)' }}</summary>
           <mat-form-field appearance="outline">
-            <mat-label>Duração executada (minutos)</mat-label>
-            <input matInput type="number" inputmode="numeric" step="1" min="1" max="2147483647"
-              #durationInput [id]="prefix() + '-duration'" formControlName="actualDurationMinutes"
-              [readOnly]="model.removed"
-              (blur)="validateNumber(durationInput, model.form.controls.actualDurationMinutes)" />
-            <mat-error>{{ fieldError(model.form.controls.actualDurationMinutes) }}</mat-error>
+            <mat-label>Relato do exercício (opcional)</mat-label>
+            <textarea matInput rows="2" [id]="prefix() + '-notes'" formControlName="notes" [readOnly]="model.removed"></textarea>
+            <mat-error>{{ fieldError(model.form.controls.notes) }}</mat-error>
           </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Distância executada (km)</mat-label>
-            <input matInput type="number" inputmode="decimal" step="0.01" min="0" max="999999.99"
-              #distanceInput [id]="prefix() + '-distance'" formControlName="actualDistanceKm"
-              [readOnly]="model.removed"
-              (blur)="validateNumber(distanceInput, model.form.controls.actualDistanceKm)" />
-            <mat-error>{{ fieldError(model.form.controls.actualDistanceKm) }}</mat-error>
-          </mat-form-field>
-        </div>
-        <mat-form-field appearance="outline">
-          <mat-label>Relato do exercício (opcional)</mat-label>
-          <textarea matInput rows="2" [id]="prefix() + '-notes'" formControlName="notes" [readOnly]="model.removed"></textarea>
-          <mat-error>{{ fieldError(model.form.controls.notes) }}</mat-error>
-        </mat-form-field>
+        </details>
       </fieldset>
       @if (editor.activityPending(model)) { <p role="status">Dados da atividade com alterações não salvas.</p> }
       @if (model.error && !model.removed) { <p role="alert">{{ model.error }}</p> }
@@ -63,54 +89,65 @@
         <p role="alert">Os dados mudaram no servidor. Revise o rascunho antes de salvar.</p>
         <app-button variant="secondary" [disabled]="blocked() || editor.busy()" (click)="editor.acknowledge(model)">Revisei; manter meu rascunho</app-button>
       }
-      <footer>
-        @if (!model.removed) {
-          <app-button type="submit" [disabled]="!editor.canWrite() || model.conflict || !editor.activityPending(model)">
-            {{ editor.operation() === 'activity:' + snapshot.id ? 'Salvando…' : 'Salvar dados da atividade' }}
-          </app-button>
-        }
-        @if (editor.activityPending(model) || model.conflict) {
-          <app-button variant="secondary" [disabled]="blocked() || editor.busy()" (click)="editor.discardActivity(model)">Descartar alterações da atividade</app-button>
-        }
-      </footer>
+      @if (durationOpen || notesOpen || activityAttention()) {
+        <footer>
+          @if (!model.removed) {
+            <button matIconButton type="submit" aria-label="Salvar dados da atividade" matTooltip="Salvar dados da atividade"
+              [disabled]="!editor.canWrite() || model.conflict || !editor.activityPending(model)">
+              <mat-icon>check</mat-icon>
+            </button>
+          }
+          <button matIconButton type="button" aria-label="Cancelar edição da atividade" matTooltip="Cancelar edição"
+            [disabled]="blocked() || editor.busy()" (click)="cancelActivity()"><mat-icon>close</mat-icon></button>
+        </footer>
+      }
     </form>
-    <div class="ic-activity__mode">
-      <mat-form-field appearance="outline">
-        <mat-label>Modo da carga deste exercício</mat-label>
-        <mat-select [id]="prefix() + '-load-mode'" [formControl]="model.selectedMode"
-          [disabled]="blocked() || editor.busy() || model.removed"
-          [attr.aria-describedby]="prefix() + '-mode-help'">
-          <mat-option [value]="null">Selecione ao informar carga</mat-option>
-          <mat-option value="TOTAL">TOTAL — carga total</mat-option>
-          <mat-option value="PER_SIDE">PER_SIDE — carga por lado</mat-option>
-        </mat-select>
-      </mat-form-field>
-      <p [id]="prefix() + '-mode-help'">PER_SIDE considera dois lados equivalentes. Não inclui peso presumido de barra, corpo ou equipamento. Sem carga registrada, a escolha é apenas local.</p>
-      @if (editor.modePending(model)) {
-        <p role="status">A mudança de modo ainda não foi aplicada. Aplique-a antes de salvar séries deste exercício.</p>
-        <app-button [disabled]="!editor.canWrite() || !model.selectedMode.value" (click)="editor.applyMode(model)">Aplicar modo</app-button>
-        <app-button variant="secondary" [disabled]="blocked() || editor.busy()" (click)="editor.acknowledgeMode(model)">Cancelar mudança de modo</app-button>
+    <details class="ic-activity__series" [open]="setsOpen || setsAttention()"
+      (toggle)="setsOpen = keepOpen($event, setsAttention())">
+      <summary>Séries e cargas</summary>
+      <div class="ic-activity__mode">
+        <mat-form-field appearance="outline">
+          <mat-label>Modo da carga deste exercício</mat-label>
+          <mat-select [id]="prefix() + '-load-mode'" [formControl]="model.selectedMode"
+            [disabled]="blocked() || editor.busy() || model.removed"
+            [attr.aria-describedby]="prefix() + '-mode-help'">
+            <mat-option [value]="null">Selecione ao informar carga</mat-option>
+            <mat-option value="TOTAL">TOTAL — carga total</mat-option>
+            <mat-option value="PER_SIDE">PER_SIDE — carga por lado</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <details [open]="modeOpen" (toggle)="modeOpen = $any($event.target).open">
+          <summary>Como interpretar a carga?</summary>
+          <p [id]="prefix() + '-mode-help'">TOTAL representa a carga total. PER_SIDE considera dois lados equivalentes. Não inclui peso presumido de barra, corpo ou equipamento. Sem carga registrada, a escolha é apenas local.</p>
+        </details>
+        @if (editor.modePending(model)) {
+          <p role="status">A mudança de modo ainda não foi aplicada. Aplique-a antes de salvar séries deste exercício.</p>
+          <app-button [disabled]="!editor.canWrite() || !model.selectedMode.value" (click)="editor.applyMode(model)">Aplicar modo</app-button>
+          <app-button variant="secondary" [disabled]="blocked() || editor.busy()" (click)="editor.acknowledgeMode(model)">Cancelar mudança de modo</app-button>
+        }
+        @if (model.modeConflict) {
+          <p role="alert">O modo mudou no servidor. Revise a interpretação dos rascunhos com carga.</p>
+          <app-button variant="secondary" [disabled]="blocked() || editor.busy()" (click)="editor.acknowledgeMode(model)">Usar modo confirmado pelo servidor</app-button>
+        }
+      </div>
+      <div class="ic-activity__sets">
+        @for (row of model.rows; track row.key) {
+          <app-workout-session-set-form [row]="row" [activityId]="snapshot.id" [revision]="revision()"
+            [pending]="editor.setPending(row)" [readOnly]="model.removed"
+            [planned]="row.setNumber <= (snapshot.plannedSetsSnapshot ?? 0)"
+            [blocked]="blocked() || editor.confirming()"
+            [saving]="editor.operation() === 'set:' + row.key" [deleting]="editor.operation() === 'delete:' + row.key"
+            [canSave]="editor.canWrite() && !model.removed && !row.removed && !row.conflict && !model.modeConflict && !editor.modePending(model)"
+            [canDelete]="editor.canWrite() && !model.removed && !row.removed"
+            (saved)="editor.saveSet(model, row, $event)" (deleted)="deleteSet(row)"
+            (discarded)="editor.discardSet(model, row, $event)" (reviewed)="editor.acknowledge(row)" (recovered)="editor.recover()" />
+        } @empty { <p>Nenhuma série registrada.</p> }
+      </div>
+      @if (!model.removed) {
+        <button matButton type="button" [id]="prefix() + '-add-set'" [disabled]="!editor.canWrite()" (click)="editor.addSet(model)">
+          <mat-icon>add</mat-icon> Adicionar série adicional
+        </button>
       }
-      @if (model.modeConflict) {
-        <p role="alert">O modo mudou no servidor. Revise a interpretação dos rascunhos com carga.</p>
-        <app-button variant="secondary" [disabled]="blocked() || editor.busy()" (click)="editor.acknowledgeMode(model)">Usar modo confirmado pelo servidor</app-button>
-      }
-    </div>
-    <div class="ic-activity__sets">
-      @for (row of model.rows; track row.key) {
-        <app-workout-session-set-form [row]="row" [activityId]="snapshot.id" [revision]="revision()"
-          [pending]="editor.setPending(row)" [readOnly]="model.removed"
-          [planned]="row.setNumber <= (snapshot.plannedSetsSnapshot ?? 0)"
-          [blocked]="blocked() || editor.confirming()"
-          [saving]="editor.operation() === 'set:' + row.key" [deleting]="editor.operation() === 'delete:' + row.key"
-          [canSave]="editor.canWrite() && !model.removed && !row.removed && !row.conflict && !model.modeConflict && !editor.modePending(model)"
-          [canDelete]="editor.canWrite() && !model.removed && !row.removed"
-          (saved)="editor.saveSet(model, row)" (deleted)="deleteSet(row)"
-          (discarded)="editor.discardSet(model, row)" (reviewed)="editor.acknowledge(row)" (recovered)="editor.recover()" />
-      } @empty { <p>Nenhuma série registrada.</p> }
-    </div>
-    @if (!model.removed) {
-      <app-button [id]="prefix() + '-add-set'" variant="secondary" [disabled]="!editor.canWrite()" (click)="editor.addSet(model)">Adicionar série</app-button>
-    }
-  </section>
+    </details>
+  </details>
 </article>

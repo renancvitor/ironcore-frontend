@@ -1,5 +1,4 @@
 @use '../../../../../styles/responsive' as responsive;
-@use '../../../../../styles/actions' as actions;
 
 :host { display: block; min-width: 0; }
 .ic-activity {
@@ -10,6 +9,8 @@
   header { padding: var(--ic-space-4); background: var(--ic-surface-elevated); border-bottom: 1px solid var(--ic-border-soft); }
   h3, h4, p, dl, dd { margin: 0; overflow-wrap: anywhere; }
   h3 { font-size: 1.125rem; }
+  summary { cursor: pointer; padding-block: var(--ic-space-3); min-height: 44px; box-sizing: border-box; color: var(--ic-text-primary); }
+  summary:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
   h4 { margin-bottom: var(--ic-space-3); }
   p { margin-bottom: var(--ic-space-3); white-space: pre-wrap; }
   fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
@@ -21,17 +22,21 @@
   dt { color: var(--ic-text-secondary); }
   dd { text-align: right; }
 }
-.ic-activity__reference, .ic-activity__execution { padding: var(--ic-space-4); }
+.ic-activity__reference, .ic-activity__execution { padding: 0 var(--ic-space-4); }
+.ic-activity__execution[open] { padding-bottom: var(--ic-space-4); }
+.ic-activity__header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ic-space-2); > div { min-width: 0; } button { flex-shrink: 0; } }
+.ic-activity .ic-activity__planned-summary { display: flex; flex-wrap: wrap; gap: var(--ic-space-2); margin: var(--ic-space-2) 0 0; font-size: 0.875rem; color: var(--ic-text-secondary); }
+.ic-activity__legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.ic-activity__series { border-top: 1px solid var(--ic-border-soft); margin-top: var(--ic-space-2); }
 .ic-activity__reference { border-bottom: 1px solid var(--ic-border-soft); h4:not(:first-child) { margin-top: var(--ic-space-3); } }
 .ic-activity__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ic-space-3); }
-.ic-activity__mode, .ic-activity__sets { margin-block: var(--ic-space-4); }
-.ic-activity__sets { display: flex; flex-direction: column; gap: var(--ic-space-3); }
+.ic-activity__mode, .ic-activity__sets { margin-block: var(--ic-space-3); }
+.ic-activity__sets { display: flex; flex-direction: column; gap: var(--ic-space-2); }
 @include responsive.mobile {
   .ic-activity {
     header { padding: var(--ic-space-3); }
     dl { grid-template-columns: 1fr; }
-    footer { @include actions.form; }
   }
-  .ic-activity__reference, .ic-activity__execution { padding: var(--ic-space-3); }
+  .ic-activity__reference, .ic-activity__execution { padding-inline: var(--ic-space-3); }
   .ic-activity__fields { grid-template-columns: 1fr; }
 }

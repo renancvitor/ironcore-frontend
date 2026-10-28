@@ -306,7 +306,7 @@ export class WorkoutSessionEditorState {
       }, activity.form);
   }
 
-  saveSet(activity: SessionActivityEditor, row: SessionSetEditor): void {
+  saveSet(activity: SessionActivityEditor, row: SessionSetEditor, afterSave?: () => void): void {
     if (!this.canWrite() || activity.removed || row.removed || row.conflict ||
       activity.modeConflict || this.modePending(activity)) return;
     if (row.form.invalid) { row.form.markAllAsTouched(); return; }
@@ -342,6 +342,7 @@ export class WorkoutSessionEditorState {
           this.commitActivity({ ...activity.confirmed, sets: [
             ...activity.confirmed.sets.filter((set) => set.id !== response.id), response,
           ].sort((a, b) => a.setNumber - b.setNumber) });
+          afterSave?.();
         }, row.form, persisted ? undefined : create);
     };
     if (!row.uncertain) send();
@@ -412,7 +413,7 @@ export class WorkoutSessionEditorState {
     });
   }
 
-  discardSet(activity: SessionActivityEditor, row: SessionSetEditor): void {
+  discardSet(activity: SessionActivityEditor, row: SessionSetEditor, afterDiscard?: () => void): void {
     if (this.busy() || this.isBlocked()) return;
     this.confirm('Descartar rascunho da série',
       'As alterações locais serão descartadas. Isso não exclui nem desfaz uma possível gravação no servidor.', 'Descartar rascunho', () => {
@@ -425,6 +426,7 @@ export class WorkoutSessionEditorState {
         }
         activity.rows = this.mergeRows(activity, activity.confirmed, this.session()?.status === 'IN_PROGRESS');
         this.touch();
+        afterDiscard?.();
       });
   }
 

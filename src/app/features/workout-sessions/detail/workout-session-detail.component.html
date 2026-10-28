@@ -2,7 +2,6 @@
   <header class="ic-session__header">
     <div>
       <h1>{{ session()?.status === 'CLOSED' ? 'Sessão encerrada' : 'Sessão de treino' }}</h1>
-      <p>Consulte a ficha preservada no início da sessão.</p>
     </div>
     <div class="ic-session__header-actions">
       <button
@@ -62,33 +61,39 @@
       <header class="ic-session__card-header">
         <h2 id="session-title">{{ session.workoutDayTitleSnapshot }}</h2>
         <p>{{ session.workoutCycleNameSnapshot }} · {{ weekDayLabels[session.weekDaySnapshot] }}</p>
+        <p class="ic-session__summary">
+          <strong>{{ statusLabels[session.status] }}</strong> · {{ session.performedOn | date: 'dd/MM/yyyy' }}
+          <span>Início {{ session.startedAt | date: 'HH:mm' : '-0300' }}{{ session.finishedAt ? ' · Fim ' + (session.finishedAt | date: 'HH:mm' : '-0300') : '' }} (São Paulo)</span>
+        </p>
       </header>
-      <dl class="ic-session__fields">
-        <div>
-          <dt>Status</dt>
-          <dd>{{ statusLabels[session.status] }}</dd>
-        </div>
-        <div>
-          <dt>Data do treino</dt>
-          <dd>{{ session.performedOn | date: 'dd/MM/yyyy' }}</dd>
-        </div>
-        <div>
-          <dt>Início</dt>
-          <dd>{{ session.startedAt | date: 'dd/MM/yyyy HH:mm' : '-0300' }} (São Paulo)</dd>
-        </div>
-        <div>
-          <dt>Encerramento</dt>
-          <dd>{{ (session.finishedAt | date: 'dd/MM/yyyy HH:mm' : '-0300') ?? '—' }}</dd>
-        </div>
-      </dl>
-      @if (session.closeReason; as reason) {
-        <p class="ic-session__notice" role="status">{{ closeReasonLabels[reason] }}</p>
-      }
+      <details class="ic-session__details">
+        <summary>Detalhes da sessão</summary>
+        <dl class="ic-session__fields">
+          <div>
+            <dt>Status</dt>
+            <dd>{{ statusLabels[session.status] }}</dd>
+          </div>
+          <div>
+            <dt>Data do treino</dt>
+            <dd>{{ session.performedOn | date: 'dd/MM/yyyy' }}</dd>
+          </div>
+          <div>
+            <dt>Início</dt>
+            <dd>{{ session.startedAt | date: 'dd/MM/yyyy HH:mm' : '-0300' }} (São Paulo)</dd>
+          </div>
+          <div>
+            <dt>Encerramento</dt>
+            <dd>{{ (session.finishedAt | date: 'dd/MM/yyyy HH:mm' : '-0300') ?? '—' }}</dd>
+          </div>
+        </dl>
+        @if (session.closeReason; as reason) {
+          <p class="ic-session__notice" role="status">{{ closeReasonLabels[reason] }}</p>
+        }
+      </details>
       <div class="ic-session__actions">
         @if (session.workoutCycleId !== null) {
-          <app-button variant="secondary" [disabled]="busy()" (click)="openSourceCycle()">
-            Ver ciclo de origem
-          </app-button>
+          <button matIconButton type="button" aria-label="Ver ciclo de origem" matTooltip="Ver ciclo de origem"
+            [disabled]="busy()" (click)="openSourceCycle()"><mat-icon>event_repeat</mat-icon></button>
         }
         @if (session.status === 'IN_PROGRESS') {
           <app-button [disabled]="!canClose()" (click)="closeSession()">Encerrar sessão</app-button>
@@ -110,30 +115,35 @@
         Rascunhos ficam somente nesta página.
       </p>
     }
-    <form class="ic-session__card ic-session__notes" [formGroup]="editor.notesForm" (ngSubmit)="editor.saveNotes()"
-      [attr.aria-busy]="editor.operation() === 'notes'">
-      <h2>Relato geral da sessão (opcional)</h2>
-      <fieldset [disabled]="editingBlocked() || editor.operation() === 'notes'">
-        <legend>Como foi a sessão</legend>
-        <mat-form-field appearance="outline">
-          <mat-label>Relato geral da sessão</mat-label>
-          <textarea matInput id="session-execution-notes" rows="3" [formControl]="editor.notes"></textarea>
-          <mat-error>{{ fieldError(editor.notes) }}</mat-error>
-        </mat-form-field>
-      </fieldset>
-      @if (editor.notesFeedback.error) { <p role="alert">{{ editor.notesFeedback.error }}</p> }
-      @if (editor.notesFeedback.message && !editor.notesPending()) { <p role="status">{{ editor.notesFeedback.message }}</p> }
-      @if (editor.notesFeedback.conflict) {
-        <p role="alert">O relato mudou no servidor. Revise seu texto antes de substituir o registro.</p>
-        <app-button variant="secondary" [disabled]="busy()" (click)="editor.acknowledge(editor.notesFeedback)">Revisei; manter meu rascunho</app-button>
-      }
-      <div class="ic-session__actions">
-        <app-button type="submit" [disabled]="!editor.canWrite() || !editor.notesPending() || editor.notesFeedback.conflict">Salvar relato</app-button>
-        @if (editor.notesPending() || editor.notesFeedback.conflict) {
-          <app-button variant="secondary" [disabled]="busy()" (click)="editor.discardNotes()">Descartar alterações do relato</app-button>
+    <details class="ic-session__card ic-session__notes" [open]="notesOpen || notesAttention()" (toggle)="toggleNotes($event)">
+      <summary id="session-notes-title">Relato geral da sessão (opcional)
+        @if (session.notes) { <span class="ic-session__notes-summary">{{ session.notes }}</span> }
+        <span class="ic-session__notes-action">{{ session.notes ? 'Visualizar / editar' : 'Adicionar relato' }}</span>
+      </summary>
+      <form [formGroup]="editor.notesForm" (ngSubmit)="editor.saveNotes()" aria-labelledby="session-notes-title"
+        [attr.aria-busy]="editor.operation() === 'notes'">
+        <fieldset [disabled]="editingBlocked() || editor.operation() === 'notes'">
+          <legend>Como foi a sessão</legend>
+          <mat-form-field appearance="outline">
+            <mat-label>Relato geral da sessão</mat-label>
+            <textarea matInput id="session-execution-notes" rows="3" [formControl]="editor.notes"></textarea>
+            <mat-error>{{ fieldError(editor.notes) }}</mat-error>
+          </mat-form-field>
+        </fieldset>
+        @if (editor.notesFeedback.error) { <p role="alert">{{ editor.notesFeedback.error }}</p> }
+        @if (editor.notesFeedback.message && !editor.notesPending()) { <p role="status">{{ editor.notesFeedback.message }}</p> }
+        @if (editor.notesFeedback.conflict) {
+          <p role="alert">O relato mudou no servidor. Revise seu texto antes de substituir o registro.</p>
+          <app-button variant="secondary" [disabled]="busy()" (click)="editor.acknowledge(editor.notesFeedback)">Revisei; manter meu rascunho</app-button>
         }
-      </div>
-    </form>
+        <div class="ic-session__actions">
+          <button matIconButton type="submit" aria-label="Salvar relato geral da sessão" matTooltip="Salvar relato"
+            [disabled]="!editor.canWrite() || !editor.notesPending() || editor.notesFeedback.conflict"><mat-icon>check</mat-icon></button>
+          <button matIconButton type="button" aria-label="Cancelar edição do relato geral" matTooltip="Cancelar edição"
+            [disabled]="busy()" (click)="cancelNotes()"><mat-icon>close</mat-icon></button>
+        </div>
+      </form>
+    </details>
     <section aria-labelledby="session-activities-title" class="ic-session__activities">
       <div>
         <h2 id="session-activities-title">Exercícios da sessão</h2>

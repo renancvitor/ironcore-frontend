@@ -103,6 +103,23 @@ export class WorkoutSessionDetailComponent implements OnInit {
   readonly closeReasonLabels = WORKOUT_SESSION_CLOSE_REASON_LABELS;
   readonly weekDayLabels = WEEK_DAY_LABELS;
   readonly fieldError = executionFieldError;
+  notesOpen = false;
+
+  notesAttention(): boolean {
+    return this.editor.notesPending() || !!this.editor.notesFeedback.error ||
+      this.editor.notesFeedback.conflict || this.editor.notes.invalid;
+  }
+
+  toggleNotes(event: Event): void {
+    const details = event.target as HTMLDetailsElement;
+    if (this.notesAttention()) details.open = true;
+    this.notesOpen = details.open;
+  }
+
+  cancelNotes(): void {
+    if (this.notesAttention()) this.editor.discardNotes();
+    else this.notesOpen = false;
+  }
 
   ngOnInit(): void {
     this.editor.isBlocked = () => this.editingBlocked();
@@ -143,6 +160,7 @@ export class WorkoutSessionDetailComponent implements OnInit {
   private acceptContext(rawId: string | null): void {
     this.contextChanged.next();
     this.editor.reset();
+    this.notesOpen = false;
     this.initialized = true;
     this.acceptedRawId = rawId;
     this.closeState.set(null);

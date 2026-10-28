@@ -1,72 +1,97 @@
 <form [formGroup]="row().form" (ngSubmit)="submit()" class="ic-set"
   [attr.aria-busy]="saving() || deleting()" [attr.data-revision]="revision()"
   [attr.aria-labelledby]="prefix() + '-title'">
-  <header>
+  <header class="ic-set__summary">
     <h4 [id]="prefix() + '-title'">Série {{ row().setNumber }}</h4>
-    <span role="status">
+    <div class="ic-set__values">
+      @if (row().persisted; as record) {
+        @if (record.actualReps !== null) { <span>{{ record.actualReps }} rep.</span> }
+        @if (record.actualLoadKg !== null) {
+          <span>{{ record.actualLoadKg | number: '1.0-2' }} kg{{ record.actualLoadMode === 'PER_SIDE' ? '/lado' : record.actualLoadMode === 'TOTAL' ? ' total' : ' (modo não informado)' }}</span>
+        }
+        @if (record.actualReps === null && record.actualLoadKg === null) {
+          <span>{{ record.notes ? 'Relato registrado' : 'Sem repetições ou carga' }}</span>
+        }
+      } @else { <span>Não registrada</span> }
+    </div>
+    <button matIconButton type="button" [id]="prefix() + '-edit'"
+      [attr.aria-label]="(readOnly() || row().removed ? 'Ver dados da série ' : row().persisted ? 'Editar série ' : 'Registrar série ') + row().setNumber"
+      [matTooltip]="readOnly() || row().removed ? 'Ver dados da série' : row().persisted ? 'Editar série' : 'Registrar série'"
+      [attr.aria-expanded]="expanded()" [attr.aria-controls]="prefix() + '-editor'"
+      [disabled]="blocked() || saving() || deleting()"
+      (click)="startEdit()">
+      <mat-icon>{{ row().persisted ? 'edit' : 'add' }}</mat-icon>
+    </button>
+  </header>
+  <div [id]="prefix() + '-editor'" [hidden]="!expanded()">
+    <p role="status">
       @if (deleting()) { Excluindo… }
       @else if (saving()) { Salvando… }
       @else if (row().uncertain) { Gravação não confirmada }
-      @else if (pending()) { {{ row().persisted ? 'Registrada · alterações não salvas' : 'Rascunho não salvo' }} }
-      @else if (row().persisted) { Registrada }
-      @else { Não registrada — {{ planned() ? 'linha planejada' : 'série adicional' }} }
-    </span>
-  </header>
-  <fieldset [disabled]="blocked() || saving() || deleting()">
-    <legend class="ic-set__legend">Dados executados da série {{ row().setNumber }}</legend>
-    <div class="ic-set__fields">
-      <mat-form-field appearance="outline">
-        <mat-label>Repetições executadas (opcional)</mat-label>
-        <input matInput type="number" inputmode="numeric" step="1" min="1" max="2147483647"
-          #repsInput [id]="prefix() + '-reps'" formControlName="actualReps"
-          [readOnly]="readOnly() || row().removed"
-          (blur)="validateNumber(repsInput, row().form.controls.actualReps)" />
-        <mat-error>{{ fieldError(row().form.controls.actualReps) }}</mat-error>
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Carga executada (kg, opcional)</mat-label>
-        <input matInput type="number" inputmode="decimal" step="0.01" min="0" max="999999.99"
-          #loadInput [id]="prefix() + '-load'" formControlName="actualLoadKg"
-          [readOnly]="readOnly() || row().removed"
-          (blur)="validateNumber(loadInput, row().form.controls.actualLoadKg)" />
-        <mat-error>{{ fieldError(row().form.controls.actualLoadKg) }}</mat-error>
-      </mat-form-field>
-    </div>
-    <details [open]="!!row().form.controls.notes.value">
-      <summary>Relato da série (opcional)</summary>
-      <mat-form-field appearance="outline">
-        <mat-label>Relato da série {{ row().setNumber }}</mat-label>
-        <textarea matInput rows="2" [id]="prefix() + '-notes'" formControlName="notes" [readOnly]="readOnly() || row().removed"></textarea>
-        <mat-error>{{ fieldError(row().form.controls.notes) }}</mat-error>
-      </mat-form-field>
-    </details>
-  </fieldset>
-  @if (row().error) { <p role="alert">{{ row().error }}</p> }
-  @if (row().message && (!pending() || row().uncertain)) { <p role="status">{{ row().message }}</p> }
-  @if (row().conflict && !row().removed) {
-    <p role="alert">O registro mudou no servidor. Seu rascunho foi preservado. Revise antes de substituí-lo.</p>
-    <app-button variant="secondary" [disabled]="blocked() || saving() || deleting()" (click)="reviewed.emit()">
-      Revisei; manter meu rascunho
-    </app-button>
-  }
-  @if (row().uncertain) {
-    <app-button variant="secondary" [disabled]="blocked() || saving() || deleting()" (click)="recovered.emit()">
-      Consultar registros
-    </app-button>
-  }
-  <footer>
-    @if (!readOnly() && (pending() || !row().persisted || row().uncertain)) {
-      <app-button type="submit" [disabled]="!canSave() || !!row().uncertain && !row().uncertain?.reviewed">
-        {{ row().uncertain ? 'Tentar registrar novamente' : row().persisted ? 'Salvar alterações' : 'Registrar série' }}
+      @else if (pending()) { Alterações não salvas }
+      @else { {{ planned() ? 'Série planejada' : 'Série adicional' }} · dados executados opcionais }
+    </p>
+    <fieldset [disabled]="blocked() || saving() || deleting()">
+      <legend class="ic-set__legend">Dados executados da série {{ row().setNumber }}</legend>
+      <div class="ic-set__fields">
+        <mat-form-field appearance="outline">
+          <mat-label>Repetições executadas (opcional)</mat-label>
+          <input matInput type="number" inputmode="numeric" step="1" min="1" max="2147483647"
+            #repsInput [id]="prefix() + '-reps'" formControlName="actualReps"
+            [readOnly]="readOnly() || row().removed"
+            (blur)="validateNumber(repsInput, row().form.controls.actualReps)" />
+          <mat-error>{{ fieldError(row().form.controls.actualReps) }}</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Carga executada (kg, opcional)</mat-label>
+          <input matInput type="number" inputmode="decimal" step="0.01" min="0" max="999999.99"
+            #loadInput [id]="prefix() + '-load'" formControlName="actualLoadKg"
+            [readOnly]="readOnly() || row().removed"
+            (blur)="validateNumber(loadInput, row().form.controls.actualLoadKg)" />
+          <mat-error>{{ fieldError(row().form.controls.actualLoadKg) }}</mat-error>
+        </mat-form-field>
+      </div>
+      <details [open]="notesOpen || notesAttention()" (toggle)="toggleNotes($event)">
+        <summary>Relato da série (opcional){{ row().persisted?.notes ? ' · registrado' : '' }}</summary>
+        <mat-form-field appearance="outline">
+          <mat-label>Relato da série {{ row().setNumber }}</mat-label>
+          <textarea matInput rows="2" [id]="prefix() + '-notes'" formControlName="notes" [readOnly]="readOnly() || row().removed"></textarea>
+          <mat-error>{{ fieldError(row().form.controls.notes) }}</mat-error>
+        </mat-form-field>
+      </details>
+    </fieldset>
+    @if (row().error) { <p role="alert">{{ row().error }}</p> }
+    @if (row().message && (!pending() || row().uncertain)) { <p role="status">{{ row().message }}</p> }
+    @if (row().conflict && !row().removed) {
+      <p role="alert">O registro mudou no servidor. Seu rascunho foi preservado. Revise antes de substituí-lo.</p>
+      <app-button variant="secondary" [disabled]="blocked() || saving() || deleting()" (click)="reviewed.emit()">
+        Revisei; manter meu rascunho
       </app-button>
     }
-    @if (pending() || row().conflict || row().uncertain || !row().persisted && !readOnly()) {
-      <app-button variant="secondary" [disabled]="blocked() || saving() || deleting()" (click)="discarded.emit()">
-        Descartar rascunho
+    @if (row().uncertain) {
+      <app-button variant="secondary" [disabled]="blocked() || saving() || deleting()" (click)="recovered.emit()">
+        Consultar registros
       </app-button>
     }
-    @if (row().persisted && !readOnly() && !row().removed) {
-      <app-button variant="danger" [disabled]="!canDelete()" (click)="deleted.emit()">Excluir série</app-button>
-    }
-  </footer>
+    <footer>
+      @if (!readOnly() && !row().removed) {
+        <button matIconButton type="submit" [attr.aria-label]="'Salvar série ' + row().setNumber"
+          [matTooltip]="row().uncertain ? 'Tentar registrar novamente' : 'Salvar série'"
+          [disabled]="!canSave() || !!row().uncertain && !row().uncertain?.reviewed">
+          <mat-icon>check</mat-icon>
+        </button>
+      }
+      <button matIconButton type="button" [attr.aria-label]="'Cancelar edição da série ' + row().setNumber"
+        matTooltip="Cancelar edição" [disabled]="blocked() || saving() || deleting()" (click)="cancel()">
+        <mat-icon>close</mat-icon>
+      </button>
+      @if (row().persisted && !readOnly() && !row().removed) {
+        <button matIconButton type="button" [attr.aria-label]="'Excluir série ' + row().setNumber"
+          matTooltip="Excluir série" [disabled]="!canDelete()" (click)="deleted.emit()">
+          <mat-icon>delete</mat-icon>
+        </button>
+      }
+    </footer>
+  </div>
+  @if (!expanded() && row().message) { <p class="ic-set__feedback" role="status">{{ row().message }}</p> }
 </form>
