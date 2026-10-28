@@ -26,7 +26,7 @@
 .ic-activity__execution[open] { padding-bottom: var(--ic-space-4); }
 .ic-activity__header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ic-space-2); > div { min-width: 0; } button { flex-shrink: 0; } }
 .ic-activity__legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.ic-activity__series { border-top: 1px solid var(--ic-border-soft); margin-top: var(--ic-space-2); }
+.ic-activity__execution-group { margin-inline-start: var(--ic-space-3); min-width: 0; }
 .ic-activity__reference { padding-block: var(--ic-space-4); border-bottom: 1px solid var(--ic-border-soft); h4:not(:first-child) { margin-top: var(--ic-space-3); } }
 .ic-activity__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ic-space-3); }
 .ic-activity__mode, .ic-activity__sets { margin-block: var(--ic-space-3); }

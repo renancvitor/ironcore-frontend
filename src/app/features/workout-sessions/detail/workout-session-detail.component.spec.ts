@@ -629,13 +629,13 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     http.expectOne(`${url}/100`).flush(detail);
     fixture.detectChanges();
     openDetails('details.ic-activity__execution');
-    openDetails('article form fieldset > details');
+    openDetails('form.ic-activity__form fieldset > details');
     const duration = fixture.nativeElement.querySelector('#activity-200-duration') as HTMLInputElement;
     expect(duration.readOnly).toBe(false);
     expect(duration.value).toBe('');
     duration.value = '12';
     duration.dispatchEvent(new Event('input'));
-    fixture.nativeElement.querySelector('article form').dispatchEvent(new Event('submit', { cancelable: true }));
+    fixture.nativeElement.querySelector('form.ic-activity__form').dispatchEvent(new Event('submit', { cancelable: true }));
     const execution = http.expectOne(`${url}/100/activities/200/execution`);
     expect(execution.request.body).toEqual({ actualDurationMinutes: 12 });
     detail.activities[0].actualDurationMinutes = 12;

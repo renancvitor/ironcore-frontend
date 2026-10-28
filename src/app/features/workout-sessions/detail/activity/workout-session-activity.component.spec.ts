@@ -170,8 +170,8 @@ describe('WorkoutSessionActivityComponent', () => {
 
   it('collapses unchanged activity fields without a discard dialog', () => {
     openDetails('.ic-activity__execution');
-    const duration = openDetails('article form fieldset > details');
-    const notes = openDetails('article form fieldset > details:nth-of-type(2)');
+    const duration = openDetails('form.ic-activity__form fieldset > details');
+    const notes = openDetails('form.ic-activity__form fieldset > details:nth-of-type(2)');
     (
       fixture.nativeElement.querySelector(
         'button[aria-label="Cancelar edição da atividade"]'
@@ -194,8 +194,8 @@ describe('WorkoutSessionActivityComponent', () => {
     const other = editor.activities()[1];
     other.form.controls.notes.setValue('Relato de outra atividade');
     openDetails('.ic-activity__execution');
-    const duration = openDetails('article form fieldset > details');
-    const notes = openDetails('article form fieldset > details:nth-of-type(2)');
+    const duration = openDetails('form.ic-activity__form fieldset > details');
+    const notes = openDetails('form.ic-activity__form fieldset > details:nth-of-type(2)');
     openDetails('.ic-activity__series');
     activity.form.patchValue({ actualDurationMinutes: 12, notes: 'Relato pendente' });
     activity.rows[0].form.controls.actualReps.setValue(7);
@@ -226,6 +226,30 @@ describe('WorkoutSessionActivityComponent', () => {
     http.expectNone(() => true);
   });
 
+  it.each([null, 'Relato registrado'])('orders the execution sections in one group while keeping their forms separate (notes: %s)', (notes) => {
+    const detail = structuredClone(sessionDetail);
+    detail.activities[0].notes = notes;
+    editor.reconcile(detail);
+    sync();
+    const group = fixture.nativeElement.querySelector('.ic-activity__execution-group') as HTMLElement;
+    const summaries = Array.from(group.querySelectorAll(
+      ':scope > details > summary, :scope > form > fieldset > details > summary',
+    )).map((summary) => summary.textContent!.trim());
+    expect(summaries).toEqual([
+      'Séries e cargas',
+      'Duração e distância',
+      notes ? 'Relato da execução · relato registrado' : 'Relato da execução (opcional)',
+    ]);
+    const series = group.querySelector(':scope > .ic-activity__series')!;
+    const form = group.querySelector(':scope > form.ic-activity__form')!;
+    expect(group.firstElementChild).toBe(series);
+    expect(series.nextElementSibling).toBe(form);
+    expect(series.closest('form')).toBeNull();
+    expect(form.querySelectorAll('details')).toHaveLength(2);
+    expect(fixture.nativeElement.querySelectorAll('form form')).toHaveLength(0);
+    http.expectNone(() => true);
+  });
+
   it('renders exactly one selector for all rows even without prescribed load', () => {
     expect(fixture.nativeElement.querySelectorAll('mat-select')).toHaveLength(1);
     expect(fixture.nativeElement.querySelectorAll('app-workout-session-set-form')).toHaveLength(3);
@@ -237,8 +261,8 @@ describe('WorkoutSessionActivityComponent', () => {
 
   it('exposes optional duration, distance and independent report without planned defaults', () => {
     openDetails('.ic-activity__execution');
-    openDetails('article form fieldset > details');
-    openDetails('article form fieldset > details:nth-of-type(2)');
+    openDetails('form.ic-activity__form fieldset > details');
+    openDetails('form.ic-activity__form fieldset > details:nth-of-type(2)');
     const duration = fixture.nativeElement.querySelector('#activity-200-duration') as HTMLInputElement;
     const distance = fixture.nativeElement.querySelector('#activity-200-distance') as HTMLInputElement;
     expect(duration.value).toBe('');
