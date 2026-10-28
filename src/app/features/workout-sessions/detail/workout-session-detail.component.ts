@@ -117,7 +117,7 @@ export class WorkoutSessionDetailComponent implements OnInit {
   }
 
   cancelNotes(): void {
-    if (this.notesAttention()) this.editor.discardNotes();
+    if (this.notesAttention()) this.editor.discardNotes(() => { this.notesOpen = false; });
     else this.notesOpen = false;
   }
 

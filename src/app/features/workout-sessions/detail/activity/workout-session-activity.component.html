@@ -140,7 +140,8 @@
             [canSave]="editor.canWrite() && !model.removed && !row.removed && !row.conflict && !model.modeConflict && !editor.modePending(model)"
             [canDelete]="editor.canWrite() && !model.removed && !row.removed"
             (saved)="editor.saveSet(model, row, $event)" (deleted)="deleteSet(row)"
-            (discarded)="editor.discardSet(model, row, $event)" (reviewed)="editor.acknowledge(row)" (recovered)="editor.recover()" />
+            (discarded)="editor.discardSet(model, row, $event)" (emptyCancelled)="editor.removeEmptyAdditionalSet(model, row)"
+            (reviewed)="editor.acknowledge(row)" (recovered)="editor.recover()" />
         } @empty { <p>Nenhuma série registrada.</p> }
       </div>
       @if (!model.removed) {

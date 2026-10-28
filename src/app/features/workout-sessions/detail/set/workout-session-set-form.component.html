@@ -75,7 +75,7 @@
     }
     <footer>
       @if (!readOnly() && !row().removed) {
-        <button matIconButton type="submit" [attr.aria-label]="'Salvar série ' + row().setNumber"
+        <button matIconButton type="submit" [attr.aria-label]="(row().uncertain?.reviewed ? 'Tentar registrar novamente a série ' : 'Salvar série ') + row().setNumber"
           [matTooltip]="row().uncertain ? 'Tentar registrar novamente' : 'Salvar série'"
           [disabled]="!canSave() || !!row().uncertain && !row().uncertain?.reviewed">
           <mat-icon>check</mat-icon>

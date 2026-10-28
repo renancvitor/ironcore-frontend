@@ -53,6 +53,14 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     http.expectOne(`${url}/100`).flush(data);
     fixture.detectChanges();
   }
+  function openDetails(selector: string): HTMLDetailsElement {
+    const details = fixture.nativeElement.querySelector(selector) as HTMLDetailsElement;
+    details.open = true;
+    details.dispatchEvent(new Event('toggle'));
+    fixture.detectChanges();
+    return details;
+  }
+
   function button(text: string): HTMLButtonElement {
     return Array.from(
       fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
@@ -494,11 +502,12 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
   it('saves the general report through the real form submit without saving other drafts', () => {
     load();
     component.editor.activities()[0].rows[0].form.controls.actualReps.setValue(7);
+    openDetails('details.ic-session__notes');
     const textarea = fixture.nativeElement.querySelector('#session-execution-notes') as HTMLTextAreaElement;
     textarea.value = 'Relato geral informado';
     textarea.dispatchEvent(new Event('input'));
     fixture.detectChanges();
-    fixture.nativeElement.querySelector('form.ic-session__notes').dispatchEvent(new Event('submit', { cancelable: true }));
+    fixture.nativeElement.querySelector('details.ic-session__notes form').dispatchEvent(new Event('submit', { cancelable: true }));
     const request = http.expectOne(`${url}/100/notes`);
     expect(request.request.body).toEqual({ notes: 'Relato geral informado' });
     const saved = { ...sessionDetail, notes: 'Relato geral informado' };
@@ -506,6 +515,48 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     http.expectOne(`${url}/100`).flush(saved);
     expect(component.editor.activities()[0].rows[0].form.controls.actualReps.value).toBe(7);
     http.expectNone((mutation) => mutation.method === 'POST');
+  });
+
+  it('collapses an unchanged general report without a discard dialog', () => {
+    load();
+    const details = openDetails('details.ic-session__notes');
+    component.cancelNotes();
+    fixture.detectChanges();
+    details.dispatchEvent(new Event('toggle'));
+    expect(details.open).toBe(false);
+    expect(component.notesOpen).toBe(false);
+    expect(dialog.open).not.toHaveBeenCalled();
+    http.expectNone(() => true);
+  });
+
+  it.each([true, false])('collapses the general report only after confirmed discard: %s', (accepted) => {
+    const detail = structuredClone(sessionDetail);
+    detail.notes = 'Relato confirmado';
+    load(detail);
+    const details = openDetails('details.ic-session__notes');
+    const activity = component.editor.activities()[0];
+    activity.form.controls.actualDurationMinutes.setValue(12);
+    activity.rows[0].form.controls.actualReps.setValue(7);
+    component.editor.notes.setValue('Relato pendente');
+    fixture.detectChanges();
+    const confirmation = new Subject<boolean>();
+    dialog.open.mockReturnValue(confirmation);
+    fixture.nativeElement.querySelector('button[aria-label="Cancelar edição do relato geral"]').click();
+    fixture.detectChanges();
+    expect(dialog.open).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ title: 'Descartar alterações do relato' }));
+    expect(component.editor.notes.value).toBe('Relato pendente');
+    expect(details.open).toBe(true);
+    expect(component.notesOpen).toBe(true);
+    confirmation.next(accepted);
+    fixture.detectChanges();
+    details.dispatchEvent(new Event('toggle'));
+    fixture.detectChanges();
+    expect(details.open).toBe(!accepted);
+    expect(component.notesOpen).toBe(!accepted);
+    expect(component.editor.notes.value).toBe(accepted ? 'Relato confirmado' : 'Relato pendente');
+    expect(activity.form.controls.actualDurationMinutes.value).toBe(12);
+    expect(activity.rows[0].form.controls.actualReps.value).toBe(7);
+    http.expectNone(() => true);
   });
 
   it('keeps dirty values when closure confirmation is cancelled', () => {
@@ -527,17 +578,20 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     expect(button('Encerrar sessão')).toBeUndefined();
     expect(button('Ver ciclo de origem')).toBeUndefined();
     expect(fixture.nativeElement.querySelectorAll('app-workout-session-set-form')).toHaveLength(0);
+    openDetails('details.ic-session__notes');
     const notes = fixture.nativeElement.querySelector('#session-execution-notes') as HTMLTextAreaElement;
     expect(notes.readOnly).toBe(false);
     notes.value = 'Correção posterior';
     notes.dispatchEvent(new Event('input'));
-    fixture.nativeElement.querySelector('form.ic-session__notes').dispatchEvent(new Event('submit', { cancelable: true }));
+    fixture.nativeElement.querySelector('details.ic-session__notes form').dispatchEvent(new Event('submit', { cancelable: true }));
     const report = http.expectOne(`${url}/100/notes`);
     expect(report.request.body).toEqual({ notes: 'Correção posterior' });
     detail.notes = 'Correção posterior';
     report.flush(detail);
     http.expectOne(`${url}/100`).flush(detail);
     fixture.detectChanges();
+    openDetails('details.ic-activity__execution');
+    openDetails('article form fieldset > details');
     const duration = fixture.nativeElement.querySelector('#activity-200-duration') as HTMLInputElement;
     expect(duration.readOnly).toBe(false);
     expect(duration.value).toBe('');
@@ -550,7 +604,10 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     execution.flush(detail.activities[0]);
     http.expectOne(`${url}/100`).flush(detail);
     fixture.detectChanges();
-    button('Adicionar série').click();
+    openDetails('details.ic-activity__series');
+    fixture.nativeElement.querySelector('#activity-200-add-set').click();
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('form.ic-set button[aria-expanded]').click();
     fixture.detectChanges();
     const reps = fixture.nativeElement.querySelector('input[id$="-reps"]') as HTMLInputElement;
     expect(reps.readOnly).toBe(false);
@@ -567,7 +624,8 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     detail.activities[0].sets = [saved];
     http.expectOne(`${url}/100`).flush(detail);
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Registrada');
+    expect(fixture.nativeElement.querySelector('.ic-set__values').textContent).toContain('7 rep.');
+    expect(component.editor.activities()[0].rows[0].persisted?.id).toBe(saved.id);
     expect(component.session()?.status).toBe('CLOSED');
     expect(component.session()?.closeReason).toBe(closeReason);
     expect(component.session()?.finishedAt).toBe('2026-10-28T06:00:00Z');

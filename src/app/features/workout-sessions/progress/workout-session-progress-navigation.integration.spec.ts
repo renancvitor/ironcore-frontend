@@ -118,9 +118,9 @@ describe('Workout Session progress navigation with real routes and HTTP', () => 
 
   it('opens inactive historical exercises directly and contextualizes an old session', async () => {
     await closedSession('?from=history');
-    const button = [
-      ...harness.routeNativeElement!.querySelectorAll<HTMLButtonElement>('button'),
-    ].find((item) => item.textContent?.includes('Ver evolução deste exercício'))!;
+    const button = harness.routeNativeElement!.querySelector<HTMLButtonElement>(
+      'button[aria-label="Ver evolução deste exercício"]',
+    )!;
     button.click();
     await settle();
     const component = current(WorkoutSessionProgressComponent);
@@ -216,11 +216,9 @@ describe('Workout Session progress navigation with real routes and HTTP', () => 
       'O vínculo deste exercício foi excluído',
     );
     expect(harness.routeNativeElement!.textContent).toContain('Exercício preservado');
-    expect(
-      [...harness.routeNativeElement!.querySelectorAll('button')].some((button) =>
-        button.textContent?.includes('Ver evolução deste exercício'),
-      ),
-    ).toBe(false);
+    expect(harness.routeNativeElement!.querySelector(
+      'button[aria-label="Ver evolução deste exercício"]',
+    )).toBeNull();
     detail.openExerciseProgress(50);
     await settle();
     http.expectNone((req) => req.url.includes('/analytics/'));

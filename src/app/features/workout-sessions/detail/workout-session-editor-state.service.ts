@@ -395,22 +395,32 @@ export class WorkoutSessionEditorState {
     this.touch();
   }
 
-  discardNotes(): void {
+  discardNotes(afterDiscard?: () => void): void {
     if (this.busy() || this.isBlocked()) return;
     this.confirm('Descartar alterações do relato', 'O relato voltará ao último valor confirmado pelo servidor.', 'Descartar alterações', () => {
       this.notes.reset(this.session()?.notes ?? '');
       Object.assign(this.notesFeedback, feedback());
       this.touch();
+      afterDiscard?.();
     });
   }
 
-  discardActivity(activity: SessionActivityEditor): void {
+  discardActivity(activity: SessionActivityEditor, afterDiscard?: () => void): void {
     if (this.busy() || this.isBlocked()) return;
     this.confirm('Descartar alterações da atividade', 'Duração, distância e relato voltarão aos valores confirmados. As séries não serão alteradas.', 'Descartar alterações', () => {
       activity.form.reset({ ...activity.baseline, notes: activity.baseline.notes ?? '' });
       Object.assign(activity, feedback());
       this.touch();
+      afterDiscard?.();
     });
+  }
+
+  removeEmptyAdditionalSet(activity: SessionActivityEditor, row: SessionSetEditor): void {
+    if (this.busy() || this.isBlocked() || activity.removed || !activity.rows.includes(row) ||
+        !row.explicit || row.persisted || row.removed || row.error || row.conflict || row.uncertain ||
+        row.form.invalid || this.setPending(row) || hasSetExecution(setExecutionValue(row.form))) return;
+    activity.rows = activity.rows.filter((value) => value !== row);
+    this.touch();
   }
 
   discardSet(activity: SessionActivityEditor, row: SessionSetEditor, afterDiscard?: () => void): void {

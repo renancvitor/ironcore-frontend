@@ -69,7 +69,9 @@ describe('WorkoutSessionSetFormComponent', () => {
     row = { ...row, uncertain };
     fixture.componentRef.setInput('row', row);
     fixture.detectChanges();
-    const save = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const intent = vi.fn();
+    fixture.componentInstance.saved.subscribe(intent);
+    const save = fixture.nativeElement.querySelector('button[aria-label="Salvar série 2"]') as HTMLButtonElement;
     expect(save.disabled).toBe(true);
     expect(fixture.nativeElement.textContent).toContain('Gravação não confirmada');
     expect(fixture.nativeElement.textContent).toContain('Consultar registros');
@@ -77,7 +79,9 @@ describe('WorkoutSessionSetFormComponent', () => {
     fixture.componentRef.setInput('row', row);
     fixture.detectChanges();
     expect(save.disabled).toBe(false);
-    expect(save.textContent).toContain('Tentar registrar novamente');
+    expect(save.getAttribute('aria-label')).toBe('Tentar registrar novamente a série 2');
+    expect(intent).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.expanded()).toBe(true);
   });
 
   it('preserves invalid native numeric input as an error rather than submitting an accidental null', () => {

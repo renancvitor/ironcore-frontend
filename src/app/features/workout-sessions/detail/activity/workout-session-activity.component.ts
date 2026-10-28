@@ -55,11 +55,12 @@ export class WorkoutSessionActivityComponent {
   }
 
   cancelActivity(): void {
-    if (this.activityAttention()) this.editor.discardActivity(this.activity());
-    else {
+    const collapse = () => {
       this.durationOpen = false;
       this.notesOpen = false;
-    }
+    };
+    if (this.activityAttention()) this.editor.discardActivity(this.activity(), collapse);
+    else collapse();
   }
 
   setsAttention(): boolean {

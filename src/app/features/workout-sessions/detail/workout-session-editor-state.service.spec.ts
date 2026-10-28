@@ -45,6 +45,45 @@ describe('WorkoutSessionEditorState with HTTP', () => {
     http.expectNone(() => true);
   });
 
+  it.each(['IN_PROGRESS', 'CLOSED'] as const)('removes only an empty local additional position without confirmation or HTTP in %s sessions', (status) => {
+    editor.reset();
+    detail.status = status;
+    if (status === 'CLOSED') detail.closeReason = 'MANUAL';
+    editor.reconcile(detail);
+    const planned = [...activity().rows];
+    editor.addSet(activity());
+    const extra = activity().rows.at(-1)!;
+    const revision = editor.revision();
+    editor.removeEmptyAdditionalSet(activity(), extra);
+    expect(activity().rows).toEqual(planned);
+    expect(editor.revision()).toBeGreaterThan(revision);
+    expect(editor.session()?.activities[0].sets).toEqual([]);
+    expect(dialog.open).not.toHaveBeenCalled();
+    http.expectNone(() => true);
+  });
+
+  it.each(['planned', 'persisted', 'draft', 'error', 'conflict', 'uncertain', 'invalid', 'removed', 'busy', 'blocked'] as const)(
+    'does not silently remove a protected additional position: %s', (kind) => {
+      editor.addSet(activity());
+      const extra = kind === 'planned' ? row() : activity().rows.at(-1)!;
+      if (kind === 'persisted') extra.persisted = sessionSet({ setNumber: extra.setNumber });
+      if (kind === 'draft') extra.form.controls.notes.setValue('Preservar');
+      if (kind === 'error') extra.error = 'Falha';
+      if (kind === 'conflict') extra.conflict = true;
+      if (kind === 'uncertain') extra.uncertain = { request: { setNumber: extra.setNumber }, reviewed: true };
+      if (kind === 'invalid') extra.form.controls.actualReps.setValue(0);
+      if (kind === 'removed') extra.removed = true;
+      if (kind === 'busy') editor.operation.set('refresh');
+      if (kind === 'blocked') editor.isBlocked = () => true;
+      const values = extra.form.getRawValue();
+      editor.removeEmptyAdditionalSet(activity(), extra);
+      expect(activity().rows).toContain(extra);
+      expect(extra.form.getRawValue()).toEqual(values);
+      expect(dialog.open).not.toHaveBeenCalled();
+      http.expectNone(() => true);
+    },
+  );
+
   it('merges persisted historical IDs with prescription and additional positions without duplication', () => {
     detail.activities[0].sets = [sessionSet({ id: 302, setNumber: 2 }), sessionSet({ id: 305, setNumber: 5 })];
     editor.reconcile(detail);

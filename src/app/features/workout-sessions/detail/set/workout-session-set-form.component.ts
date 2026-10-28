@@ -33,6 +33,7 @@ export class WorkoutSessionSetFormComponent {
   readonly saved = output<() => void>();
   readonly deleted = output<void>();
   readonly discarded = output<() => void>();
+  readonly emptyCancelled = output<void>();
   readonly reviewed = output<void>();
   readonly recovered = output<void>();
   readonly fieldError = executionFieldError;
@@ -63,9 +64,12 @@ export class WorkoutSessionSetFormComponent {
   }
 
   cancel(): void {
-    if (this.needsAttention() || !this.row().persisted) {
+    if (this.needsAttention()) {
       this.discarded.emit(() => this.closeEditor());
-    } else this.closeEditor();
+    } else {
+      if (!this.row().persisted && this.row().explicit) this.emptyCancelled.emit();
+      this.closeEditor();
+    }
   }
 
   private closeEditor(): void {
