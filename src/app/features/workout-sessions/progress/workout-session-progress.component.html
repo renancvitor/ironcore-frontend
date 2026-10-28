@@ -4,19 +4,29 @@
       <h1>Evolução de treinos</h1>
       <p>Acompanhe os indicadores da execução registrada nas suas sessões encerradas.</p>
     </div>
-    <button
-      matIconButton
-      type="button"
-      [attr.aria-label]="
-        sourceSessionId() ? 'Voltar à sessão de origem' : 'Voltar ao histórico de sessões'
-      "
-      [matTooltip]="
-        sourceSessionId() ? 'Voltar à sessão de origem' : 'Voltar ao histórico de sessões'
-      "
-      (click)="back()"
-    >
-      <mat-icon>arrow_back</mat-icon>
-    </button>
+    <div class="ic-session-progress__header-actions">
+      <a
+        matIconButton
+        routerLink="/workout-planning"
+        matTooltip="Planejamento de treinos"
+        aria-label="Ir ao planejamento de treinos"
+      >
+        <mat-icon>event_note</mat-icon>
+      </a>
+      <button
+        matIconButton
+        type="button"
+        [attr.aria-label]="
+          sourceSessionId() ? 'Voltar à sessão de origem' : 'Voltar ao histórico de sessões'
+        "
+        [matTooltip]="
+          sourceSessionId() ? 'Voltar à sessão de origem' : 'Voltar ao histórico de sessões'
+        "
+        (click)="back()"
+      >
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+    </div>
   </header>
   @if (choosingExercise()) {
     <app-exercise-catalog

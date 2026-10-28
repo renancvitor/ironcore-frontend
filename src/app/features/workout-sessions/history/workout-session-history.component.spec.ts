@@ -5,7 +5,6 @@ import { provideRouter, Router } from '@angular/router';
 import { MatPaginator } from '@angular/material/paginator';
 import { By } from '@angular/platform-browser';
 import { API_BASE_URL } from '../../../core/http/api-base-url.token';
-import { cycleDetail } from '../../workout-planning/workout-planning.testing';
 import { sessionHistory, sessionHistoryItem } from '../workout-sessions.testing';
 import { WorkoutSessionHistoryComponent } from './workout-session-history.component';
 
@@ -96,43 +95,51 @@ describe('WorkoutSessionHistoryComponent with HTTP', () => {
     expect(paginator.pageSize).toBe(50);
   });
 
-  it('applies combined filters at page zero and clears them through the UI', () => {
+  it('applies name and dates only on submit, resets the page, and clears the controls', () => {
     load();
     component.state.page = 3;
     component.filtersForm.patchValue({
-      workoutCycleId: 9,
-      workoutDayId: 30,
+      name: '  Pernas  ',
       startDate: '2026-10-01',
       endDate: '2026-10-27',
     });
-    http.expectOne(`${cyclesUrl}/9`).flush(cycleDetail);
+    http.expectNone((req) => req.url === url || req.url.startsWith(cyclesUrl));
     fixture.nativeElement
       .querySelector('form')
       .dispatchEvent(new Event('submit', { cancelable: true }));
     const filtered = request();
     expect(filtered.request.params.keys().sort()).toEqual([
       'endDate',
+      'name',
       'page',
       'size',
       'startDate',
-      'workoutCycleId',
-      'workoutDayId',
     ]);
+    expect(filtered.request.params.get('name')).toBe('Pernas');
     expect(filtered.request.params.get('page')).toBe('0');
-    expect(filtered.request.params.get('workoutDayId')).toBe('30');
-    expect(filtered.request.params.get('startDate')).toBe('2026-10-01');
     filtered.flush(sessionHistory());
     fixture.detectChanges();
     button('Limpar filtros').click();
     const cleared = request();
     expect(cleared.request.params.keys().sort()).toEqual(['page', 'size']);
     cleared.flush(sessionHistory());
-    expect(component.filtersForm.getRawValue()).toEqual({
-      workoutCycleId: null,
-      workoutDayId: null,
-      startDate: '',
-      endDate: '',
-    });
+    expect(component.filtersForm.getRawValue()).toEqual({ name: '', startDate: '', endDate: '' });
+    expect(fixture.nativeElement.querySelector('details')).toBeNull();
+    expect(fixture.nativeElement.querySelector('#history-name')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('#history-cycle')).toBeNull();
+    expect(fixture.nativeElement.querySelector('#history-day-id')).toBeNull();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    fixture.nativeElement.querySelector('[aria-label="Ver evolução"]').click();
+    expect(navigate).toHaveBeenCalledWith(['/workout-sessions/progress'], { queryParams: {} });
+  });
+
+  it('omits whitespace-only names', () => {
+    load();
+    component.filtersForm.controls.name.setValue('   ');
+    component.applyFilters();
+    const filtered = request();
+    expect(filtered.request.params.has('name')).toBe(false);
+    filtered.flush(sessionHistory());
   });
 
   it.each(['startDate', 'endDate'] as const)('accepts a single %s as a local ISO date', (field) => {
@@ -162,48 +169,6 @@ describe('WorkoutSessionHistoryComponent with HTTP', () => {
     component.filtersForm.patchValue({ startDate: '2024-02-29' });
     component.applyFilters();
     request().flush(sessionHistory());
-  });
-
-  it.each([0, -1, 1.5, Number.NaN, 9007199254740992])('rejects invalid origin ID %s', (id) => {
-    load();
-    component.filtersForm.controls.workoutDayId.setValue(id);
-    component.applyFilters();
-    expect(component.filtersForm.invalid).toBe(true);
-    http.expectNone((req) => req.url === url);
-  });
-
-  it('supports a day filter independently without loading planning', () => {
-    load();
-    component.filtersForm.controls.workoutDayId.setValue(30);
-    component.applyFilters();
-    const filtered = request();
-    expect(filtered.request.params.get('workoutDayId')).toBe('30');
-    expect(filtered.request.params.has('workoutCycleId')).toBe(false);
-    filtered.flush(sessionHistory());
-    http.expectNone((req) => req.url.startsWith(cyclesUrl));
-  });
-
-  it('rejects an invalid cycle before both history and planning requests', () => {
-    load();
-    component.filtersForm.controls.workoutCycleId.setValue(-1);
-    component.applyFilters();
-    expect(component.filtersForm.invalid).toBe(true);
-    http.expectNone(() => true);
-  });
-
-  it('searches cycle names from the keyboard without submitting history filters', () => {
-    load();
-    component.cycleSearch.setValue('Força');
-    const input = fixture.nativeElement.querySelector('#history-cycle-search') as HTMLInputElement;
-    const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
-    input.dispatchEvent(event);
-    expect(event.defaultPrevented).toBe(true);
-    const search = http.expectOne((req) => req.url === cyclesUrl);
-    expect(search.request.params.get('name')).toBe('Força');
-    search.flush({
-      cycles: { content: [], page: 0, size: 20, totalElements: 0, totalPages: 0, last: true },
-    });
-    http.expectNone((req) => req.url === url);
   });
 
   it('cancels stale filter reads and cleans up the active subscription on destroy', () => {
@@ -259,7 +224,7 @@ describe('WorkoutSessionHistoryComponent with HTTP', () => {
 
   it('restores applied filters and pagination when the component is recreated', () => {
     load();
-    component.filtersForm.controls.startDate.setValue('2026-10-01');
+    component.filtersForm.patchValue({ name: 'Pernas', startDate: '2026-10-01' });
     component.applyFilters();
     request().flush(sessionHistory());
     component.onPageChange({ pageIndex: 2, pageSize: 20, length: 60 });
@@ -269,122 +234,17 @@ describe('WorkoutSessionHistoryComponent with HTTP', () => {
     component = fixture.componentInstance;
     const restored = request();
     expect(restored.request.params.get('page')).toBe('2');
+    expect(restored.request.params.get('name')).toBe('Pernas');
     expect(restored.request.params.get('startDate')).toBe('2026-10-01');
     restored.flush(sessionHistory([sessionHistoryItem], 2, 20, 60));
     expect(component.filtersForm.controls.startDate.value).toBe('2026-10-01');
-    expect(component.filtersForm.controls.workoutDayId.value).toBeNull();
-    expect(component.filtersForm.controls.workoutCycleId.value).toBeNull();
+    expect(component.filtersForm.controls.name.value).toBe('Pernas');
     expect(component.filtersForm.valid).toBe(true);
     component.applyFilters();
     const reapplied = request();
     expect(reapplied.request.params.get('startDate')).toBe('2026-10-01');
     expect(reapplied.request.params.get('page')).toBe('0');
     reapplied.flush(sessionHistory());
-  });
-
-  it('searches planning by name in explicit pages and cancels superseded searches', () => {
-    load();
-    component.cycleSearch.setValue('Força');
-    component.searchCycles();
-    const old = http.expectOne((req) => req.url === cyclesUrl);
-    expect(old.request.params.get('name')).toBe('Força');
-    component.cycleSearch.setValue('Base');
-    component.searchCycles();
-    expect(old.cancelled).toBe(true);
-    const first = http.expectOne((req) => req.url === cyclesUrl);
-    const item = {
-      id: 9,
-      name: 'Base',
-      workoutStatus: 'COMPLETED',
-      trainingGoal: { id: 1, name: 'Força' },
-      startDate: null,
-      endDate: null,
-      desiredDurationMonths: null,
-    };
-    first.flush({
-      cycles: { content: [item], page: 0, size: 20, totalElements: 21, totalPages: 2, last: false },
-    });
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('1 de 21 ciclos encontrados');
-    button('Carregar mais ciclos').click();
-    const more = http.expectOne((req) => req.url === cyclesUrl);
-    expect(more.request.params.get('page')).toBe('1');
-    expect(more.request.params.get('name')).toBe('Base');
-    more.flush({
-      cycles: {
-        content: [{ ...item, id: 10 }],
-        page: 1,
-        size: 20,
-        totalElements: 21,
-        totalPages: 2,
-        last: true,
-      },
-    });
-    expect(component.cycles()).toHaveLength(2);
-  });
-
-  it('restores a selected cycle name and day without replaying the whole planning search', async () => {
-    load();
-    component.searchCycles();
-    http
-      .expectOne((req) => req.url === cyclesUrl)
-      .flush({
-        cycles: {
-          content: [cycleDetail],
-          page: 0,
-          size: 20,
-          totalElements: 1,
-          totalPages: 1,
-          last: true,
-        },
-      });
-    component.filtersForm.controls.workoutCycleId.setValue(9);
-    http.expectOne(`${cyclesUrl}/9`).flush(cycleDetail);
-    component.filtersForm.controls.workoutDayId.setValue(30);
-    component.applyFilters();
-    request().flush(sessionHistory());
-    fixture.destroy();
-    fixture = TestBed.createComponent(WorkoutSessionHistoryComponent);
-    component = fixture.componentInstance;
-    const restored = request();
-    expect(restored.request.params.get('workoutCycleId')).toBe('9');
-    expect(restored.request.params.get('workoutDayId')).toBe('30');
-    restored.flush(sessionHistory());
-    http.expectOne(`${cyclesUrl}/9`).flush(cycleDetail);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-    expect(component.cycleOptions()).toEqual([{ id: 9, name: 'Força A' }]);
-    expect(fixture.nativeElement.querySelector('#history-cycle').textContent).toContain('Força A');
-    expect(fixture.nativeElement.querySelector('#history-day').textContent).toContain('Treino B');
-    expect(component.filtersForm.valid).toBe(true);
-    http.expectNone((req) => req.url === cyclesUrl);
-  });
-
-  it('resets incompatible day filters, cancels previous cycle details, and supports planning recovery', () => {
-    load();
-    component.filtersForm.controls.workoutDayId.setValue(30);
-    component.filtersForm.controls.workoutCycleId.setValue(9);
-    expect(component.filtersForm.controls.workoutDayId.value).toBeNull();
-    const old = http.expectOne(`${cyclesUrl}/9`);
-    component.filtersForm.controls.workoutCycleId.setValue(10);
-    expect(old.cancelled).toBe(true);
-    http.expectOne(`${cyclesUrl}/10`).flush({}, { status: 404, statusText: 'Not found' });
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Não foi possível consultar os treinos');
-    button('Consultar treinos novamente').click();
-    http.expectOne(`${cyclesUrl}/10`).flush({ ...cycleDetail, id: 10 });
-    expect(component.days()).toEqual(cycleDetail.days);
-    component.searchCycles();
-    http.expectOne((req) => req.url === cyclesUrl).error(new ProgressEvent('error'));
-    expect(component.cyclesError()).toContain('Não foi possível buscar ciclos');
-    component.searchCycles();
-    http
-      .expectOne((req) => req.url === cyclesUrl)
-      .flush({
-        cycles: { content: [], page: 0, size: 20, totalElements: 0, totalPages: 0, last: true },
-      });
-    expect(component.cyclesError()).toBe('');
   });
 
   it('uses labelled unique controls and semantic cards with native keyboard actions', () => {

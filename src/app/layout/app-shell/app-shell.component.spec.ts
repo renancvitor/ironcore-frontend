@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatPaginator, MatPaginatorIntl } from '@angular/material/paginator';
 import { By } from '@angular/platform-browser';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { AuthStateService } from '../../core/auth/auth-state.service';
@@ -82,7 +82,16 @@ describe('AppShellComponent', () => {
     for (let i = 0; i < 2; i++) {
       element.querySelector<HTMLButtonElement>('button[aria-label="Abrir menu"]')!.click();
       await fixture.whenStable();
-      expect(element.querySelectorAll('app-sidebar a[href="/workout-planning"]')).toHaveLength(1);
+      const planningEntries = fixture.debugElement
+        .query(By.css('app-sidebar'))
+        .queryAll(By.directive(RouterLink))
+        .filter((entry) => {
+          const destination = entry.injector.get(RouterLink).urlTree;
+          return (
+            destination && TestBed.inject(Router).serializeUrl(destination) === '/workout-planning'
+          );
+        });
+      expect(planningEntries).toHaveLength(1);
       expect(element.querySelectorAll('app-header')).toHaveLength(1);
       expect(element.querySelectorAll('app-sidebar')).toHaveLength(1);
       expect(element.querySelectorAll('router-outlet')).toHaveLength(1);

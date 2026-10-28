@@ -7,7 +7,6 @@ export class WorkoutSessionHistoryState {
   filters: WorkoutSessionHistoryFilters = {};
   page = 0;
   size = 20;
-  selectedCycle: { id: number; name: string } | null = null;
 
   constructor() {
     const auth = inject(AuthStateService);
@@ -19,7 +18,6 @@ export class WorkoutSessionHistoryState {
       this.filters = {};
       this.page = 0;
       this.size = 20;
-      this.selectedCycle = null;
     });
   }
 }

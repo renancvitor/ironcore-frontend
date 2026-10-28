@@ -1,8 +1,28 @@
 <section class="ic-history" aria-labelledby="history-title" [attr.aria-busy]="loading()">
-  <header>
-    <h1 id="history-title">Histórico de sessões</h1>
-    <p>Consulte seus treinos encerrados e corrija os registros de execução quando precisar.</p>
-    <app-button variant="secondary" (click)="openProgress()">Ver evolução</app-button>
+  <header class="ic-history__header">
+    <div>
+      <h1 id="history-title">Histórico de sessões</h1>
+      <p>Consulte seus treinos encerrados e corrija os registros de execução quando precisar.</p>
+    </div>
+    <div class="ic-history__header-actions">
+      <a
+        matIconButton
+        routerLink="/workout-planning"
+        matTooltip="Planejamento de treinos"
+        aria-label="Ir ao planejamento de treinos"
+      >
+        <mat-icon>event_note</mat-icon>
+      </a>
+      <button
+        matIconButton
+        type="button"
+        matTooltip="Ver evolução"
+        aria-label="Ver evolução"
+        (click)="openProgress()"
+      >
+        <mat-icon>trending_up</mat-icon>
+      </button>
+    </div>
   </header>
   <form
     class="ic-history__panel"
@@ -15,82 +35,11 @@
       O período considera a data em que o treino foi realizado. Os nomes exibidos nas sessões são os
       preservados na época.
     </p>
-    <details>
-      <summary>Buscar ciclo de origem pelo nome</summary>
-      <div class="ic-history__search">
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>Nome do ciclo</mat-label>
-          <input
-            matInput
-            id="history-cycle-search"
-            [formControl]="cycleSearch"
-            (keydown.enter)="$event.preventDefault(); searchCycles()"
-          />
-        </mat-form-field>
-        <app-button variant="secondary" (click)="searchCycles()">Buscar ciclos</app-button>
-      </div>
-      <p>
-        Busque pelo nome ou deixe vazio para consultar os ciclos disponíveis. A busca é paginada;
-        carregue mais opções quando necessário. Origens removidas continuam visíveis nos registros
-        históricos, mas não podem ser selecionadas.
-      </p>
-      @if (cyclesLoading()) {
-        <p role="status">Buscando ciclos…</p>
-      }
-      @if (cyclesError()) {
-        <p role="alert">{{ cyclesError() }}</p>
-      }
-      @if (cyclePage(); as page) {
-        <p role="status">{{ cycles().length }} de {{ page.totalElements }} ciclos encontrados.</p>
-        @if (!page.last) {
-          <app-button variant="secondary" [disabled]="cyclesLoading()" (click)="moreCycles()"
-            >Carregar mais ciclos</app-button
-          >
-        }
-      }
-    </details>
     <div class="ic-history__grid">
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>Ciclo de origem</mat-label>
-        <mat-select
-          id="history-cycle"
-          formControlName="workoutCycleId"
-          aria-describedby="history-cycle-help"
-        >
-          <mat-option [value]="null">Todos os ciclos</mat-option>
-          @for (cycle of cycleOptions(); track cycle.id) {
-            <mat-option [value]="cycle.id">{{ cycle.name }} ({{ cycle.id }})</mat-option>
-          }
-        </mat-select>
-        <mat-hint id="history-cycle-help">Use a busca por nome para encontrar opções.</mat-hint>
+      <mat-form-field class="ic-history__name" appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Nome do ciclo ou treino</mat-label>
+        <input matInput id="history-name" formControlName="name" placeholder="Buscar por nome" />
       </mat-form-field>
-      @if (days().length) {
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>Treino de origem</mat-label>
-          <mat-select id="history-day" formControlName="workoutDayId">
-            <mat-option [value]="null">Todos os treinos</mat-option>
-            @for (day of days(); track day.id) {
-              <mat-option [value]="day.id"
-                >{{ day.title }} · {{ weekDayLabels[day.weekDay] }}</mat-option
-              >
-            }
-          </mat-select>
-        </mat-form-field>
-      } @else {
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>Código do treino</mat-label>
-          <input
-            matInput
-            id="history-day-id"
-            type="number"
-            min="1"
-            step="1"
-            formControlName="workoutDayId"
-          />
-          <mat-hint>Opcional. Selecione um ciclo para escolher pelo nome.</mat-hint>
-          <mat-error>Informe um código inteiro positivo.</mat-error>
-        </mat-form-field>
-      }
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>Data inicial</mat-label>
         <input matInput id="history-start-date" type="date" formControlName="startDate" />
@@ -102,17 +51,6 @@
         <mat-error>Informe uma data válida.</mat-error>
       </mat-form-field>
     </div>
-    @if (daysLoading()) {
-      <p role="status">Consultando treinos do ciclo…</p>
-    }
-    @if (daysError()) {
-      <div role="alert">
-        <p>{{ daysError() }}</p>
-        <app-button variant="secondary" (click)="retryDays()"
-          >Consultar treinos novamente</app-button
-        >
-      </div>
-    }
     @if (filtersForm.touched && filtersForm.hasError('dateRange')) {
       <p role="alert">A data inicial deve ser anterior ou igual à data final.</p>
     }

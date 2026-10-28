@@ -11,18 +11,29 @@ import { MatIconModule } from '@angular/material/icon';
 })
 export class SidebarComponent {
   private readonly router = inject(Router);
+  openPlanning(): void {
+    void this.router.navigate(['/workout-planning']);
+  }
 
   get sessionDetailActive(): boolean {
-    return /^\/workout-sessions\/\d+(?:[?#]|$)/.test(this.router.url) && !this.historyDetailActive && !this.progressDetailActive;
+    return (
+      /^\/workout-sessions\/\d+(?:[?#]|$)/.test(this.router.url) &&
+      !this.historyDetailActive &&
+      !this.progressDetailActive
+    );
   }
 
   get historyDetailActive(): boolean {
-    return /^\/workout-sessions\/\d+(?:[?#]|$)/.test(this.router.url) &&
-      this.router.parseUrl(this.router.url).queryParams['from'] === 'history';
+    return (
+      /^\/workout-sessions\/\d+(?:[?#]|$)/.test(this.router.url) &&
+      this.router.parseUrl(this.router.url).queryParams['from'] === 'history'
+    );
   }
 
   get progressDetailActive(): boolean {
-    return /^\/workout-sessions\/\d+(?:[?#]|$)/.test(this.router.url) &&
-      this.router.parseUrl(this.router.url).queryParams['from'] === 'progress';
+    return (
+      /^\/workout-sessions\/\d+(?:[?#]|$)/.test(this.router.url) &&
+      this.router.parseUrl(this.router.url).queryParams['from'] === 'progress'
+    );
   }
 }

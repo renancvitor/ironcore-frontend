@@ -7,6 +7,16 @@
       <button
         matIconButton
         type="button"
+        aria-label="Voltar ao planejamento de treinos"
+        matTooltip="Planejamento de treinos"
+        [disabled]="busy()"
+        (click)="backToPlanning()"
+      >
+        <mat-icon>event_note</mat-icon>
+      </button>
+      <button
+        matIconButton
+        type="button"
         aria-label="Atualizar sessão de treino"
         matTooltip="Atualizar sessão"
         [disabled]="busy() || notFound()"
@@ -14,6 +24,7 @@
       >
         <mat-icon>refresh</mat-icon>
       </button>
+      @if (returnLabel !== 'Voltar ao planejamento de treinos') {
       <button
         matIconButton
         type="button"
@@ -24,6 +35,7 @@
       >
         <mat-icon>arrow_back</mat-icon>
       </button>
+      }
     </div>
   </header>
   @if (loading() && !session()) {
@@ -46,12 +58,6 @@
   }
   @if (empty()) {
     <app-empty-state icon="fitness_center" message="Nenhuma sessão de treino em andamento." />
-    <div class="ic-session__actions">
-      <app-button variant="secondary" [disabled]="busy()" (click)="loadSession()">
-        Consultar novamente
-      </app-button>
-      <app-button [disabled]="busy()" (click)="backToPlanning()">Ir ao planejamento</app-button>
-    </div>
   }
   @if (notFound()) {
     <app-empty-state icon="search_off" message="Sessão de treino não encontrada ou indisponível." />

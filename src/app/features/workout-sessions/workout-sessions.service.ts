@@ -47,7 +47,7 @@ export class WorkoutSessionsService {
     page = 0, size = 20, filters: WorkoutSessionHistoryFilters = {},
   ): Observable<ListWorkoutSessionsResponse> {
     let params = new HttpParams().set('page', page).set('size', size);
-    for (const key of ['workoutCycleId', 'workoutDayId', 'startDate', 'endDate'] as const) {
+    for (const key of ['name', 'workoutCycleId', 'workoutDayId', 'startDate', 'endDate'] as const) {
       const value = filters[key];
       if (value !== undefined && value !== '') params = params.set(key, value);
     }

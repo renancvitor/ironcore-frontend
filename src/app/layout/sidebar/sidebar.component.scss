@@ -39,7 +39,6 @@
   background: transparent;
   box-shadow: none;
 }
-
 .ic-sidebar__group mat-expansion-panel-header {
   padding-inline: var(--ic-space-4);
 }
@@ -55,7 +54,9 @@
 
   .ic-sidebar__link-content {
     gap: var(--ic-space-2);
-    mat-icon { flex-shrink: 0; }
+    mat-icon {
+      flex-shrink: 0;
+    }
     > span {
       flex: 1;
       min-width: 0;

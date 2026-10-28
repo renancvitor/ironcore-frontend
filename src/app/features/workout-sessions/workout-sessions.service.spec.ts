@@ -31,11 +31,12 @@ describe('WorkoutSessionsService', () => {
     const response = sessionHistory();
     const next = vi.fn();
     service.listWorkoutSessions(2, 50, {
+      name: 'Pernas',
       workoutCycleId: 9, workoutDayId: 30, startDate: '2026-10-01', endDate: '2026-10-27',
     }).subscribe(next);
     const request = http.expectOne((req) => req.url === url);
     expect(request.request.method).toBe('GET');
-    expect(request.request.params.toString()).toBe('page=2&size=50&workoutCycleId=9&workoutDayId=30&startDate=2026-10-01&endDate=2026-10-27');
+    expect(request.request.params.toString()).toBe('page=2&size=50&name=Pernas&workoutCycleId=9&workoutDayId=30&startDate=2026-10-01&endDate=2026-10-27');
     request.flush(response);
     expect(next).toHaveBeenCalledExactlyOnceWith(response);
   });

@@ -269,9 +269,12 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     expect(fixture.nativeElement.textContent).toContain('Nenhuma sessão de treino em andamento.');
     expect(fixture.nativeElement.querySelector('[role="alert"]')).toBeNull();
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    button('Consultar novamente').click();
+    expect(fixture.nativeElement.textContent).not.toContain('Consultar novamente');
+    expect(fixture.nativeElement.textContent).not.toContain('Ir ao planejamento');
+    fixture.nativeElement.querySelector('[aria-label="Atualizar sessão de treino"]').click();
     http.expectOne(`${url}/in-progress`).flush(sessionDetail);
-    component.backToPlanning();
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('[aria-label="Voltar ao planejamento de treinos"]').click();
     expect(navigate).toHaveBeenCalledWith(['/workout-planning']);
   });
 

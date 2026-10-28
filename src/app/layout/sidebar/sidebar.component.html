@@ -67,28 +67,24 @@
     class="ic-sidebar__group"
     routerLinkActive
     #workoutRoutes="routerLinkActive"
-    [expanded]="workoutRoutes.isActive || sessionDetailActive || historyDetailActive || progressDetailActive"
+    [expanded]="
+      workoutRoutes.isActive || sessionDetailActive || historyDetailActive || progressDetailActive
+    "
   >
-    <mat-expansion-panel-header>
-      <mat-panel-title>
-        <span class="ic-sidebar__link-content">
-          <mat-icon>calendar_month</mat-icon>
-          <span>Treinos</span>
-        </span>
-      </mat-panel-title>
-    </mat-expansion-panel-header>
-
-    <a
+    <mat-expansion-panel-header
       routerLink="/workout-planning"
       routerLinkActive="ic-sidebar__link--active"
       ariaCurrentWhenActive="page"
-      class="ic-sidebar__link ic-sidebar__link--child"
+      (keydown.enter)="openPlanning()"
+      (keydown.space)="openPlanning()"
     >
-      <span class="ic-sidebar__link-content">
-        <mat-icon>event_note</mat-icon>
-        <span>Planejamento de treinos</span>
-      </span>
-    </a>
+      <mat-panel-title>
+        <span class="ic-sidebar__link-content">
+          <mat-icon>event_note</mat-icon>
+          <span>Planejamento de treinos</span>
+        </span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
     <a
       routerLink="/workout-sessions"
       routerLinkActive="ic-sidebar__link--active"

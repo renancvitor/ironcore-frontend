@@ -19,37 +19,32 @@ describe('WorkoutSessionHistoryState authentication isolation', () => {
     auth.setUser(user);
     state = TestBed.inject(WorkoutSessionHistoryState);
     state.filters = {
-      workoutCycleId: 9,
-      workoutDayId: 30,
+      name: 'Ciclo da primeira pessoa',
       startDate: '2026-10-01',
       endDate: '2026-10-27',
     };
     state.page = 2;
     state.size = 50;
-    state.selectedCycle = { id: 9, name: 'Ciclo da primeira pessoa' };
   });
 
   function expectEmptyState() {
     expect(state.filters).toEqual({});
     expect(state.page).toBe(0);
     expect(state.size).toBe(20);
-    expect(state.selectedCycle).toBeNull();
   }
 
-  it('preserves filters, pagination and the selected name when reusing the singleton for the same identity', () => {
+  it('preserves the name filter and pagination when reusing the singleton for the same identity', () => {
     TestBed.tick();
     expect(TestBed.inject(WorkoutSessionHistoryState)).toBe(state);
     auth.setUser({ ...user, nickname: 'Nome atualizado', email: 'updated@ironcore.test' });
     TestBed.tick();
     expect(state.filters).toEqual({
-      workoutCycleId: 9,
-      workoutDayId: 30,
+      name: 'Ciclo da primeira pessoa',
       startDate: '2026-10-01',
       endDate: '2026-10-27',
     });
     expect(state.page).toBe(2);
     expect(state.size).toBe(50);
-    expect(state.selectedCycle).toEqual({ id: 9, name: 'Ciclo da primeira pessoa' });
   });
 
   it('clears all state on logout', () => {

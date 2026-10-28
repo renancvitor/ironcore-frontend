@@ -2,41 +2,31 @@ import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
-  AbstractControl,
   FormControl,
   FormGroup,
   ReactiveFormsModule,
+  AbstractControl,
   ValidationErrors,
   ValidatorFn,
 } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { catchError, defer, EMPTY, finalize, Subject, switchMap } from 'rxjs';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { PageResult } from '../../../shared/models/page-result.model';
-import { WorkoutPlanningService } from '../../workout-planning/workout-planning.service';
-import {
-  ListWorkoutCyclesItemResponse,
-  WorkoutDayDetailResponse,
-} from '../../workout-planning/workout-planning.models';
 import { WEEK_DAY_LABELS } from '../../workout-planning/workout-planning.labels';
 import { WORKOUT_SESSION_CLOSE_REASON_LABELS } from '../workout-sessions.labels';
 import { WorkoutSessionHistoryItem } from '../workout-sessions.models';
 import { WorkoutSessionsService } from '../workout-sessions.service';
 import { WorkoutSessionHistoryState } from './workout-session-history-state.service';
 import { progressNavigationQuery } from '../progress/workout-session-progress.utils';
-
-const positiveId: ValidatorFn = (control: AbstractControl): ValidationErrors | null =>
-  control.value === null ||
-  control.value === '' ||
-  (Number.isSafeInteger(control.value) && control.value > 0)
-    ? null
-    : { positiveId: true };
 
 const isoDate: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
   const value: string = control.value;
@@ -57,10 +47,13 @@ const isoDate: ValidatorFn = (control: AbstractControl): ValidationErrors | null
   selector: 'app-workout-session-history',
   imports: [
     DatePipe,
+    RouterLink,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
     MatPaginatorModule,
     ButtonComponent,
     LoadingComponent,
@@ -71,28 +64,15 @@ const isoDate: ValidatorFn = (control: AbstractControl): ValidationErrors | null
 })
 export class WorkoutSessionHistoryComponent {
   private readonly service = inject(WorkoutSessionsService);
-  private readonly planning = inject(WorkoutPlanningService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   readonly state = inject(WorkoutSessionHistoryState);
-  private readonly selectedCycle = signal(this.state.selectedCycle);
   private readonly requests = new Subject<void>();
-  private readonly cycleRequests = new Subject<number>();
-  private readonly dayRequests = new Subject<number | null>();
   private requestKey = '';
   readonly result = signal<PageResult<WorkoutSessionHistoryItem> | null>(null);
   readonly loading = signal(false);
   readonly error = signal('');
-  readonly cycles = signal<ListWorkoutCyclesItemResponse[]>([]);
-  readonly cyclesLoading = signal(false);
-  readonly cyclesError = signal('');
-  readonly cyclePage = signal<PageResult<ListWorkoutCyclesItemResponse> | null>(null);
-  readonly days = signal<WorkoutDayDetailResponse[]>([]);
-  readonly daysLoading = signal(false);
-  readonly daysError = signal('');
-  readonly cycleSearch = new FormControl('', { nonNullable: true });
-  private appliedCycleSearch = '';
   readonly weekDayLabels = WEEK_DAY_LABELS;
   readonly closeReasonLabels = WORKOUT_SESSION_CLOSE_REASON_LABELS;
   readonly filtered = computed(() => {
@@ -101,8 +81,7 @@ export class WorkoutSessionHistoryComponent {
   });
   readonly filtersForm = new FormGroup(
     {
-      workoutCycleId: new FormControl<number | null>(null, positiveId),
-      workoutDayId: new FormControl<number | null>(null, positiveId),
+      name: new FormControl('', { nonNullable: true }),
       startDate: new FormControl('', { nonNullable: true, validators: isoDate }),
       endDate: new FormControl('', { nonNullable: true, validators: isoDate }),
     },
@@ -118,8 +97,7 @@ export class WorkoutSessionHistoryComponent {
   constructor() {
     this.filtersForm.patchValue(
       {
-        workoutCycleId: this.state.filters.workoutCycleId ?? null,
-        workoutDayId: this.state.filters.workoutDayId ?? null,
+        name: this.state.filters.name ?? '',
         startDate: this.state.filters.startDate ?? '',
         endDate: this.state.filters.endDate ?? '',
       },
@@ -151,87 +129,9 @@ export class WorkoutSessionHistoryComponent {
         this.state.page = sessions.page;
         this.state.size = sessions.size;
       });
-    this.cycleRequests
-      .pipe(
-        switchMap((page) =>
-          defer(() => {
-            this.cyclesLoading.set(true);
-            this.cyclesError.set('');
-            return this.planning
-              .listWorkoutCycles(page, 20, { name: this.appliedCycleSearch || undefined })
-              .pipe(
-                catchError(() => {
-                  this.cyclesError.set('Não foi possível buscar ciclos. Tente buscar novamente.');
-                  return EMPTY;
-                }),
-                finalize(() => this.cyclesLoading.set(false)),
-              );
-          }),
-        ),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(({ cycles }) => {
-        this.cycles.update((previous) =>
-          cycles.page === 0 ? cycles.content : [...previous, ...cycles.content],
-        );
-        this.cyclePage.set(cycles);
-      });
-    this.dayRequests
-      .pipe(
-        switchMap((id) => {
-          this.days.set([]);
-          this.daysError.set('');
-          if (id === null || !Number.isSafeInteger(id) || id <= 0) return EMPTY;
-          return defer(() => {
-            this.daysLoading.set(true);
-            return this.planning.getWorkoutCycleDetail(id).pipe(
-              catchError(() => {
-                this.daysError.set(
-                  'Não foi possível consultar os treinos deste ciclo. Tente novamente ou informe o código do treino.',
-                );
-                return EMPTY;
-              }),
-              finalize(() => this.daysLoading.set(false)),
-            );
-          });
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((cycle) => this.days.set(cycle.days));
-    this.filtersForm.controls.workoutCycleId.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((id) => {
-        this.filtersForm.controls.workoutDayId.reset(null);
-        const cycle = this.cycleOptions().find((cycle) => cycle.id === id);
-        this.selectedCycle.set(cycle ? { id: cycle.id, name: cycle.name } : null);
-        this.dayRequests.next(id);
-      });
-    if (this.state.filters.workoutCycleId) this.dayRequests.next(this.state.filters.workoutCycleId);
     this.load();
   }
 
-  cycleOptions(): { id: number; name: string }[] {
-    const selected = this.selectedCycle();
-    return selected && !this.cycles().some((cycle) => cycle.id === selected.id)
-      ? [selected, ...this.cycles()]
-      : this.cycles();
-  }
-
-  searchCycles(): void {
-    this.appliedCycleSearch = this.cycleSearch.value.trim();
-    this.cyclePage.set(null);
-    this.cycles.set([]);
-    this.cycleRequests.next(0);
-  }
-
-  moreCycles(): void {
-    const page = this.cyclePage();
-    if (page && !page.last && !this.cyclesLoading()) this.cycleRequests.next(page.page + 1);
-  }
-
-  retryDays(): void {
-    this.dayRequests.next(this.filtersForm.controls.workoutCycleId.value);
-  }
   load(): void {
     const key = JSON.stringify([this.state.page, this.state.size, this.state.filters]);
     if (this.loading() && key === this.requestKey) return;
@@ -244,12 +144,10 @@ export class WorkoutSessionHistoryComponent {
     if (this.filtersForm.invalid) return;
     const values = this.filtersForm.getRawValue();
     this.state.filters = {
-      workoutCycleId: values.workoutCycleId ?? undefined,
-      workoutDayId: values.workoutDayId ?? undefined,
+      name: values.name.trim() || undefined,
       startDate: values.startDate || undefined,
       endDate: values.endDate || undefined,
     };
-    this.state.selectedCycle = this.selectedCycle();
     this.state.page = 0;
     this.load();
   }
@@ -257,7 +155,6 @@ export class WorkoutSessionHistoryComponent {
   clearFilters(): void {
     this.filtersForm.reset();
     this.state.filters = {};
-    this.state.selectedCycle = null;
     this.state.page = 0;
     this.load();
   }
@@ -270,7 +167,10 @@ export class WorkoutSessionHistoryComponent {
 
   openSession(id: number): void {
     void this.router.navigate(['/workout-sessions', id], {
-      queryParams: { ...progressNavigationQuery(this.route.snapshot.queryParamMap), from: 'history' },
+      queryParams: {
+        ...progressNavigationQuery(this.route.snapshot.queryParamMap),
+        from: 'history',
+      },
     });
   }
 

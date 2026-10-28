@@ -61,6 +61,9 @@
     color: var(--ic-text-secondary);
   }
 }
+.ic-session-progress__header-actions {
+  @include actions.icons;
+}
 
 .ic-session-progress__filters,
 .ic-session-progress__result {

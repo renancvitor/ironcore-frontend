@@ -13,6 +13,7 @@ import { ToastService } from '../../../shared/components/toast/toast.service';
 import { WorkoutSessionDetailComponent } from '../detail/workout-session-detail.component';
 import { WorkoutSessionHistoryComponent } from '../history/workout-session-history.component';
 import { sessionDetail, sessionHistory } from '../workout-sessions.testing';
+import { cyclePage } from '../../workout-planning/workout-planning.testing';
 import { WorkoutSessionProgressComponent } from './workout-session-progress.component';
 import {
   cardioResponse,
@@ -50,6 +51,27 @@ describe('Workout Session progress navigation with real routes and HTTP', () => 
     harness = await RouterTestingHarness.create();
   });
   afterEach(() => http.verify());
+
+  it.each(['/workout-sessions/history', '/workout-sessions/progress', '/workout-sessions'])('opens planning directly from %s', async (path) => {
+    await harness.navigateByUrl(path);
+    if (path === '/workout-sessions/history')
+      http.expectOne((req) => req.url === url).flush(sessionHistory());
+    if (path === '/workout-sessions')
+      http.expectOne(url + '/in-progress').flush(null);
+    harness.detectChanges();
+    const shortcut = harness.routeNativeElement!.querySelector<HTMLElement>(
+      '[aria-label="Ir ao planejamento de treinos"], [aria-label="Voltar ao planejamento de treinos"]',
+    )!;
+    expect(shortcut.querySelector('mat-icon')!.textContent).toContain('event_note');
+    shortcut.click();
+    await settle();
+    expect(router.url).toBe('/workout-planning');
+    const requests = http.match((req) => req.url !== url);
+    expect(requests).toHaveLength(2);
+    for (const request of requests)
+      request.flush(request.request.url.endsWith('/workout-cycles') ? cyclePage() : []);
+    await settle();
+  });
 
   const current = <T>(type: new (...args: never[]) => T): T =>
     harness.fixture.debugElement.query(By.directive(type)).componentInstance;
@@ -99,7 +121,7 @@ describe('Workout Session progress navigation with real routes and HTTP', () => 
     harness.detectChanges();
     const button = [
       ...harness.routeNativeElement!.querySelectorAll<HTMLButtonElement>('button'),
-    ].find((item) => item.textContent?.includes('Ver evolução'))!;
+    ].find((item) => item.getAttribute('aria-label') === 'Ver evolução')!;
     button.click();
     await settle();
     expect(current(WorkoutSessionProgressComponent)).toBeTruthy();
@@ -216,9 +238,11 @@ describe('Workout Session progress navigation with real routes and HTTP', () => 
       'O vínculo deste exercício foi excluído',
     );
     expect(harness.routeNativeElement!.textContent).toContain('Exercício preservado');
-    expect(harness.routeNativeElement!.querySelector(
-      'button[aria-label="Ver evolução deste exercício"]',
-    )).toBeNull();
+    expect(
+      harness.routeNativeElement!.querySelector(
+        'button[aria-label="Ver evolução deste exercício"]',
+      ),
+    ).toBeNull();
     detail.openExerciseProgress(50);
     await settle();
     http.expectNone((req) => req.url.includes('/analytics/'));
@@ -234,11 +258,16 @@ describe('Workout Session progress navigation with real routes and HTTP', () => 
     http.expectOne((req) => req.url === url).flush(sessionHistory());
     harness.detectChanges();
     expect(router.url).toContain('metric=volumeKgReps');
-    current(WorkoutSessionHistoryComponent).openSession(100); await settle();
-    http.expectOne(url + '/100').flush({ ...sessionDetail, status: 'CLOSED', closeReason: 'MANUAL' });
+    current(WorkoutSessionHistoryComponent).openSession(100);
+    await settle();
+    http
+      .expectOne(url + '/100')
+      .flush({ ...sessionDetail, status: 'CLOSED', closeReason: 'MANUAL' });
     harness.detectChanges();
-    current(WorkoutSessionDetailComponent).returnToList(); await settle();
-    http.expectOne((req) => req.url === url).flush(sessionHistory()); harness.detectChanges();
+    current(WorkoutSessionDetailComponent).returnToList();
+    await settle();
+    http.expectOne((req) => req.url === url).flush(sessionHistory());
+    harness.detectChanges();
     expect(router.url).toContain('metric=volumeKgReps');
     current(WorkoutSessionHistoryComponent).openProgress();
     await settle();

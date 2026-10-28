@@ -2,6 +2,7 @@ import { WeekDay } from '../workout-planning/workout-planning.models';
 import { PageResult } from '../../shared/models/page-result.model';
 
 export interface WorkoutSessionHistoryFilters {
+  name?: string;
   workoutCycleId?: number;
   workoutDayId?: number;
   startDate?: string;
