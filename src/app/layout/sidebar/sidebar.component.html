@@ -95,4 +95,18 @@
       <span>Histórico de sessões</span>
     </span>
   </a>
+  <a
+    routerLink="/workout-sessions/progress"
+    routerLinkActive="ic-sidebar__link--active"
+    [routerLinkActiveOptions]="{ exact: true }"
+    [class.ic-sidebar__link--active]="progressDetailActive"
+    [attr.aria-current]="progressDetailActive ? 'page' : null"
+    ariaCurrentWhenActive="page"
+    class="ic-sidebar__link"
+  >
+    <span class="ic-sidebar__link-content">
+      <mat-icon>show_chart</mat-icon>
+      <span>Evolução de treinos</span>
+    </span>
+  </a>
 </nav>

@@ -9,7 +9,7 @@ import {
   ValidationErrors,
   ValidatorFn,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -29,6 +29,7 @@ import { WORKOUT_SESSION_CLOSE_REASON_LABELS } from '../workout-sessions.labels'
 import { WorkoutSessionHistoryItem } from '../workout-sessions.models';
 import { WorkoutSessionsService } from '../workout-sessions.service';
 import { WorkoutSessionHistoryState } from './workout-session-history-state.service';
+import { progressNavigationQuery } from '../progress/workout-session-progress.utils';
 
 const positiveId: ValidatorFn = (control: AbstractControl): ValidationErrors | null =>
   control.value === null ||
@@ -72,6 +73,7 @@ export class WorkoutSessionHistoryComponent {
   private readonly service = inject(WorkoutSessionsService);
   private readonly planning = inject(WorkoutPlanningService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   readonly state = inject(WorkoutSessionHistoryState);
   private readonly selectedCycle = signal(this.state.selectedCycle);
@@ -267,6 +269,14 @@ export class WorkoutSessionHistoryComponent {
   }
 
   openSession(id: number): void {
-    void this.router.navigate(['/workout-sessions', id], { queryParams: { from: 'history' } });
+    void this.router.navigate(['/workout-sessions', id], {
+      queryParams: { ...progressNavigationQuery(this.route.snapshot.queryParamMap), from: 'history' },
+    });
+  }
+
+  openProgress(): void {
+    void this.router.navigate(['/workout-sessions/progress'], {
+      queryParams: progressNavigationQuery(this.route.snapshot.queryParamMap),
+    });
   }
 }

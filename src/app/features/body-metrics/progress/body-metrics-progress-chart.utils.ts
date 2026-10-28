@@ -1,8 +1,9 @@
 import {
-  BodyMetricsProgressChartRequest,
   BodyMetricsProgressChartResponse,
   BodyMetricsProgressMetric,
 } from '../body-metrics.models';
+
+export { localDateString, defaultProgressPeriod, progressPeriodError } from '../../../shared/utils/progress-period.utils';
 
 const CHART_LEFT = 60;
 const CHART_WIDTH = 670;
@@ -30,48 +31,6 @@ const SERIES_PALETTE_SLOT: Record<BodyMetricsProgressMetric, number> = {
   [BodyMetricsProgressMetric.THIGH_CM]: 7,
   [BodyMetricsProgressMetric.CALF_CM]: 2,
 };
-
-export function localDateString(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
-}
-
-export function defaultProgressPeriod(today = new Date()): BodyMetricsProgressChartRequest {
-  const startDate = new Date(today.getFullYear(), today.getMonth() - 5, 1);
-
-  return {
-    startDate: localDateString(startDate),
-    endDate: localDateString(today),
-  };
-}
-
-export function progressPeriodError(
-  period: BodyMetricsProgressChartRequest,
-  today = localDateString(new Date()),
-): string {
-  const { startDate, endDate } = period;
-
-  if (!isValidDate(startDate) || !isValidDate(endDate)) {
-    return 'Informe datas inicial e final válidas.';
-  }
-
-  if (startDate > today || endDate > today) {
-    return 'As datas não podem ser futuras.';
-  }
-
-  if (startDate > endDate) {
-    return 'A data inicial não pode ser maior que a data final.';
-  }
-
-  if (endDate > maximumPeriodEndDate(startDate)) {
-    return 'O período máximo permitido é de 12 meses.';
-  }
-
-  return '';
-}
 
 export function monthLabel(period: string): string {
   const year = period.slice(0, 4);
@@ -142,30 +101,6 @@ export function buildProgressChart(response: BodyMetricsProgressChartResponse) {
     ticks,
     unit: series[0]?.unit ?? '',
   };
-}
-
-function isValidDate(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return false;
-  }
-
-  if (Number.isNaN(Date.parse(value))) {
-    return false;
-  }
-
-  return new Date(value).toISOString().slice(0, 10) === value;
-}
-
-function maximumPeriodEndDate(startDate: string): string {
-  const [year, month, day] = startDate.split('-').map(Number);
-
-  const lastDay = new Date(Date.UTC(year + 1, month, 0)).getUTCDate();
-
-  const maximumDate = new Date(Date.UTC(year + 1, month - 1, Math.min(day, lastDay)));
-
-  maximumDate.setUTCDate(maximumDate.getUTCDate() - 1);
-
-  return maximumDate.toISOString().slice(0, 10);
 }
 
 function monthIndex(period: string): number {

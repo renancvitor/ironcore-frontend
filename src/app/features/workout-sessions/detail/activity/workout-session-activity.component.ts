@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, DestroyRef, DOCUMENT, inject, input } from '@angular/core';
+import { Component, DestroyRef, DOCUMENT, inject, input, output } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -22,6 +22,7 @@ export class WorkoutSessionActivityComponent {
   readonly activity = input.required<SessionActivityEditor>();
   readonly blocked = input(false);
   readonly revision = input(0);
+  readonly progressRequested = output<number>();
   readonly editor = inject(WorkoutSessionEditorState);
   readonly fieldError = executionFieldError;
   readonly validateNumber = validateExecutionNumberInput;

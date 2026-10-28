@@ -1,0 +1,186 @@
+<p class="ic-chart__help">
+  Cada posição representa uma sessão em ordem cronológica. Os intervalos entre posições não são
+  proporcionais ao tempo. A linha conecta somente valores consecutivos registrados; ausência de
+  informação interrompe a linha.
+</p>
+<p class="ic-chart__legend">
+  <svg viewBox="0 0 32 12" aria-hidden="true" class="ic-chart__sample">
+    <line x1="0" y1="6" x2="32" y2="6" [attr.stroke]="indicator().color" stroke-width="3" />
+  </svg>
+  {{ indicator().label }} ({{ indicator().unit }})
+</p>
+@if (chart().validCount === 1) {
+  <p role="status">
+    Há apenas um valor válido. O marcador representa esse registro, sem uma linha de tendência.
+  </p>
+}
+@if (chart().validCount > 0) {
+  <div
+    class="ic-chart__scroll"
+    tabindex="0"
+    role="region"
+    aria-label="Gráfico de sessões com rolagem horizontal"
+  >
+    <svg
+      class="ic-chart__plot"
+      [attr.viewBox]="'0 0 ' + chart().width + ' 340'"
+      [style.min-width.px]="chart().width"
+      role="img"
+      [attr.aria-label]="
+        indicator().label +
+        '. Selecione uma sessão no controle abaixo ou consulte a tabela para acessar os valores.'
+      "
+    >
+      <text x="60" y="18">{{ indicator().unit }}</text>
+      @for (tick of chart().ticks; track tick.value) {
+        <line
+          class="ic-chart__grid"
+          x1="60"
+          [attr.x2]="chart().right"
+          [attr.y1]="tick.y"
+          [attr.y2]="tick.y"
+        />
+        <text x="50" [attr.y]="tick.y + 4" text-anchor="end">
+          {{ tick.value | number: '1.0-2' }}
+        </text>
+      }
+      @for (point of chart().points; track point.sessionId) {
+        @if (point.showLabel) {
+          <text [attr.transform]="'translate(' + point.x + ', 284) rotate(-35)'" text-anchor="end">
+            {{ point.label }}
+          </text>
+        }
+      }
+      <g [attr.stroke]="indicator().color">
+        @for (segment of chart().segments; track segment.sessionId) {
+          <path
+            class="ic-chart__line"
+            [attr.d]="segment.path"
+            fill="none"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            vector-effect="non-scaling-stroke"
+          />
+        }
+        @for (point of chart().points; track point.sessionId) {
+          @if (point.value !== null) {
+            <circle
+              class="ic-chart__marker"
+              [attr.data-session-id]="point.sessionId"
+              [attr.cx]="point.x"
+              [attr.cy]="point.y"
+              r="4"
+              [attr.fill]="indicator().color"
+              [attr.stroke]="
+                selectedPoint()?.sessionId === point.sessionId
+                  ? 'var(--ic-text-primary)'
+                  : indicator().color
+              "
+              stroke-width="2"
+            />
+            <circle
+              class="ic-chart__target"
+              [attr.cx]="point.x"
+              [attr.cy]="point.y"
+              r="24"
+              fill="transparent"
+              stroke="none"
+              (click)="selectedId.set(point.sessionId)"
+            >
+              <title>
+                Sessão {{ point.sessionId }} — {{ point.label }} —
+                {{ point.startedAt | date: 'HH:mm:ss' : '-0300' }} (São Paulo):
+                {{ formatValue(point.value, indicator().key, true) }}
+              </title>
+            </circle>
+          }
+        }
+      </g>
+      <text [attr.x]="chart().right" y="330" text-anchor="end">
+        Sequência cronológica de sessões
+      </text>
+    </svg>
+  </div>
+}
+@if (selectedPoint(); as point) {
+  <div class="ic-chart__selection">
+    <label for="progress-session-point">Consultar ponto por sessão</label>
+    <select id="progress-session-point" [value]="point.sessionId" (change)="selectSession($event)">
+      @for (session of chart().points; track session.sessionId) {
+        <option [value]="session.sessionId">
+          {{ session.label }} · {{ session.startedAt | date: 'HH:mm:ss' : '-0300' }} · Sessão
+          {{ session.sessionId }}
+        </option>
+      }
+    </select>
+  </div>
+  <section
+    class="ic-chart__point-detail"
+    aria-live="polite"
+    aria-label="Detalhe da sessão selecionada"
+  >
+    <p>
+      <strong>Sessão {{ point.sessionId }}</strong> · {{ point.label }} ·
+      {{ point.startedAt | date: 'HH:mm:ss' : '-0300' }} (São Paulo)
+    </p>
+    <p>{{ point.exerciseNameSnapshot }} — {{ formatValue(point.value, indicator().key) }}</p>
+    @if (point.value === null) {
+      <p>Sem informação elegível para este indicador.</p>
+    }
+    @if (indicator().key === 'averagePaceMinPerKm' && point.value !== null) {
+      <p>
+        Valor recebido: {{ formatValue(point.value, indicator().key, true) }}. Minutos e segundos
+        são uma apresentação aproximada.
+      </p>
+    }
+    <p>{{ coverage(point) }}</p>
+    <app-button variant="secondary" (click)="sessionOpened.emit(point.sessionId)"
+      >Consultar sessão {{ point.sessionId }}</app-button
+    >
+  </section>
+}
+<details class="ic-chart__data">
+  <summary>Ver valores em tabela</summary>
+  <p class="ic-chart__help">
+    — significa ausência de informação elegível. Zero é um valor registrado.
+  </p>
+  <div class="ic-chart__scroll" tabindex="0" role="region" aria-label="Valores por sessão">
+    <table>
+      <caption>
+        {{
+          indicator().label
+        }}
+        — valores retornados para o período, uma linha por sessão
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Sessão</th>
+          <th scope="col">Início (São Paulo)</th>
+          <th scope="col">Exercício na sessão</th>
+          <th scope="col">{{ indicator().label }} ({{ indicator().unit }})</th>
+          <th scope="col">Cobertura dos registros</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (point of chart().points; track point.sessionId) {
+          <tr>
+            <th scope="row">
+              <button
+                type="button"
+                class="ic-chart__session-link"
+                (click)="sessionOpened.emit(point.sessionId)"
+              >
+                {{ point.label }} · Sessão {{ point.sessionId }}
+              </button>
+            </th>
+            <td>{{ point.startedAt | date: 'dd/MM/yyyy HH:mm:ss' : '-0300' }}</td>
+            <td>{{ point.exerciseNameSnapshot }}</td>
+            <td>{{ formatValue(point.value, indicator().key, true) }}</td>
+            <td class="ic-chart__coverage">{{ coverage(point) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</details>

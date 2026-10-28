@@ -114,6 +114,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'workout-sessions/progress',
+        loadComponent: () =>
+          import('./features/workout-sessions/progress/workout-session-progress.component').then(
+            (m) => m.WorkoutSessionProgressComponent,
+          ),
+      },
+      {
         path: 'workout-sessions/:id',
         canActivate: [workoutSessionEntryGuard],
         canDeactivate: [workoutSessionPendingChangesGuard],

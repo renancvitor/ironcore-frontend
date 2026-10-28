@@ -3,6 +3,11 @@ import { inject, Injectable } from '@angular/core';
 import { catchError, Observable, of, throwError } from 'rxjs';
 import { API_BASE_URL } from '../../core/http/api-base-url.token';
 import {
+  ExerciseCardioEvolutionResponse,
+  ExerciseStrengthEvolutionResponse,
+  WorkoutSessionAnalyticsPeriod,
+} from './workout-session-analytics.models';
+import {
   CloseWorkoutSessionResponse,
   GetWorkoutSessionDetailResponse,
   StartWorkoutSessionRequest,
@@ -23,6 +28,20 @@ export class WorkoutSessionsService {
   private readonly http = inject(HttpClient);
   private readonly apiBaseUrl = inject(API_BASE_URL);
   private readonly sessionsUrl = `${this.apiBaseUrl}/api/users/me/workout-sessions`;
+
+  getStrengthEvolution(exerciseId: number, period: WorkoutSessionAnalyticsPeriod): Observable<ExerciseStrengthEvolutionResponse> {
+    const params = new HttpParams().set('startDate', period.startDate).set('endDate', period.endDate);
+    return this.http.get<ExerciseStrengthEvolutionResponse>(
+      `${this.sessionsUrl}/analytics/exercises/${exerciseId}/strength`, { params },
+    );
+  }
+
+  getCardioEvolution(exerciseId: number, period: WorkoutSessionAnalyticsPeriod): Observable<ExerciseCardioEvolutionResponse> {
+    const params = new HttpParams().set('startDate', period.startDate).set('endDate', period.endDate);
+    return this.http.get<ExerciseCardioEvolutionResponse>(
+      `${this.sessionsUrl}/analytics/exercises/${exerciseId}/cardio`, { params },
+    );
+  }
 
   listWorkoutSessions(
     page = 0, size = 20, filters: WorkoutSessionHistoryFilters = {},
