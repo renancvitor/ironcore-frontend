@@ -3,6 +3,13 @@
 
 <article class="ic-activity" [attr.data-revision]="revision()">
   <header><h3>{{ snapshot.exerciseNameSnapshot }}</h3></header>
+  @if (editor.session()?.status === 'CLOSED') {
+    @if (snapshot.exerciseId !== null) {
+      <app-button variant="secondary" [disabled]="blocked() || editor.busy()" (click)="progressRequested.emit(snapshot.exerciseId)">Ver evolução deste exercício</app-button>
+    } @else {
+      <p>O vínculo deste exercício foi excluído. A evolução por exercício está indisponível; os registros históricos continuam preservados nesta sessão.</p>
+    }
+  }
   <section class="ic-activity__reference" [attr.aria-labelledby]="prefix() + '-planned'">
     <h4 [id]="prefix() + '-planned'">Prescrição planejada — referência</h4>
     <dl>

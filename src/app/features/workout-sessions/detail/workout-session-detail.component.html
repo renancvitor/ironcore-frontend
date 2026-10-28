@@ -143,7 +143,7 @@
       </div>
       @for (activity of editor.activities(); track activity.confirmed.id) {
         <app-workout-session-activity [activity]="activity" [blocked]="editingBlocked()"
-          [revision]="editor.revision()" />
+          [revision]="editor.revision()" (progressRequested)="openExerciseProgress($event)" />
       } @empty {
         <app-empty-state
           icon="fitness_center"

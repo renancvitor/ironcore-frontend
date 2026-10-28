@@ -1,0 +1,249 @@
+<section class="ic-session-progress">
+  <header class="ic-session-progress__header">
+    <div>
+      <h1>Evolução de treinos</h1>
+      <p>Acompanhe os indicadores da execução registrada nas suas sessões encerradas.</p>
+    </div>
+    <button
+      matIconButton
+      type="button"
+      [attr.aria-label]="
+        sourceSessionId() ? 'Voltar à sessão de origem' : 'Voltar ao histórico de sessões'
+      "
+      [matTooltip]="
+        sourceSessionId() ? 'Voltar à sessão de origem' : 'Voltar ao histórico de sessões'
+      "
+      (click)="back()"
+    >
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+  </header>
+  @if (choosingExercise()) {
+    <app-exercise-catalog
+      mode="select"
+      [multiple]="false"
+      (selectionConfirmed)="confirmExercise($event)"
+      (selectionCancelled)="choosingExercise.set(false)"
+    />
+  } @else {
+    <section class="ic-session-progress__result" aria-labelledby="progress-exercise-title">
+      <h2 id="progress-exercise-title">
+        {{ exerciseId() ? exerciseName() : 'Selecione um exercício' }}
+      </h2>
+      @if (invalidExercise()) {
+        <p role="alert">
+          O exercício informado no link é inválido. Selecione um exercício pelo catálogo ou por uma
+          sessão histórica.
+        </p>
+      }
+      <p>
+        O catálogo permite buscar exercícios ativos. Para exercícios históricos inativos, abra uma
+        sessão encerrada e escolha “Ver evolução deste exercício”.
+      </p>
+      <div class="ic-session-progress__actions">
+        <app-button variant="secondary" (click)="openHistory()">Consultar histórico</app-button>
+        <app-button (click)="choosingExercise.set(true)">{{
+          exerciseId() ? 'Trocar exercício' : 'Selecionar exercício'
+        }}</app-button>
+      </div>
+    </section>
+    <form class="ic-session-progress__filters" [formGroup]="form" (ngSubmit)="applyPeriod()">
+      <div class="ic-session-progress__field">
+        <label for="session-progress-start">Data inicial</label>
+        <input
+          id="session-progress-start"
+          type="date"
+          formControlName="startDate"
+          required
+          [max]="today"
+          [attr.aria-invalid]="!!validationError()"
+          aria-describedby="session-period-help session-period-error"
+        />
+      </div>
+      <div class="ic-session-progress__field">
+        <label for="session-progress-end">Data final</label>
+        <input
+          id="session-progress-end"
+          type="date"
+          formControlName="endDate"
+          required
+          [max]="today"
+          [attr.aria-invalid]="!!validationError()"
+          aria-describedby="session-period-help session-period-error"
+        />
+      </div>
+      <app-button type="submit">Aplicar período</app-button>
+      <p id="session-period-help" class="ic-session-progress__help">
+        Selecione até 12 meses, sem datas futuras. Referência de hoje: São Paulo.
+      </p>
+      <p id="session-period-error" class="ic-session-progress__error" role="alert">
+        {{ validationError() }}
+      </p>
+    </form>
+    @if (!exerciseId()) {
+      <app-empty-state
+        icon="show_chart"
+        message="Selecione um exercício para consultar a evolução de força e cardio."
+      />
+    } @else if (periodIsValid()) {
+      <p class="ic-session-progress__period">
+        Período aplicado: {{ period().startDate | date: 'dd/MM/yyyy' }} a
+        {{ period().endDate | date: 'dd/MM/yyyy' }}.
+      </p>
+      <fieldset class="ic-session-progress__types">
+        <legend>Tipo de indicadores</legend>
+        @for (option of families; track option.key) {
+          <label
+            class="ic-session-progress__type"
+            [class.ic-session-progress__type--selected]="family() === option.key"
+          >
+            <input
+              type="radio"
+              name="session-progress-family"
+              [value]="option.key"
+              [checked]="family() === option.key"
+              (change)="selectFamily(option.key)"
+              aria-controls="session-progress-result"
+            />{{ option.label }}
+          </label>
+        }
+      </fieldset>
+      @if (strengthError()) {
+        <div class="ic-session-progress__error-state">
+          <p role="alert">Força: {{ strengthError() }}</p>
+          <app-button variant="secondary" [disabled]="strengthLoading()" (click)="retry('strength')"
+            >Tentar força novamente</app-button
+          >
+        </div>
+      }
+      @if (cardioError()) {
+        <div class="ic-session-progress__error-state">
+          <p role="alert">Cardio: {{ cardioError() }}</p>
+          <app-button variant="secondary" [disabled]="cardioLoading()" (click)="retry('cardio')"
+            >Tentar cardio novamente</app-button
+          >
+        </div>
+      }
+      <section
+        id="session-progress-result"
+        class="ic-session-progress__result"
+        [attr.aria-busy]="loading()"
+        aria-labelledby="session-progress-title"
+      >
+        <h2 id="session-progress-title">{{ family() === 'strength' ? 'Força' : 'Cardio' }}</h2>
+        @if (loading()) {
+          <app-loading />
+        } @else if (response(); as data) {
+          <fieldset class="ic-session-progress__types">
+            <legend>Indicador exibido</legend>
+            @for (option of indicators(); track option.key) {
+              <label
+                class="ic-session-progress__type"
+                [class.ic-session-progress__type--selected]="indicator().key === option.key"
+              >
+                <input
+                  type="radio"
+                  name="session-progress-metric"
+                  [value]="option.key"
+                  [checked]="indicator().key === option.key"
+                  [disabled]="!isAvailable(option)"
+                  (change)="selectIndicator(option)"
+                />
+                {{ option.label }} ({{ option.unit }})
+                @if (!isAvailable(option)) {
+                  <span>— sem dados</span>
+                }
+              </label>
+            }
+          </fieldset>
+          @if (data.points.length === 0) {
+            <app-empty-state
+              icon="history"
+              message="Nenhuma sessão encerrada com este exercício no período selecionado."
+            />
+          } @else {
+            @if (!hasValues()) {
+              <app-empty-state
+                icon="show_chart"
+                message="Há sessões no período, mas sem informação elegível para este indicador. Consulte os registros na tabela."
+              />
+            }
+            <app-workout-session-progress-chart
+              [points]="data.points"
+              [indicator]="indicator()"
+              (sessionOpened)="openSession($event)"
+            />
+          }
+          @if (family() === 'cardio') {
+            @if (cardio(); as cardioData) {
+              <section class="ic-session-progress__summary" aria-labelledby="cardio-summary-title">
+                <h3 id="cardio-summary-title">Resumo cardiovascular do período</h3>
+                <p>
+                  Pace e velocidade são médias da duração informada, calculadas com os registros
+                  elegíveis de cada indicador. Não representam velocidade instantânea nem tempo em
+                  movimento confirmado.
+                </p>
+                <dl>
+                  <div>
+                    <dt>Distância acumulada</dt>
+                    <dd>{{ formatValue(cardioData.summary.totalDistanceKm, 'distanceKm') }}</dd>
+                    <dd>{{ cardioData.summary.distanceRecordCount }} registro(s) de distância</dd>
+                  </div>
+                  <div>
+                    <dt>Duração acumulada</dt>
+                    <dd>
+                      {{ formatValue(cardioData.summary.totalDurationMinutes, 'durationMinutes') }}
+                    </dd>
+                    <dd>{{ cardioData.summary.durationRecordCount }} registro(s) de duração</dd>
+                  </div>
+                  <div>
+                    <dt>Pace médio do período</dt>
+                    <dd>
+                      {{
+                        formatValue(cardioData.summary.averagePaceMinPerKm, 'averagePaceMinPerKm')
+                      }}
+                    </dd>
+                    @if (cardioData.summary.averagePaceMinPerKm !== null) {
+                      <dd>
+                        Valor recebido:
+                        {{
+                          formatValue(
+                            cardioData.summary.averagePaceMinPerKm,
+                            'averagePaceMinPerKm',
+                            true
+                          )
+                        }}
+                      </dd>
+                    }
+                    <dd>{{ cardioData.summary.paceRecordCount }} registro(s) elegível(is)</dd>
+                  </div>
+                  <div>
+                    <dt>Velocidade média do período</dt>
+                    <dd>
+                      {{
+                        formatValue(
+                          cardioData.summary.averageSpeedKmPerHour,
+                          'averageSpeedKmPerHour'
+                        )
+                      }}
+                    </dd>
+                    <dd>{{ cardioData.summary.speedRecordCount }} registro(s) elegível(is)</dd>
+                  </div>
+                </dl>
+                <p>
+                  Os totais incluem valores informados separadamente. As médias podem utilizar
+                  coberturas diferentes. — significa ausência de informação.
+                </p>
+              </section>
+            }
+          }
+        } @else if (error()) {
+          <p role="status">
+            A consulta desta família falhou. Use a ação de tentar novamente acima ou consulte a
+            outra família.
+          </p>
+        }
+      </section>
+    }
+  }
+</section>
