@@ -8,6 +8,7 @@ export interface WorkoutSessionEvolutionPoint {
   performedOn: string;
   startedAt: string;
   exerciseNameSnapshot: string;
+  workoutDayTitleSnapshot?: string;
 }
 
 export interface ExerciseStrengthEvolutionPoint extends WorkoutSessionEvolutionPoint {

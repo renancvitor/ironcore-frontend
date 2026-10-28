@@ -51,28 +51,25 @@ describe('Workout Session native SVG chart', () => {
       expect(styles).toContain(color);
   });
 
-  it('keeps repeated days and timestamps distinct in SVG, accessible selection and table', () => {
+  it('keeps repeated times distinct while identifying rows by date and workout, without codes or selection controls', () => {
     const { fixture, element } = render([strengthPoint(), strengthPoint({ sessionId: 101 })]);
     const circles = [...element.querySelectorAll('.ic-chart__marker')];
     expect(circles).toHaveLength(2);
     expect(circles[0].getAttribute('cx')).not.toBe(circles[1].getAttribute('cx'));
     expect(element.querySelectorAll('tbody tr')).toHaveLength(2);
-    expect(element.querySelectorAll('tbody th[scope="row"]')).toHaveLength(2);
-    expect(element.querySelector('svg[role="img"]')?.getAttribute('aria-label')).toContain(
-      'tabela',
-    );
-    const select = element.querySelector('select')!;
-    select.value = '101';
-    select.dispatchEvent(new Event('change'));
-    fixture.detectChanges();
-    expect(element.querySelector('[aria-live="polite"]')?.textContent).toContain('Sessão 101');
-    expect(element.querySelector('[aria-live="polite"]')?.textContent).toContain(
-      '10:00:00 (São Paulo)',
-    );
+    expect(element.querySelector('select')).toBeNull();
+    expect(element.querySelector('details')).toBeNull();
+    expect(element.querySelector('.ic-chart__point-detail')).toBeNull();
+    expect(element.textContent).not.toMatch(/Sessão 100|Sessão 101|Cobertura dos registros/);
+    expect(
+      [...element.querySelectorAll('thead th')].map((cell) => cell.textContent?.trim()),
+    ).toEqual(['Início (São Paulo)', 'Treino', 'Maior carga normalizada executada (kg)']);
+    expect(element.querySelector('tbody')?.textContent).toContain('Peito e braços');
+    expect(element.querySelector('tbody')?.textContent).toContain('10:00:00');
     const open = vi.fn();
     fixture.componentInstance.sessionOpened.subscribe(open);
-    element.querySelector<HTMLButtonElement>('.ic-chart__point-detail button')!.click();
-    expect(open).toHaveBeenCalledWith(101);
+    element.querySelectorAll<HTMLButtonElement>('.ic-chart__session-link')[1].click();
+    expect(open).toHaveBeenCalledExactlyOnceWith(101);
   });
 
   it('draws zero and breaks paths across null without losing a table row', () => {
@@ -90,7 +87,6 @@ describe('Workout Session native SVG chart', () => {
     expect(rows).toHaveLength(5);
     expect(rows[0].textContent).toContain('0 kg');
     expect(rows[2].textContent).toContain('—');
-    expect(element.querySelectorAll('select option')).toHaveLength(5);
   });
 
   it('shows one marker with no artificial line', () => {
@@ -100,31 +96,27 @@ describe('Workout Session native SVG chart', () => {
     expect(element.textContent).toContain('apenas um valor válido');
   });
 
-  it('retains every null-only session and its coverage without a numeric plot', () => {
+  it('retains null-only records in the table without a numeric plot', () => {
     const { element } = render([
       strengthPoint({ maxNormalizedLoadKg: null, volumeKgReps: null, volumeSetCount: 0 }),
     ]);
     expect(element.querySelector('.ic-chart__plot')).toBeNull();
     expect(element.querySelectorAll('tbody tr')).toHaveLength(1);
-    expect(element.querySelector('[aria-live="polite"]')?.textContent).toContain(
-      'Sem informação elegível',
-    );
-    expect(element.querySelector('tbody')?.textContent).toContain('com carga: 2');
+    expect(element.querySelector('tbody')?.textContent).toContain('—');
+    expect(element.textContent).not.toContain('com carga:');
   });
 
-  it('supports touch selection, decimal pace and partial coverage without recalculation', () => {
-    const { fixture, element } = render(
-      [cardioPoint(), cardioPoint({ sessionId: 101, averagePaceMinPerKm: 6.67 })],
+  it('shows the backend decimal pace and useful point information without a detail card', () => {
+    const { element } = render(
+      [cardioPoint({ averagePaceMinPerKm: 6.67 })],
       ANALYTICS_INDICATORS[4],
     );
-    element
-      .querySelectorAll<SVGElement>('.ic-chart__target')[1]
-      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    fixture.detectChanges();
-    const detail = element.querySelector('[aria-live="polite"]')?.textContent;
-    expect(detail).toContain('≈ 6:40 min/km');
-    expect(detail).toContain('6,67 min/km');
-    expect(detail).toContain('Atividades: 2');
+    expect(element.querySelector('tbody')?.textContent).toContain('6,67 min/km');
+    const title = element.querySelector('.ic-chart__target title')?.textContent;
+    expect(title).toContain('Peito e braços');
+    expect(title).toContain('10:00:00');
+    expect(title).toContain('6,67 min/km');
+    expect(title).not.toContain('Sessão');
   });
 
   it('keeps every dense session, offers horizontal scrolling and thins only labels', () => {
@@ -133,7 +125,6 @@ describe('Workout Session native SVG chart', () => {
     );
     expect(element.querySelectorAll('.ic-chart__marker')).toHaveLength(180);
     expect(element.querySelectorAll('tbody tr')).toHaveLength(180);
-    expect(element.querySelectorAll('select option')).toHaveLength(180);
     expect(element.querySelector('.ic-chart__plot')?.getAttribute('style')).toContain(
       'min-width: 11576px',
     );

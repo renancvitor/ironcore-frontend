@@ -1,7 +1,6 @@
 <p class="ic-chart__help">
-  Cada posição representa uma sessão em ordem cronológica. Os intervalos entre posições não são
-  proporcionais ao tempo. A linha conecta somente valores consecutivos registrados; ausência de
-  informação interrompe a linha.
+  Evolução do exercício no período selecionado. Os pontos seguem a ordem dos treinos, com
+  espaçamento uniforme. A ausência de informação interrompe a linha.
 </p>
 <p class="ic-chart__legend">
   <svg viewBox="0 0 32 12" aria-hidden="true" class="ic-chart__sample">
@@ -19,7 +18,7 @@
     class="ic-chart__scroll"
     tabindex="0"
     role="region"
-    aria-label="Gráfico de sessões com rolagem horizontal"
+    aria-label="Gráfico de evolução do exercício com rolagem horizontal"
   >
     <svg
       class="ic-chart__plot"
@@ -27,8 +26,7 @@
       [style.min-width.px]="chart().width"
       role="img"
       [attr.aria-label]="
-        indicator().label +
-        '. Selecione uma sessão no controle abaixo ou consulte a tabela para acessar os valores.'
+        indicator().label + '. Consulte a tabela abaixo para conferir os valores e abrir um treino.'
       "
     >
       <text x="60" y="18">{{ indicator().unit }}</text>
@@ -72,11 +70,7 @@
               [attr.cy]="point.y"
               r="4"
               [attr.fill]="indicator().color"
-              [attr.stroke]="
-                selectedPoint()?.sessionId === point.sessionId
-                  ? 'var(--ic-text-primary)'
-                  : indicator().color
-              "
+              [attr.stroke]="indicator().color"
               stroke-width="2"
             />
             <circle
@@ -86,101 +80,68 @@
               r="24"
               fill="transparent"
               stroke="none"
-              (click)="selectedId.set(point.sessionId)"
             >
               <title>
-                Sessão {{ point.sessionId }} — {{ point.label }} —
-                {{ point.startedAt | date: 'HH:mm:ss' : '-0300' }} (São Paulo):
+                {{ point.workoutDayTitleSnapshot || 'Treino' }} —
+                {{ point.startedAt | date: 'dd/MM/yyyy HH:mm:ss' : '-0300' }} (São Paulo):
                 {{ formatValue(point.value, indicator().key, true) }}
               </title>
             </circle>
           }
         }
       </g>
-      <text [attr.x]="chart().right" y="330" text-anchor="end">
-        Sequência cronológica de sessões
-      </text>
+      <text [attr.x]="chart().right" y="330" text-anchor="end">Início dos treinos</text>
     </svg>
   </div>
 }
-@if (selectedPoint(); as point) {
-  <div class="ic-chart__selection">
-    <label for="progress-session-point">Consultar ponto por sessão</label>
-    <select id="progress-session-point" [value]="point.sessionId" (change)="selectSession($event)">
-      @for (session of chart().points; track session.sessionId) {
-        <option [value]="session.sessionId">
-          {{ session.label }} · {{ session.startedAt | date: 'HH:mm:ss' : '-0300' }} · Sessão
-          {{ session.sessionId }}
-        </option>
-      }
-    </select>
-  </div>
-  <section
-    class="ic-chart__point-detail"
-    aria-live="polite"
-    aria-label="Detalhe da sessão selecionada"
+<section class="ic-chart__data" aria-label="Valores dos treinos no período">
+  <p class="ic-chart__help">— indica ausência de informação. Zero é um valor registrado.</p>
+  <div
+    class="ic-chart__scroll"
+    tabindex="0"
+    role="region"
+    aria-label="Tabela de evolução do exercício"
   >
-    <p>
-      <strong>Sessão {{ point.sessionId }}</strong> · {{ point.label }} ·
-      {{ point.startedAt | date: 'HH:mm:ss' : '-0300' }} (São Paulo)
-    </p>
-    <p>{{ point.exerciseNameSnapshot }} — {{ formatValue(point.value, indicator().key) }}</p>
-    @if (point.value === null) {
-      <p>Sem informação elegível para este indicador.</p>
-    }
-    @if (indicator().key === 'averagePaceMinPerKm' && point.value !== null) {
-      <p>
-        Valor recebido: {{ formatValue(point.value, indicator().key, true) }}. Minutos e segundos
-        são uma apresentação aproximada.
-      </p>
-    }
-    <p>{{ coverage(point) }}</p>
-    <app-button variant="secondary" (click)="sessionOpened.emit(point.sessionId)"
-      >Consultar sessão {{ point.sessionId }}</app-button
-    >
-  </section>
-}
-<details class="ic-chart__data">
-  <summary>Ver valores em tabela</summary>
-  <p class="ic-chart__help">
-    — significa ausência de informação elegível. Zero é um valor registrado.
-  </p>
-  <div class="ic-chart__scroll" tabindex="0" role="region" aria-label="Valores por sessão">
     <table>
       <caption>
         {{
           indicator().label
         }}
-        — valores retornados para o período, uma linha por sessão
+        —
+        {{
+          indicator().unit
+        }}
       </caption>
       <thead>
         <tr>
-          <th scope="col">Sessão</th>
           <th scope="col">Início (São Paulo)</th>
-          <th scope="col">Exercício na sessão</th>
+          <th scope="col">Treino</th>
           <th scope="col">{{ indicator().label }} ({{ indicator().unit }})</th>
-          <th scope="col">Cobertura dos registros</th>
         </tr>
       </thead>
       <tbody>
         @for (point of chart().points; track point.sessionId) {
           <tr>
-            <th scope="row">
+            <th scope="row">{{ point.startedAt | date: 'dd/MM/yyyy HH:mm:ss' : '-0300' }}</th>
+            <td>
               <button
                 type="button"
                 class="ic-chart__session-link"
+                [attr.aria-label]="
+                  'Consultar ' +
+                  (point.workoutDayTitleSnapshot || 'treino') +
+                  ' de ' +
+                  (point.startedAt | date: 'dd/MM/yyyy HH:mm:ss' : '-0300')
+                "
                 (click)="sessionOpened.emit(point.sessionId)"
               >
-                {{ point.label }} · Sessão {{ point.sessionId }}
+                {{ point.workoutDayTitleSnapshot || 'Consultar treino' }}
               </button>
-            </th>
-            <td>{{ point.startedAt | date: 'dd/MM/yyyy HH:mm:ss' : '-0300' }}</td>
-            <td>{{ point.exerciseNameSnapshot }}</td>
+            </td>
             <td>{{ formatValue(point.value, indicator().key, true) }}</td>
-            <td class="ic-chart__coverage">{{ coverage(point) }}</td>
           </tr>
         }
       </tbody>
     </table>
   </div>
-</details>
+</section>

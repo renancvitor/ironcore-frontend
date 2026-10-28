@@ -40,41 +40,6 @@
   align-items: center;
 }
 
-.ic-chart__target {
-  cursor: pointer;
-}
-
-.ic-chart__selection {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--ic-space-3);
-  margin-block: var(--ic-space-4);
-
-  select {
-    min-width: 0;
-    max-width: 100%;
-    min-height: 44px;
-    padding: var(--ic-space-3);
-    background: var(--ic-field-bg);
-    color: var(--ic-field-text);
-    border: var(--ic-border-width-default) solid var(--ic-field-border);
-    border-radius: var(--ic-radius-md);
-    font: inherit;
-  }
-}
-
-.ic-chart__point-detail {
-  padding: var(--ic-space-4);
-  background: var(--ic-surface-elevated);
-  border: var(--ic-border-width-default) solid var(--ic-border-soft);
-  border-radius: var(--ic-radius-md);
-  overflow-wrap: anywhere;
-  p {
-    line-height: 1.5;
-  }
-}
-
 .ic-chart__session-link {
   min-height: 44px;
   padding: 0;
@@ -87,12 +52,6 @@
   text-decoration: underline;
 }
 
-td.ic-chart__coverage {
-  white-space: normal;
-  min-width: 18rem;
-}
-
-select:focus-visible,
 .ic-chart__session-link:focus-visible {
   outline: var(--ic-focus-ring-width) solid var(--ic-primary);
   outline-offset: var(--ic-focus-ring-offset);
@@ -129,17 +88,11 @@ select:focus-visible,
 
 .ic-chart__data {
   margin-top: var(--ic-space-4);
-
-  summary {
-    cursor: pointer;
-    padding-block: var(--ic-space-3);
-    color: var(--ic-navigation);
-  }
 }
 
 table {
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
+  min-width: 36rem;
   border-collapse: separate;
   border-spacing: 0;
 }
@@ -197,9 +150,12 @@ tbody th:first-child {
   font-weight: 600;
 }
 
-input:focus-visible,
-summary:focus-visible,
 .ic-chart__scroll:focus-visible {
   outline: var(--ic-focus-ring-width) solid var(--ic-primary);
   outline-offset: calc(-1 * var(--ic-focus-ring-width));
+}
+
+th:nth-child(2),
+td:nth-child(2) {
+  text-align: left;
 }

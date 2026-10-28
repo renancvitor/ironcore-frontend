@@ -187,7 +187,9 @@ export function buildSessionProgressChart(
       value,
       x: points.length === 1 ? (60 + right) / 2 : 60 + index * step,
       y: value === null ? null : 260 - (value / ceiling) * 230,
-      label: `${point.performedOn.slice(8, 10)}/${point.performedOn.slice(5, 7)}/${point.performedOn.slice(0, 4)}`,
+      label: new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo' }).format(
+        new Date(point.startedAt),
+      ),
       showLabel: index % labelEvery === 0 || index === points.length - 1,
     };
   });
