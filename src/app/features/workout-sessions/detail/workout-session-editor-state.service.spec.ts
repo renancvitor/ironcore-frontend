@@ -127,7 +127,7 @@ describe('WorkoutSessionEditorState with HTTP', () => {
     editor.reconcile(detail);
     row().form.controls.actualLoadKg.setValue(0);
     editor.saveSet(activity(), row());
-    expect(row().error).toContain('Selecione TOTAL ou PER_SIDE');
+    expect(row().error).toBe('Selecione Carga total ou Carga por lado antes de registrar carga.');
     http.expectNone(() => true);
     activity().selectedMode.setValue('TOTAL');
     expect(editor.hasPending()).toBe(true);

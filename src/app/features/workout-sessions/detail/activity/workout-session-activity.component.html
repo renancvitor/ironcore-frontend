@@ -101,13 +101,13 @@
             [disabled]="blocked() || editor.busy() || model.removed"
             [attr.aria-describedby]="prefix() + '-mode-help'">
             <mat-option [value]="null">Selecione ao informar carga</mat-option>
-            <mat-option value="TOTAL">TOTAL — carga total</mat-option>
-            <mat-option value="PER_SIDE">PER_SIDE — carga por lado</mat-option>
+            <mat-option value="TOTAL">Carga total</mat-option>
+            <mat-option value="PER_SIDE">Carga por lado</mat-option>
           </mat-select>
         </mat-form-field>
         <details [open]="modeOpen" (toggle)="modeOpen = $any($event.target).open">
           <summary>Como interpretar a carga?</summary>
-          <p [id]="prefix() + '-mode-help'">TOTAL representa a carga total. PER_SIDE considera dois lados equivalentes. Não inclui peso presumido de barra, corpo ou equipamento. Sem carga registrada, a escolha é apenas local.</p>
+          <p [id]="prefix() + '-mode-help'">Na carga por lado, são considerados dois lados equivalentes. Não é incluído peso presumido de barra, corpo ou equipamento. Sem carga registrada, a escolha é apenas local.</p>
         </details>
         @if (editor.modePending(model)) {
           <p role="status">A mudança de modo ainda não foi aplicada. Aplique-a antes de salvar séries deste exercício.</p>

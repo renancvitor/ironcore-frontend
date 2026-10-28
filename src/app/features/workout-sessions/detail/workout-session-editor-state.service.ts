@@ -318,7 +318,7 @@ export class WorkoutSessionEditorState {
     }
     const mode = activity.confirmed.actualLoadMode ?? activity.selectedMode.value;
     if (value.actualLoadKg !== null && mode === null) {
-      row.error = 'Selecione TOTAL ou PER_SIDE no exercício antes de registrar carga.';
+      row.error = 'Selecione Carga total ou Carga por lado antes de registrar carga.';
       this.touch();
       return;
     }
@@ -370,8 +370,9 @@ export class WorkoutSessionEditorState {
   applyMode(activity: SessionActivityEditor): void {
     const mode = activity.selectedMode.value;
     if (!this.canWrite() || activity.removed || mode === null || !this.modePending(activity)) return;
+    const modeLabel = mode === 'TOTAL' ? 'Carga total' : 'Carga por lado';
     this.confirm('Reinterpretar cargas registradas',
-      `Aplicar ${mode} às séries com carga? TOTAL representa a carga total; PER_SIDE representa a carga por lado, considerando dois lados equivalentes. Os números serão mantidos, sem conversão ou inclusão de barra, corpo ou equipamento. Rascunhos com carga usarão este modo quando forem salvos; não serão salvos agora.`,
+      `Aplicar ${modeLabel} às séries com carga? Na carga por lado, são considerados dois lados equivalentes. Os números serão mantidos, sem conversão ou inclusão de peso presumido de barra, corpo ou equipamento. Rascunhos com carga usarão este modo quando forem salvos; não serão salvos agora.`,
       'Aplicar modo', () => this.write(`mode:${activity.confirmed.id}`, activity,
         () => this.service.changeWorkoutSessionActivityLoadMode(this.session()!.id, activity.confirmed.id, { actualLoadMode: mode }),
         (response) => {
