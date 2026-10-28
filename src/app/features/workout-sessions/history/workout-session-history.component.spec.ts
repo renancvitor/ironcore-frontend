@@ -67,9 +67,9 @@ describe('WorkoutSessionHistoryComponent with HTTP', () => {
     ])
       expect(text).toContain(value);
     expect(text).not.toMatch(/undefined|null/);
-    expect(fixture.nativeElement.querySelectorAll('article')).toHaveLength(1);
+    expect(fixture.nativeElement.querySelectorAll('tbody tr')).toHaveLength(1);
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    button('Consultar sessão').click();
+    fixture.nativeElement.querySelector('tbody tr').click();
     expect(navigate).toHaveBeenCalledExactlyOnceWith(['/workout-sessions', 100], {
       queryParams: { from: 'history' },
     });
@@ -217,7 +217,7 @@ describe('WorkoutSessionHistoryComponent with HTTP', () => {
     expect(fixture.nativeElement.querySelector('[role="alert"]')).toBeNull();
     component.onPageChange({ pageIndex: 1, pageSize: 20, length: 30 });
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('article')).toBeNull();
+    expect(fixture.nativeElement.querySelector('tbody tr')).toBeNull();
     expect(fixture.nativeElement.querySelector('app-loading')).not.toBeNull();
     request().flush(sessionHistory([], 1, 20, 30));
   });
@@ -247,7 +247,7 @@ describe('WorkoutSessionHistoryComponent with HTTP', () => {
     reapplied.flush(sessionHistory());
   });
 
-  it('uses labelled unique controls and semantic cards with native keyboard actions', () => {
+  it('uses labelled unique controls and an accessible table without an actions column', () => {
     load();
     const root: HTMLElement = fixture.nativeElement;
     const ids = Array.from(root.querySelectorAll('[id]')).map((element) => element.id);
@@ -256,10 +256,31 @@ describe('WorkoutSessionHistoryComponent with HTTP', () => {
       expect(control.id).toBeTruthy();
       expect(root.querySelector(`label[for="${control.id}"]`)).not.toBeNull();
     }
-    expect(root.querySelector('article')?.getAttribute('aria-labelledby')).toBe(
-      'history-session-100',
+    expect(root.querySelector('table')).not.toBeNull();
+    expect(root.querySelector('tbody tr')?.getAttribute('aria-label')).toBe(
+      'Consultar sessão de Treino preservado em 27/10/2026',
     );
+    expect(root.querySelector('tbody tr')?.getAttribute('tabindex')).toBe('0');
+    expect([...root.querySelectorAll('th')].map((cell) => cell.textContent?.trim())).toEqual([
+      'Treino',
+      'Ciclo',
+      'Dia da semana',
+      'Data do treino',
+      'Início (São Paulo)',
+      'Encerramento (São Paulo)',
+      'Motivo do encerramento',
+    ]);
+    expect(root.querySelector('.mat-column-actions')).toBeNull();
     expect(root.querySelector('mat-paginator')?.getAttribute('aria-label')).toContain('histórico');
-    expect(button('Consultar sessão').type).toBe('button');
+  });
+  it.each(['Enter', ' '])('opens a session with the %s key without scrolling', (key) => {
+    load();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+    fixture.nativeElement.querySelector('tbody tr').dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/workout-sessions', 100], {
+      queryParams: { from: 'history' },
+    });
   });
 });

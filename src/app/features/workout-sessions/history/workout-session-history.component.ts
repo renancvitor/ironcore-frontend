@@ -16,6 +16,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatTableModule } from '@angular/material/table';
 import { catchError, defer, EMPTY, finalize, Subject, switchMap } from 'rxjs';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
@@ -55,6 +56,7 @@ const isoDate: ValidatorFn = (control: AbstractControl): ValidationErrors | null
     MatIconModule,
     MatTooltipModule,
     MatPaginatorModule,
+    MatTableModule,
     ButtonComponent,
     LoadingComponent,
     EmptyStateComponent,
@@ -75,6 +77,15 @@ export class WorkoutSessionHistoryComponent {
   readonly error = signal('');
   readonly weekDayLabels = WEEK_DAY_LABELS;
   readonly closeReasonLabels = WORKOUT_SESSION_CLOSE_REASON_LABELS;
+  readonly displayedColumns = [
+    'workout',
+    'cycle',
+    'weekDay',
+    'performedOn',
+    'startedAt',
+    'finishedAt',
+    'closeReason',
+  ];
   readonly filtered = computed(() => {
     this.result();
     return Object.values(this.state.filters).some((value) => value !== undefined && value !== '');
@@ -172,6 +183,20 @@ export class WorkoutSessionHistoryComponent {
         from: 'history',
       },
     });
+  }
+
+  openRowFromKeyboard(event: Event, id: number): void {
+    if (event.target !== event.currentTarget) return;
+    event.preventDefault();
+    this.openSession(id);
+  }
+
+  weekDayLabel(session: WorkoutSessionHistoryItem): string {
+    return this.weekDayLabels[session.weekDaySnapshot];
+  }
+
+  closeReasonLabel(session: WorkoutSessionHistoryItem): string {
+    return this.closeReasonLabels[session.closeReason];
   }
 
   openProgress(): void {
