@@ -44,13 +44,24 @@
   padding-inline: var(--ic-space-4);
 }
 
+// Limit the Material body override to groups inside this sidebar.
+:host ::ng-deep .ic-sidebar__group .mat-expansion-panel-body {
+  padding-inline: 0;
+}
+
 .ic-sidebar__link--child {
   margin-top: var(--ic-space-1);
-  padding-left: var(--ic-space-6);
+  padding-inline: var(--ic-space-5) var(--ic-space-2);
 
   .ic-sidebar__link-content {
+    gap: var(--ic-space-2);
     mat-icon { flex-shrink: 0; }
-    > span { min-width: 0; overflow-wrap: anywhere; }
+    > span {
+      flex: 1;
+      min-width: 0;
+      overflow-wrap: normal;
+      word-break: normal;
+    }
   }
 }
 
