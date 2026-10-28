@@ -5,6 +5,33 @@
       <p>Consulte seus ciclos de treino e sua composição.</p>
     </div>
     <div class="ic-workout-catalog__header-actions">
+      <a
+        matIconButton
+        routerLink="/workout-sessions"
+        matTooltip="Sessão de treino em andamento"
+        aria-label="Sessão de treino em andamento"
+        [disabled]="busy()"
+      >
+        <mat-icon>play_circle_outline</mat-icon>
+      </a>
+      <a
+        matIconButton
+        routerLink="/workout-sessions/history"
+        matTooltip="Histórico de sessões"
+        aria-label="Histórico de sessões"
+        [disabled]="busy()"
+      >
+        <mat-icon>history</mat-icon>
+      </a>
+      <a
+        matIconButton
+        routerLink="/workout-sessions/progress"
+        matTooltip="Evolução de treinos"
+        aria-label="Evolução de treinos"
+        [disabled]="busy()"
+      >
+        <mat-icon>trending_up</mat-icon>
+      </a>
       <button
         matIconButton
         type="button"

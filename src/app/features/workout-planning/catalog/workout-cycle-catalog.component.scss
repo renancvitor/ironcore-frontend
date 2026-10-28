@@ -34,7 +34,7 @@
   border-radius: var(--ic-radius-md);
 }
 .ic-workout-catalog__header-actions {
-  flex-shrink: 0;
+  @include actions.icons;
 }
 .ic-workout-catalog__actions-cell {
   white-space: nowrap;
@@ -130,11 +130,9 @@ mat-paginator {
   }
 }
 @include responsive.mobile {
-  .ic-workout-catalog__header-actions {
-    @include actions.icons;
-  }
   .ic-workout-catalog__header {
     @include actions.header;
+    grid-template-columns: minmax(0, 1fr);
   }
   .ic-workout-catalog {
     gap: var(--ic-space-3);
