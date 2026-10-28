@@ -30,9 +30,13 @@
       routerLink="/body-metrics"
       routerLinkActive="ic-sidebar__link--active"
       [routerLinkActiveOptions]="{ exact: true }"
+      ariaCurrentWhenActive="page"
       class="ic-sidebar__link ic-sidebar__link--child"
     >
-      Histórico
+      <span class="ic-sidebar__link-content">
+        <mat-icon>history</mat-icon>
+        <span>Histórico</span>
+      </span>
     </a>
     <a
       routerLink="/body-metrics/progress"
@@ -41,7 +45,10 @@
       ariaCurrentWhenActive="page"
       class="ic-sidebar__link ic-sidebar__link--child"
     >
-      Evolução
+      <span class="ic-sidebar__link-content">
+        <mat-icon>show_chart</mat-icon>
+        <span>Evolução</span>
+      </span>
     </a>
   </mat-expansion-panel>
 
@@ -56,57 +63,73 @@
       <span>Catálogo de exercícios</span>
     </span>
   </a>
-  <a
-    routerLink="/workout-planning"
-    routerLinkActive="ic-sidebar__link--active"
-    ariaCurrentWhenActive="page"
-    class="ic-sidebar__link"
+  <mat-expansion-panel
+    class="ic-sidebar__group"
+    routerLinkActive
+    #workoutRoutes="routerLinkActive"
+    [expanded]="workoutRoutes.isActive || sessionDetailActive || historyDetailActive || progressDetailActive"
   >
-    <span class="ic-sidebar__link-content">
-      <mat-icon>event_note</mat-icon>
-      <span>Planejamento de treinos</span>
-    </span>
-  </a>
-  <a
-    routerLink="/workout-sessions"
-    routerLinkActive="ic-sidebar__link--active"
-    [routerLinkActiveOptions]="{ exact: true }"
-    [class.ic-sidebar__link--active]="sessionDetailActive"
-    [attr.aria-current]="sessionDetailActive ? 'page' : null"
-    ariaCurrentWhenActive="page"
-    class="ic-sidebar__link"
-  >
-    <span class="ic-sidebar__link-content">
-      <mat-icon>play_circle</mat-icon>
-      <span>Sessão de treino em andamento</span>
-    </span>
-  </a>
-  <a
-    routerLink="/workout-sessions/history"
-    routerLinkActive="ic-sidebar__link--active"
-    [routerLinkActiveOptions]="{ exact: true }"
-    [class.ic-sidebar__link--active]="historyDetailActive"
-    [attr.aria-current]="historyDetailActive ? 'page' : null"
-    ariaCurrentWhenActive="page"
-    class="ic-sidebar__link"
-  >
-    <span class="ic-sidebar__link-content">
-      <mat-icon>history</mat-icon>
-      <span>Histórico de sessões</span>
-    </span>
-  </a>
-  <a
-    routerLink="/workout-sessions/progress"
-    routerLinkActive="ic-sidebar__link--active"
-    [routerLinkActiveOptions]="{ exact: true }"
-    [class.ic-sidebar__link--active]="progressDetailActive"
-    [attr.aria-current]="progressDetailActive ? 'page' : null"
-    ariaCurrentWhenActive="page"
-    class="ic-sidebar__link"
-  >
-    <span class="ic-sidebar__link-content">
-      <mat-icon>show_chart</mat-icon>
-      <span>Evolução de treinos</span>
-    </span>
-  </a>
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        <span class="ic-sidebar__link-content">
+          <mat-icon>calendar_month</mat-icon>
+          <span>Treinos</span>
+        </span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+
+    <a
+      routerLink="/workout-planning"
+      routerLinkActive="ic-sidebar__link--active"
+      ariaCurrentWhenActive="page"
+      class="ic-sidebar__link ic-sidebar__link--child"
+    >
+      <span class="ic-sidebar__link-content">
+        <mat-icon>event_note</mat-icon>
+        <span>Planejamento de treinos</span>
+      </span>
+    </a>
+    <a
+      routerLink="/workout-sessions"
+      routerLinkActive="ic-sidebar__link--active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      [class.ic-sidebar__link--active]="sessionDetailActive"
+      [attr.aria-current]="sessionDetailActive ? 'page' : null"
+      ariaCurrentWhenActive="page"
+      class="ic-sidebar__link ic-sidebar__link--child"
+    >
+      <span class="ic-sidebar__link-content">
+        <mat-icon>play_circle</mat-icon>
+        <span>Sessão de treino em andamento</span>
+      </span>
+    </a>
+    <a
+      routerLink="/workout-sessions/history"
+      routerLinkActive="ic-sidebar__link--active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      [class.ic-sidebar__link--active]="historyDetailActive"
+      [attr.aria-current]="historyDetailActive ? 'page' : null"
+      ariaCurrentWhenActive="page"
+      class="ic-sidebar__link ic-sidebar__link--child"
+    >
+      <span class="ic-sidebar__link-content">
+        <mat-icon>history</mat-icon>
+        <span>Histórico de sessões</span>
+      </span>
+    </a>
+    <a
+      routerLink="/workout-sessions/progress"
+      routerLinkActive="ic-sidebar__link--active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      [class.ic-sidebar__link--active]="progressDetailActive"
+      [attr.aria-current]="progressDetailActive ? 'page' : null"
+      ariaCurrentWhenActive="page"
+      class="ic-sidebar__link ic-sidebar__link--child"
+    >
+      <span class="ic-sidebar__link-content">
+        <mat-icon>show_chart</mat-icon>
+        <span>Evolução de treinos</span>
+      </span>
+    </a>
+  </mat-expansion-panel>
 </nav>

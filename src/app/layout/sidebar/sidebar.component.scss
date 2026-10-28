@@ -47,6 +47,11 @@
 .ic-sidebar__link--child {
   margin-top: var(--ic-space-1);
   padding-left: var(--ic-space-6);
+
+  .ic-sidebar__link-content {
+    mat-icon { flex-shrink: 0; }
+    > span { min-width: 0; overflow-wrap: anywhere; }
+  }
 }
 
 @include responsive.mobile {
