@@ -520,7 +520,12 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
   it('collapses an unchanged general report without a discard dialog', () => {
     load();
     const details = openDetails('details.ic-session__notes');
-    component.cancelNotes();
+    (
+      fixture.nativeElement.querySelector(
+        'button[aria-label="Cancelar edição do relato geral"]'
+      ) as HTMLButtonElement
+    ).click();
+
     fixture.detectChanges();
     details.dispatchEvent(new Event('toggle'));
     expect(details.open).toBe(false);

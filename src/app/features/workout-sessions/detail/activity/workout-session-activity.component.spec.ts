@@ -172,7 +172,12 @@ describe('WorkoutSessionActivityComponent', () => {
     openDetails('.ic-activity__execution');
     const duration = openDetails('article form fieldset > details');
     const notes = openDetails('article form fieldset > details:nth-of-type(2)');
-    fixture.componentInstance.cancelActivity();
+    (
+      fixture.nativeElement.querySelector(
+        'button[aria-label="Cancelar edição da atividade"]'
+      ) as HTMLButtonElement
+    ).click();
+
     sync();
     expect(duration.open).toBe(false);
     expect(notes.open).toBe(false);
