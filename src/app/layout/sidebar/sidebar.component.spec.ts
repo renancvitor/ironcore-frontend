@@ -55,9 +55,10 @@ describe('SidebarComponent', () => {
         ],
       },
       {
-        name: 'Planejamento de treinos',
-        icon: 'event_note',
+        name: 'Treinos',
+        icon: 'fitness_center',
         links: [
+          ['/workout-planning', 'Planejamento de treinos', 'event_note'],
           ['/workout-sessions', 'Sessão de treino em andamento', 'play_circle'],
           ['/workout-sessions/history', 'Histórico de sessões', 'history'],
           ['/workout-sessions/progress', 'Evolução de treinos', 'show_chart'],
@@ -88,17 +89,29 @@ describe('SidebarComponent', () => {
     }
   });
 
-  it('uses the native expansion header as the planning entry without a separate arrow button', async () => {
-    const panel = group('Planejamento de treinos');
-    const header = panel.nativeElement.querySelector('mat-expansion-panel-header') as HTMLElement;
-    expect(panel.nativeElement.querySelector('button')).toBeNull();
-    expect(header.querySelector('a')).toBeNull();
-    header.click();
+  it('only expands and collapses Treinos without navigating from another page', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/exercises');
     await fixture.whenStable();
     fixture.detectChanges();
-    expect(TestBed.inject(Router).url).toBe('/workout-planning');
-    expect((panel.componentInstance as MatExpansionPanel).expanded).toBe(true);
-    expect(header.getAttribute('aria-expanded')).toBe('true');
+    const panel = group('Treinos');
+    const instance = panel.componentInstance as MatExpansionPanel;
+    const header = panel.nativeElement.querySelector('mat-expansion-panel-header') as HTMLElement;
+    const navigate = vi.spyOn(router, 'navigate');
+    const navigateByUrl = vi.spyOn(router, 'navigateByUrl');
+    expect(instance.expanded).toBe(false);
+    for (const expanded of [true, false]) {
+      header.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(instance.expanded).toBe(expanded);
+      expect(header.getAttribute('aria-expanded')).toBe(String(expanded));
+      expect(router.url).toBe('/exercises');
+    }
+    expect(navigate).not.toHaveBeenCalled();
+    expect(navigateByUrl).not.toHaveBeenCalled();
+    expect(header.querySelector('a, button')).toBeNull();
+    expect(header.hasAttribute('aria-current')).toBe(false);
   });
 
   it.each([
@@ -110,13 +123,11 @@ describe('SidebarComponent', () => {
     ['/workout-sessions/100?from=history', '/workout-sessions/history'],
     ['/workout-sessions/progress', '/workout-sessions/progress'],
     ['/workout-sessions/100?from=progress', '/workout-sessions/progress'],
-  ])('expands planning on %s and marks only %s as the current page', async (url, href) => {
+  ])('expands Treinos on %s and marks only %s as the current page', async (url, href) => {
     await TestBed.inject(Router).navigateByUrl(url);
     await fixture.whenStable();
     fixture.detectChanges();
-    expect((group('Planejamento de treinos').componentInstance as MatExpansionPanel).expanded).toBe(
-      true,
-    );
+    expect((group('Treinos').componentInstance as MatExpansionPanel).expanded).toBe(true);
     expect((group('Medidas corporais').componentInstance as MatExpansionPanel).expanded).toBe(
       false,
     );
@@ -124,10 +135,7 @@ describe('SidebarComponent', () => {
       '.ic-sidebar__link--active',
     ) as NodeListOf<HTMLAnchorElement>;
     expect(active).toHaveLength(1);
-    expect(
-      active[0].getAttribute('href') ??
-        (active[0].tagName === 'MAT-EXPANSION-PANEL-HEADER' ? '/workout-planning' : null),
-    ).toBe(href);
+    expect(active[0].getAttribute('href')).toBe(href);
     expect(active[0].getAttribute('aria-current')).toBe('page');
     const current = fixture.nativeElement.querySelectorAll(
       '[aria-current="page"]',
@@ -139,7 +147,7 @@ describe('SidebarComponent', () => {
   it.each([
     ['/body-metrics', 'Medidas corporais'],
     ['/body-metrics/progress', 'Medidas corporais'],
-    ['/workout-planning', 'Planejamento de treinos'],
+    ['/workout-planning', 'Treinos'],
   ])('preserves manual collapse and expansion of the active group on %s', async (url, name) => {
     await TestBed.inject(Router).navigateByUrl(url);
     await fixture.whenStable();
@@ -227,7 +235,7 @@ describe('SidebarComponent', () => {
 
   it('opens Workout Planning and keeps its link active on the detail route', async () => {
     const link = fixture.nativeElement.querySelector(
-      'mat-expansion-panel-header[aria-current="page"], mat-expansion-panel:last-child mat-expansion-panel-header',
+      'a[href="/workout-planning"]',
     ) as HTMLAnchorElement;
     expect(link.textContent).toContain('Planejamento de treinos');
     link.click();

@@ -11,9 +11,6 @@ import { MatIconModule } from '@angular/material/icon';
 })
 export class SidebarComponent {
   private readonly router = inject(Router);
-  openPlanning(): void {
-    void this.router.navigate(['/workout-planning']);
-  }
 
   get sessionDetailActive(): boolean {
     return (

@@ -59,7 +59,7 @@
     class="ic-sidebar__link"
   >
     <span class="ic-sidebar__link-content">
-      <mat-icon>fitness_center</mat-icon>
+      <mat-icon>menu_book</mat-icon>
       <span>Catálogo de exercícios</span>
     </span>
   </a>
@@ -71,20 +71,25 @@
       workoutRoutes.isActive || sessionDetailActive || historyDetailActive || progressDetailActive
     "
   >
-    <mat-expansion-panel-header
-      routerLink="/workout-planning"
-      routerLinkActive="ic-sidebar__link--active"
-      ariaCurrentWhenActive="page"
-      (keydown.enter)="openPlanning()"
-      (keydown.space)="openPlanning()"
-    >
+    <mat-expansion-panel-header>
       <mat-panel-title>
         <span class="ic-sidebar__link-content">
-          <mat-icon>event_note</mat-icon>
-          <span>Planejamento de treinos</span>
+          <mat-icon>fitness_center</mat-icon>
+          <span>Treinos</span>
         </span>
       </mat-panel-title>
     </mat-expansion-panel-header>
+    <a
+      routerLink="/workout-planning"
+      routerLinkActive="ic-sidebar__link--active"
+      ariaCurrentWhenActive="page"
+      class="ic-sidebar__link ic-sidebar__link--child"
+    >
+      <span class="ic-sidebar__link-content">
+        <mat-icon>event_note</mat-icon>
+        <span>Planejamento de treinos</span>
+      </span>
+    </a>
     <a
       routerLink="/workout-sessions"
       routerLinkActive="ic-sidebar__link--active"
