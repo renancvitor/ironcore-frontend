@@ -57,19 +57,20 @@
                   matIconButton
                   type="button"
                   class="session-action"
-                  [attr.aria-label]="
-                    (startingDayId() === workout.day.id
-                      ? 'Iniciando sessão: '
-                      : 'Iniciar sessão: ') + workout.day.title
-                  "
+                  [attr.aria-label]="sessionActionLabel(workout.day.id) + ': ' + workout.day.title"
                   [matTooltip]="
-                    startingDayId() === workout.day.id ? 'Iniciando sessão…' : 'Iniciar sessão'
+                    sessionActionLabel(workout.day.id) +
+                    (startingDayId() === workout.day.id ? '…' : '')
                   "
                   [disabled]="startBlocked()"
                   (click)="startSession(workout)"
                 >
                   <mat-icon>{{
-                    startingDayId() === workout.day.id ? 'hourglass_top' : 'play_circle'
+                    startingDayId() === workout.day.id
+                      ? 'hourglass_top'
+                      : sessionNeedsRecovery()
+                        ? 'sync'
+                        : 'play_circle'
                   }}</mat-icon>
                 </button>
               }

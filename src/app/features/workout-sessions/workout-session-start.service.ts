@@ -1,6 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, EMPTY, map, Observable, of, switchMap, take } from 'rxjs';
+import { catchError, EMPTY, finalize, map, Observable, of, switchMap, take } from 'rxjs';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import {
   GetWorkoutSessionDetailResponse,
@@ -15,6 +15,7 @@ export class WorkoutSessionStartService {
   private readonly dialog = inject(DialogService);
   private readonly router = inject(Router);
   readonly needsRecovery = signal(false);
+  readonly recovering = signal(false);
 
   start(
     request: StartWorkoutSessionRequest,
@@ -55,6 +56,7 @@ export class WorkoutSessionStartService {
     message: string,
     recovered: (session: GetWorkoutSessionDetailResponse | null) => void,
   ): Observable<null> {
+    this.recovering.set(true);
     return this.sessions.getInProgressWorkoutSession().pipe(
       switchMap((session) => {
         this.needsRecovery.set(false);
@@ -88,6 +90,7 @@ export class WorkoutSessionStartService {
         });
         return of(null);
       }),
+      finalize(() => this.recovering.set(false)),
     );
   }
 }

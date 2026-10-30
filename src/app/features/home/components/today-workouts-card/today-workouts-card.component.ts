@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
@@ -61,7 +62,7 @@ type CurrentSession = Pick<
     MatTooltipModule,
   ],
   providers: [WorkoutSessionStartService],
-  host: { '(window:focus)': 'updateToday()', '(document:visibilitychange)': 'updateToday()' },
+  host: { '(window:focus)': 'onResume()', '(document:visibilitychange)': 'onResume()' },
   templateUrl: './today-workouts-card.component.html',
   styleUrl: './today-workouts-card.component.scss',
 })
@@ -72,12 +73,16 @@ export class TodayWorkoutsCardComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly document = inject(DOCUMENT);
   readonly session = signal<CurrentSession | null>(null);
   readonly sessionLoading = signal(false);
   readonly sessionError = signal(false);
   readonly planningLoading = signal(false);
   readonly planningError = signal(false);
   readonly startingDayId = signal<number | null>(null);
+  readonly sessionNeedsRecovery = computed(
+    () => this.starter.needsRecovery() || this.starter.recovering(),
+  );
   private readonly cycles = signal<GetWorkoutCycleDetailResponse[]>([]);
   private readonly today = signal(WEEK_DAYS[new Date().getDay()]);
   readonly workouts = computed<TodayWorkout[]>(() =>
@@ -114,6 +119,18 @@ export class TodayWorkoutsCardComponent implements OnInit {
 
   updateToday(): void {
     this.today.set(WEEK_DAYS[new Date().getDay()]);
+  }
+
+  onResume(): void {
+    if (this.document.visibilityState !== 'visible') return;
+    this.updateToday();
+    this.loadSession();
+  }
+
+  sessionActionLabel(dayId: number): string {
+    const busy = this.startingDayId() === dayId;
+    if (this.sessionNeedsRecovery()) return busy ? 'Verificando sessão' : 'Verificar sessão';
+    return busy ? 'Iniciando sessão' : 'Iniciar sessão';
   }
 
   loadSession(): void {

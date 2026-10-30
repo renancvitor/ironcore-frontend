@@ -68,6 +68,7 @@ describe('TodayWorkoutsCardComponent', () => {
   };
 
   beforeEach(async () => {
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date(2026, 9, 29, 0, 30));
     dialog.open.mockReset().mockReturnValue(of(false));
@@ -92,6 +93,7 @@ describe('TodayWorkoutsCardComponent', () => {
   afterEach(() => {
     http.verify();
     vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it('loads with busy state and prevents starts until both lookups finish', () => {
@@ -289,10 +291,29 @@ describe('TodayWorkoutsCardComponent', () => {
     load();
     start();
     http.expectOne(sessionsUrl).flush(null, { status: 0, statusText: 'Unknown' });
+    fixture.detectChanges();
+    expect(
+      fixture.nativeElement.querySelector('button[aria-label="Verificando sessão: Treino 10"]'),
+    ).toBeTruthy();
     current().flush(null, { status: 500, statusText: 'Error' });
+    fixture.detectChanges();
+    const verifyButton = fixture.nativeElement.querySelector(
+      'button[aria-label="Verificar sessão: Treino 10"]',
+    ) as HTMLButtonElement;
+    expect(verifyButton).toBeTruthy();
+    expect(verifyButton.querySelector('mat-icon')?.textContent?.trim()).toBe('sync');
+    expect(verifyButton.disabled).toBe(false);
     start();
+    fixture.detectChanges();
+    expect(
+      fixture.nativeElement.querySelector('button[aria-label="Verificando sessão: Treino 10"]'),
+    ).toBeTruthy();
     http.expectNone(sessionsUrl);
     current().flush(null);
+    fixture.detectChanges();
+    expect(
+      fixture.nativeElement.querySelector('button[aria-label="Iniciar sessão: Treino 10"]'),
+    ).toBeTruthy();
     expect(fixture.componentInstance.startingDayId()).toBeNull();
     start();
     http.expectOne(sessionsUrl).flush({ id: 60 });
@@ -305,6 +326,10 @@ describe('TodayWorkoutsCardComponent', () => {
     start();
     http.expectOne(sessionsUrl).flush(null, { status: 500, statusText: 'Error' });
     current().flush(null);
+    fixture.detectChanges();
+    expect(
+      fixture.nativeElement.querySelector('button[aria-label="Verificando sessão: Treino 10"]'),
+    ).toBeTruthy();
     start();
     http.expectNone(sessionsUrl);
     expect(fixture.componentInstance.startBlocked()).toBe(true);
@@ -348,11 +373,83 @@ describe('TodayWorkoutsCardComponent', () => {
       load([day(), day(11, 'FRIDAY')]);
       vi.setSystemTime(new Date(2026, 9, 30, 0, 1));
       (event === 'focus' ? window : document).dispatchEvent(new Event(event));
+      current().flush(null);
       fixture.detectChanges();
       expect(fixture.componentInstance.workouts().map((item) => item.day.id)).toEqual([11]);
       expect(text()).not.toContain('Treino 10');
     },
   );
+
+  it.each(['focus', 'visibilitychange'])(
+    'revalidates an externally closed session when resuming (%s) and allows a new start',
+    (event) => {
+      load([day()], session);
+      (event === 'focus' ? window : document).dispatchEvent(new Event(event));
+      expect(fixture.componentInstance.startBlocked()).toBe(true);
+      current().flush(null);
+      fixture.detectChanges();
+      expect(text()).not.toContain('Treino aberto');
+      expect(fixture.componentInstance.startBlocked()).toBe(false);
+      start();
+      http.expectOne(sessionsUrl).flush({ id: 60 });
+    },
+  );
+
+  it('discovers a session opened externally and blocks new starts', () => {
+    load();
+    window.dispatchEvent(new Event('focus'));
+    current().flush(session);
+    fixture.detectChanges();
+    expect(text()).toContain('Treino aberto');
+    start();
+    http.expectNone(sessionsUrl);
+  });
+
+  it('ignores resume events while hidden and deduplicates pending session lookups', () => {
+    load();
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    document.dispatchEvent(new Event('visibilitychange'));
+    window.dispatchEvent(new Event('focus'));
+    http.expectNone(`${sessionsUrl}/in-progress`);
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    document.dispatchEvent(new Event('visibilitychange'));
+    window.dispatchEvent(new Event('focus'));
+    document.dispatchEvent(new Event('visibilitychange'));
+    current().flush(null);
+  });
+
+  it('keeps starts blocked if resume revalidation fails and allows a lookup retry', () => {
+    load([day()], session);
+    window.dispatchEvent(new Event('focus'));
+    current().flush(null, { status: 500, statusText: 'Error' });
+    fixture.detectChanges();
+    expect(text()).toContain('Não foi possível consultar');
+    start();
+    http.expectNone(sessionsUrl);
+    fixture.componentInstance.loadSession();
+    current().flush(null);
+    expect(fixture.componentInstance.startBlocked()).toBe(false);
+  });
+
+  it('does not revalidate concurrently with a pending start, recovery lookup or recovery dialog', () => {
+    const decision = new Subject<boolean>();
+    dialog.open.mockReturnValue(decision);
+    load();
+    start();
+    window.dispatchEvent(new Event('focus'));
+    http.expectNone(`${sessionsUrl}/in-progress`);
+    http.expectOne(sessionsUrl).flush(null, { status: 500, statusText: 'Error' });
+    const recovering = current();
+    window.dispatchEvent(new Event('focus'));
+    document.dispatchEvent(new Event('visibilitychange'));
+    http.expectNone(`${sessionsUrl}/in-progress`);
+    recovering.flush(null);
+    window.dispatchEvent(new Event('focus'));
+    http.expectNone(`${sessionsUrl}/in-progress`);
+    decision.next(false);
+    window.dispatchEvent(new Event('focus'));
+    current().flush(null);
+  });
 
   it('updates automatically at local midnight while Home remains visible', () => {
     load();
