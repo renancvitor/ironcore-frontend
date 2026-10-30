@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { TodayWorkoutsCardComponent } from './components/today-workouts-card/today-workouts-card.component';
 import { BodyMetricsLatestCardComponent } from './components/body-metrics-latest-card/body-metrics-latest-card.component';
 import { InProgressWorkoutsCardComponent } from './components/in-progress-workouts-card/in-progress-workouts-card.component';
 import { BodyMetricsProgressCardComponent } from './components/body-metrics-progress-card/body-metrics-progress-card.component';
@@ -6,6 +7,7 @@ import { BodyMetricsProgressCardComponent } from './components/body-metrics-prog
 @Component({
   selector: 'app-home',
   imports: [
+    TodayWorkoutsCardComponent,
     BodyMetricsLatestCardComponent,
     InProgressWorkoutsCardComponent,
     BodyMetricsProgressCardComponent,

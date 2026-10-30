@@ -5,8 +5,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { catchError, EMPTY, finalize, map, Observable, of, switchMap, take } from 'rxjs';
-import { WorkoutSessionsService } from '../../workout-sessions/workout-sessions.service';
+import { finalize, Observable, take } from 'rxjs';
+import { WorkoutSessionStartService } from '../../workout-sessions/workout-session-start.service';
 import { ExerciseCatalogComponent } from '../../exercise/catalog/exercise-catalog.component';
 import { ExerciseCatalogStateService } from '../../exercise/catalog/exercise-catalog-state.service';
 import { ListExercisesItemResponse } from '../../exercise/exercise.models';
@@ -43,7 +43,7 @@ import { createWorkoutDayForm } from '../workout-day.form';
 
 @Component({
   selector: 'app-workout-cycle-detail',
-  providers: [ExerciseCatalogStateService],
+  providers: [ExerciseCatalogStateService, WorkoutSessionStartService],
   imports: [
     WorkoutActivityOrderFormComponent,
     ExerciseCatalogComponent,
@@ -64,7 +64,7 @@ import { createWorkoutDayForm } from '../workout-day.form';
 })
 export class WorkoutCycleDetailComponent implements OnInit {
   private readonly workoutPlanningService = inject(WorkoutPlanningService);
-  private readonly workoutSessionsService = inject(WorkoutSessionsService);
+  private readonly sessionStart = inject(WorkoutSessionStartService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -89,7 +89,7 @@ export class WorkoutCycleDetailComponent implements OnInit {
   readonly lifecycleBusy = computed(() => this.lifecycleState() !== null);
   readonly sessionStartingDayId = signal<number | null>(null);
   readonly sessionStartBusy = computed(() => this.sessionStartingDayId() !== null);
-  readonly sessionNeedsRecovery = signal(false);
+  readonly sessionNeedsRecovery = this.sessionStart.needsRecovery;
   readonly contextualActionsDisabled = computed(
     () =>
       this.sessionStartBusy() ||
@@ -129,7 +129,6 @@ export class WorkoutCycleDetailComponent implements OnInit {
   readonly dayBusy = computed(
     () => this.daySaving() || this.daysLoading() || this.confirmingDelete(),
   );
-  dayForm = createWorkoutDayForm('create', () => this.cycle()?.days ?? []);
   readonly activityMode = signal<'select' | 'create' | 'edit' | 'reorder' | null>(null);
   readonly activityDayId = signal<number | null>(null);
   readonly activityDay = computed(
@@ -148,6 +147,8 @@ export class WorkoutCycleDetailComponent implements OnInit {
       .filter((activity) => activity.id !== this.selectedActivity()?.id)
       .map((activity) => activity.exercise.id),
   );
+
+  dayForm = createWorkoutDayForm('create', () => this.cycle()?.days ?? []);
   activityForm = createWorkoutActivityForm();
   activityOrderForm = createWorkoutActivityOrderForm(0);
 
@@ -163,34 +164,12 @@ export class WorkoutCycleDetailComponent implements OnInit {
     if (!this.canStartSession(day) || this.contextualActionsDisabled()) return;
     this.sessionStartingDayId.set(day.id);
     let refreshCycle = false;
-    const operation = this.sessionNeedsRecovery()
-      ? this.recoverSession(
-          'Confira se a abertura anterior foi efetivada antes de iniciar outra sessão.',
-        )
-      : this.workoutSessionsService
-          .startWorkoutSession({
-            workoutCycleId: this.cycle()!.id,
-            workoutDayId: day.id,
-          })
-          .pipe(
-            catchError((error) => {
-              if (error.status === 401) return EMPTY;
-              const message =
-                error.error?.message ?? 'Não foi possível confirmar a abertura da sessão.';
-              if (error.status === 409 || error.status === 0 || error.status >= 500) {
-                refreshCycle = error.status === 409;
-                this.sessionNeedsRecovery.set(true);
-                return this.recoverSession(message);
-              }
-              refreshCycle = error.status === 400 || error.status === 404;
-              this.dialogService.open({
-                title: 'Não foi possível iniciar a sessão de treino',
-                message,
-                primaryAction: 'Ok',
-              });
-              return of(null);
-            }),
-          );
+    const operation = this.sessionStart.start(
+      { workoutCycleId: this.cycle()!.id, workoutDayId: day.id },
+      () => {
+        refreshCycle = true;
+      },
+    );
     operation
       .pipe(
         takeUntilDestroyed(this.destroyRef),
@@ -205,42 +184,6 @@ export class WorkoutCycleDetailComponent implements OnInit {
           this.loadCycle();
         }
       });
-  }
-
-  private recoverSession(message: string): Observable<null> {
-    return this.workoutSessionsService.getInProgressWorkoutSession().pipe(
-      switchMap((session) => {
-        this.sessionNeedsRecovery.set(false);
-        return this.dialogService
-          .open({
-            title: session ? 'Sessão de treino em andamento' : 'Abertura da sessão de treino',
-            message: session
-              ? `${message} Há uma sessão de “${session.workoutDayTitleSnapshot}” em andamento. Deseja continuar visualizando essa sessão?`
-              : `${message} Nenhuma sessão em andamento foi encontrada. Confira o planejamento antes de tentar novamente.`,
-            primaryAction: session ? 'Continuar sessão' : 'Ok',
-            ...(session ? { secondaryAction: 'Voltar' } : {}),
-          })
-          .pipe(
-            take(1),
-            map((confirmed) => {
-              if (confirmed && session)
-                void this.router.navigate(['/workout-sessions', session.id]);
-              return null;
-            }),
-          );
-      }),
-      catchError((error) => {
-        if (error.status === 401) return EMPTY;
-        this.sessionNeedsRecovery.set(true);
-        this.dialogService.open({
-          title: 'Não foi possível recuperar a sessão de treino',
-          message:
-            error.error?.message ?? 'Consulte novamente antes de tentar iniciar outra sessão.',
-          primaryAction: 'Ok',
-        });
-        return of(null);
-      }),
-    );
   }
 
   startCycle(): void {

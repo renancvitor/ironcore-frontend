@@ -42,7 +42,10 @@ describe('Workout Planning navigation', () => {
       const summaryCycles = [cycle, { ...cycle, id: 12, name: 'Corrida' }];
       await TestBed.configureTestingModule({
         providers: [
-          { provide: WorkoutSessionsService, useValue: {} },
+          {
+            provide: WorkoutSessionsService,
+            useValue: { getInProgressWorkoutSession: () => of(null) },
+          },
           provideRouter(featureRoutes),
           {
             provide: BodyMetricsService,
@@ -58,6 +61,7 @@ describe('Workout Planning navigation', () => {
               ) =>
                 of({
                   cycles: {
+                    last: true,
                     content: filters.workoutStatus === status ? summaryCycles : [],
                     totalElements: filters.workoutStatus === status ? 2 : 0,
                   },
@@ -91,7 +95,7 @@ describe('Workout Planning navigation', () => {
         harness.detectChanges();
         expect(TestBed.inject(Router).url).toBe('/');
         expect(harness.routeDebugElement!.componentInstance).toBeInstanceOf(HomeComponent);
-        expect(harness.routeNativeElement!.querySelectorAll('.ic-summary-card')).toHaveLength(3);
+        expect(harness.routeNativeElement!.querySelectorAll('.ic-summary-card')).toHaveLength(4);
       }
     },
   );

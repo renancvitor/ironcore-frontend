@@ -1,0 +1,81 @@
+@use '../../../../../styles/responsive' as responsive;
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+h3 {
+  margin: 0 0 var(--ic-space-3);
+  font-size: var(--ic-font-size-sm);
+  color: var(--ic-text-secondary);
+  text-transform: uppercase;
+}
+
+.current-session {
+  border-bottom: var(--ic-border-width-default) solid var(--ic-border-soft);
+  padding-bottom: var(--ic-space-4);
+  margin-bottom: var(--ic-space-4);
+}
+
+.workout-name {
+  margin: 0;
+  font-size: 1.125rem;
+  color: var(--ic-text-primary);
+}
+
+.muted {
+  margin: var(--ic-space-2) 0;
+  color: var(--ic-text-secondary);
+  font-size: var(--ic-font-size-sm);
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+li,
+.session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ic-space-3);
+  padding: var(--ic-space-3);
+}
+
+li {
+  border: var(--ic-border-width-default) solid var(--ic-border-soft);
+  border-radius: var(--ic-radius-md);
+  & + li {
+    margin-top: var(--ic-space-3);
+  }
+}
+
+.session-action {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  color: var(--ic-primary);
+  &:disabled {
+    color: var(--ic-text-secondary);
+  }
+  &:focus-visible {
+    outline: var(--ic-focus-ring-width) solid var(--ic-primary);
+    outline-offset: var(--ic-focus-ring-offset);
+  }
+}
+
+.workout-info {
+  min-width: 0;
+  flex: 1;
+}
+
+@include responsive.mobile {
+  li,
+  .session-row {
+    gap: var(--ic-space-2);
+    padding: var(--ic-space-2);
+  }
+}

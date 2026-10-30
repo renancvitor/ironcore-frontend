@@ -30,6 +30,16 @@ describe('HomeComponent', () => {
     TestBed.inject(HttpTestingController)
       .expectOne((request) => request.url === '/api/users/me/body-metrics/progress/changes')
       .flush({ startDate: '2026-05-01', endDate: '2026-10-11', changes: [] });
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne('/api/users/me/workout-sessions/in-progress').flush(null);
+    http
+      .expectOne(
+        (request) =>
+          request.url === '/api/users/me/workout-cycles' && request.params.get('size') === '20',
+      )
+      .flush({
+        cycles: { content: [], page: 0, size: 20, totalElements: 0, totalPages: 0, last: true },
+      });
     fixture.detectChanges();
   });
 
@@ -58,13 +68,21 @@ describe('HomeComponent', () => {
 
   afterEach(() => TestBed.inject(HttpTestingController).verify());
 
-  it('renders the three summary cards and links to the full progress page', () => {
+  it('renders the daily workout card first, preserves the other summary cards and links to the full progress page', () => {
     const element = fixture.nativeElement as HTMLElement;
     expect(
       Array.from(element.querySelectorAll('.ic-summary-card__header h2'), (title) =>
         title.textContent?.trim(),
       ),
-    ).toEqual(['Última avaliação corporal', 'Planejamento de treinos', 'Evolução corporal']);
+    ).toEqual([
+      'Treinos do dia',
+      'Última avaliação corporal',
+      'Planejamento de treinos',
+      'Evolução corporal',
+    ]);
+    expect(element.querySelector('.ic-home__cards')?.firstElementChild?.tagName).toBe(
+      'APP-TODAY-WORKOUTS-CARD',
+    );
     const card = element.querySelector('app-in-progress-workouts-card')!;
     expect(card.querySelector('app-summary-card')).toBeTruthy();
     expect(card.querySelector('app-loading')).toBeTruthy();
@@ -93,7 +111,7 @@ describe('HomeComponent', () => {
     expect(element.querySelector('app-body-metrics-progress-card')?.textContent).toContain(
       'Sem dados suficientes',
     );
-    expect(element.querySelectorAll('.ic-summary-card')).toHaveLength(3);
+    expect(element.querySelectorAll('.ic-summary-card')).toHaveLength(4);
     element.querySelector<HTMLButtonElement>('app-in-progress-workouts-card button')!.click();
     fixture.detectChanges();
     http.expectNone((request) => request.url.includes('body-metrics'));
@@ -121,6 +139,6 @@ describe('HomeComponent', () => {
     expect(
       element.querySelector('app-in-progress-workouts-card footer a')?.getAttribute('href'),
     ).toBe('/workout-planning');
-    expect(element.querySelectorAll('.ic-summary-card')).toHaveLength(3);
+    expect(element.querySelectorAll('.ic-summary-card')).toHaveLength(4);
   });
 });

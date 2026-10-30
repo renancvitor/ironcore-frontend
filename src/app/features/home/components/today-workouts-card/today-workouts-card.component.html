@@ -1,0 +1,84 @@
+<app-summary-card title="Treinos do dia">
+  <div
+    aria-live="polite"
+    [attr.aria-busy]="sessionLoading() || planningLoading() || startingDayId() !== null"
+  >
+    @if (sessionLoading()) {
+      <app-loading />
+    } @else if (sessionError()) {
+      <p role="alert">
+        Não foi possível consultar a sessão em andamento. Consulte novamente antes de iniciar.
+      </p>
+      <app-button variant="secondary" (click)="loadSession()">Tentar novamente</app-button>
+    } @else if (session(); as current) {
+      <section class="current-session" aria-label="Sessão em andamento">
+        <h3>Sessão em andamento</h3>
+        <div class="session-row">
+          <div class="workout-info">
+            <p class="workout-name">{{ current.workoutDayTitleSnapshot }}</p>
+            <p class="muted">{{ current.workoutCycleNameSnapshot }}</p>
+          </div>
+          <button
+            matIconButton
+            type="button"
+            class="session-action"
+            [attr.aria-label]="'Continuar sessão: ' + current.workoutDayTitleSnapshot"
+            matTooltip="Continuar sessão"
+            (click)="continueSession()"
+          >
+            <mat-icon>arrow_outward</mat-icon>
+          </button>
+        </div>
+      </section>
+    }
+    <section aria-label="Treinos planejados para hoje">
+      <h3>Treinos planejados para hoje</h3>
+      @if (planningLoading()) {
+        <app-loading />
+      } @else if (planningError()) {
+        <p role="alert">Não foi possível carregar os treinos de hoje.</p>
+        <app-button variant="secondary" (click)="loadPlanning()">Tentar novamente</app-button>
+      } @else if (workouts().length) {
+        @if (session()) {
+          <p class="muted">Encerre a sessão em andamento para iniciar outro treino.</p>
+        }
+        <ul>
+          @for (workout of workouts(); track workout.day.id) {
+            <li>
+              <div class="workout-info">
+                <h4 class="workout-name">{{ workout.day.title }}</h4>
+                <p class="muted">{{ workout.cycleName }}</p>
+                @if (!workout.day.activities.length) {
+                  <p class="muted">Treino sem atividades.</p>
+                }
+              </div>
+              @if (workout.day.activities.length) {
+                <button
+                  matIconButton
+                  type="button"
+                  class="session-action"
+                  [attr.aria-label]="
+                    (startingDayId() === workout.day.id
+                      ? 'Iniciando sessão: '
+                      : 'Iniciar sessão: ') + workout.day.title
+                  "
+                  [matTooltip]="
+                    startingDayId() === workout.day.id ? 'Iniciando sessão…' : 'Iniciar sessão'
+                  "
+                  [disabled]="startBlocked()"
+                  (click)="startSession(workout)"
+                >
+                  <mat-icon>{{
+                    startingDayId() === workout.day.id ? 'hourglass_top' : 'play_circle'
+                  }}</mat-icon>
+                </button>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="muted">Nenhum treino planejado para hoje.</p>
+      }
+    </section>
+  </div>
+</app-summary-card>

@@ -33,9 +33,20 @@ import { ExerciseDetailComponent } from './features/exercise/catalog/detail/exer
 import { WorkoutSessionDetailComponent } from './features/workout-sessions/detail/workout-session-detail.component';
 import { WorkoutSessionHistoryComponent } from './features/workout-sessions/history/workout-session-history.component';
 import { WorkoutSessionProgressComponent } from './features/workout-sessions/progress/workout-session-progress.component';
-import { workoutSessionEntryGuard, workoutSessionPendingChangesGuard } from './features/workout-sessions/detail/workout-session-pending-changes.guard';
+import {
+  workoutSessionEntryGuard,
+  workoutSessionPendingChangesGuard,
+} from './features/workout-sessions/detail/workout-session-pending-changes.guard';
 
 function flushEmptyWorkoutSummary(http: HttpTestingController): void {
+  http.expectOne('/api/users/me/workout-sessions/in-progress').flush(null);
+  http
+    .expectOne(
+      (req) => req.url === '/api/users/me/workout-cycles' && req.params.get('size') === '20',
+    )
+    .flush({
+      cycles: { content: [], page: 0, size: 20, totalElements: 0, totalPages: 0, last: true },
+    });
   for (const status of ['IN_PROGRESS', 'NOT_STARTED']) {
     http
       .expectOne(
