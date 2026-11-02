@@ -84,12 +84,12 @@ describe('ChangePasswordComponent', () => {
 
     expect(changePassword).toHaveBeenCalledOnce();
     expect(changePassword).toHaveBeenCalledWith(validFormValue);
-    expect(component.loading).toBe(true);
+    expect(component.loading()).toBe(true);
     expect(fixture.nativeElement.querySelector('app-loading')).toBeTruthy();
 
     result.complete();
 
-    expect(component.loading).toBe(false);
+    expect(component.loading()).toBe(false);
   });
 
   it('should return to profile and notify success after a successful password change', async () => {
@@ -115,7 +115,7 @@ describe('ChangePasswordComponent', () => {
 
     component.submit();
 
-    expect(component.loading).toBe(false);
+    expect(component.loading()).toBe(false);
     expect(navigate).not.toHaveBeenCalled();
     expect(openDialog).toHaveBeenCalledWith({
       title: 'Não foi possível alterar a senha',

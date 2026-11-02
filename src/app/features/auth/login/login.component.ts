@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 
@@ -23,7 +23,7 @@ export class LoginComponent {
   private readonly router = inject(Router);
   private readonly dialogService = inject(DialogService);
 
-  loading = false;
+  readonly loading = signal(false);
   errorMessage = '';
 
   readonly form = new FormGroup({
@@ -39,12 +39,12 @@ export class LoginComponent {
   });
 
   submit(): void {
-    if (this.form.invalid || this.loading) {
+    if (this.form.invalid || this.loading()) {
       this.form.markAllAsTouched();
       return;
     }
 
-    this.loading = true;
+    this.loading.set(true);
     this.errorMessage = '';
 
     const request: LoginRequest = this.form.getRawValue();
@@ -53,7 +53,7 @@ export class LoginComponent {
       .login(request)
       .pipe(
         finalize(() => {
-          this.loading = false;
+          this.loading.set(false);
         }),
       )
       .subscribe({

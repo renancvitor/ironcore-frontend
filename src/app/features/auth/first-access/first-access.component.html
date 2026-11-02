@@ -50,9 +50,12 @@
             ? 'Nova senha é obrigatória.'
             : form.controls.newPassword.touched && form.controls.newPassword.hasError('minlength')
               ? 'A senha deve ter pelo menos 8 caracteres.'
-              : form.controls.newPassword.touched && form.hasError('sameAsCurrentPassword')
-                ? 'A nova senha deve ser diferente da senha atual.'
-                : ''
+              : form.controls.newPassword.touched &&
+                  form.controls.newPassword.hasError('passwordByteLimit')
+                ? 'A senha deve ter no máximo 72 bytes. Acentos e emojis ocupam mais de um byte.'
+                : form.controls.newPassword.touched && form.hasError('sameAsCurrentPassword')
+                  ? 'A nova senha deve ser diferente da senha atual.'
+                  : ''
         "
       />
 
@@ -69,9 +72,12 @@
             : form.controls.confirmNewPassword.touched &&
                 form.controls.confirmNewPassword.hasError('minlength')
               ? 'A senha deve ter pelo menos 8 caracteres.'
-              : form.controls.confirmNewPassword.touched && form.hasError('passwordMismatch')
-                ? 'A confirmação de senha não confere.'
-                : ''
+              : form.controls.confirmNewPassword.touched &&
+                  form.controls.confirmNewPassword.hasError('passwordByteLimit')
+                ? 'A senha deve ter no máximo 72 bytes.'
+                : form.controls.confirmNewPassword.touched && form.hasError('passwordMismatch')
+                  ? 'A confirmação de senha não confere.'
+                  : ''
         "
       />
 
@@ -81,7 +87,7 @@
         </p>
       }
 
-      @if (loading) {
+      @if (loading()) {
         <app-loading />
       } @else {
         <app-button type="submit" variant="primary" [disabled]="form.invalid">

@@ -45,8 +45,6 @@ describe('AuthService', () => {
   it('should store the authenticated user after login', () => {
     const response: LoginResponse = {
       ...user,
-      accessToken: 'access-token',
-      tokenType: 'Bearer',
       expiresAt: '2026-09-04T00:00:00Z',
     };
 
@@ -132,7 +130,9 @@ describe('AuthService', () => {
 
     authService.initialChangePassword(initialChangePasswordRequest).subscribe();
 
-    const request = httpTestingController.expectOne(`${apiBaseUrl}/api/users/change-initial-password`);
+    const request = httpTestingController.expectOne(
+      `${apiBaseUrl}/api/users/change-initial-password`,
+    );
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual(initialChangePasswordRequest);
 

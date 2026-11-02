@@ -44,6 +44,17 @@ describe('DialogComponent', () => {
     dialogRefMock.close.mockClear();
   });
 
+  it('renders untrusted backend messages as text', () => {
+    const previous = dialogData.message;
+    const payload = '<img src=x onerror="alert(1)"><script>alert(1)</script>';
+    dialogData.message = payload;
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('p').textContent).toContain(payload);
+    expect(fixture.nativeElement.querySelector('img, script')).toBeNull();
+    dialogData.message = previous;
+  });
+
   it('should create', () => {
     expect(component).toBeTruthy();
   });

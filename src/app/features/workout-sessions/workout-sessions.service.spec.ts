@@ -214,6 +214,7 @@ describe('WorkoutSessionsService with the existing authentication and CSRF inter
     const request = http.expectOne(`${url}/in-progress`);
     expect(request.request.withCredentials).toBe(true);
     request.flush({ message: 'Não autenticado' }, { status: 401, statusText: 'Unauthorized' });
+    http.expectOne('/api/users/me').flush({}, { status: 401, statusText: 'Unauthorized' });
     expect(auth.isAuthenticated()).toBe(false);
     expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/login']);
     expect(error).toHaveBeenCalledWith(expect.objectContaining({ status: 401 }));
