@@ -10,7 +10,12 @@ import { csrfInterceptor } from './csrf.interceptor';
 
 describe('cross-origin CSRF integration', () => {
   const api = 'https://api.ironcore.test';
-  const user = { userId: 1, email: 'user@ironcore.test', nickname: 'User', mustChangePassword: false };
+  const user = {
+    userId: 1,
+    email: 'user@ironcore.test',
+    nickname: 'User',
+    mustChangePassword: false,
+  };
   let http: HttpClient;
   let requests: HttpTestingController;
   let auth: AuthService;
@@ -18,12 +23,14 @@ describe('cross-origin CSRF integration', () => {
   const router = { url: '/profile', currentNavigation: vi.fn(() => null), navigate: vi.fn() };
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [
-      provideHttpClient(withInterceptors([authInterceptor, csrfInterceptor])),
-      provideHttpClientTesting(),
-      { provide: API_BASE_URL, useValue: api },
-      { provide: Router, useValue: router },
-    ] });
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([authInterceptor, csrfInterceptor])),
+        provideHttpClientTesting(),
+        { provide: API_BASE_URL, useValue: api },
+        { provide: Router, useValue: router },
+      ],
+    });
     http = TestBed.inject(HttpClient);
     requests = TestBed.inject(HttpTestingController);
     auth = TestBed.inject(AuthService);
@@ -41,7 +48,14 @@ describe('cross-origin CSRF integration', () => {
   }
 
   it('protects login, first access, authenticated writes and logout, fetching fresh tokens', () => {
-    auth.initialChangePassword({ email: user.email, currentPassword: 'old', newPassword: 'new', confirmNewPassword: 'new' }).subscribe();
+    auth
+      .initialChangePassword({
+        email: user.email,
+        currentPassword: 'old',
+        newPassword: 'new',
+        confirmNewPassword: 'new',
+      })
+      .subscribe();
     supplyToken('initial-token');
     const initial = requests.expectOne(`${api}/api/users/change-initial-password`);
     expect(initial.request.headers.get('X-XSRF-TOKEN')).toBe('initial-token');
@@ -83,7 +97,12 @@ describe('cross-origin CSRF integration', () => {
     restore.flush(user);
     expect(state.currentUser()).toEqual(user);
     auth.restoreSession().subscribe();
-    requests.expectOne(`${api}/api/users/me`).flush(null, { status: 401, statusText: 'Unauthorized' });
+    requests
+      .expectOne(`${api}/api/users/me`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+    requests
+      .expectOne(`${api}/api/users/me`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
     expect(state.currentUser()).toBeNull();
     expect(router.navigate).not.toHaveBeenCalled();
   });
@@ -100,7 +119,10 @@ describe('cross-origin CSRF integration', () => {
   });
 
   it('does not send CSRF tokens or credentials to unrelated origins', () => {
-    for (const url of ['https://telemetry.test/events', 'https://api.ironcore.test.evil.test/api/users']) {
+    for (const url of [
+      'https://telemetry.test/events',
+      'https://api.ironcore.test.evil.test/api/users',
+    ]) {
       http.post(url, {}).subscribe();
       const request = requests.expectOne(url);
       expect(request.request.withCredentials).toBe(false);
@@ -112,8 +134,14 @@ describe('cross-origin CSRF integration', () => {
 
   it('does not execute a write if token retrieval fails and can fetch again', () => {
     let status: number | undefined;
-    http.post(`${api}/api/write`, {}).subscribe({ error: error => { status = error.status; } });
-    requests.expectOne(`${api}/api/auth/csrf`).flush(null, { status: 503, statusText: 'Unavailable' });
+    http.post(`${api}/api/write`, {}).subscribe({
+      error: (error) => {
+        status = error.status;
+      },
+    });
+    requests
+      .expectOne(`${api}/api/auth/csrf`)
+      .flush(null, { status: 503, statusText: 'Unavailable' });
     expect(status).toBe(503);
     requests.expectNone(`${api}/api/write`);
     http.post(`${api}/api/write`, {}).subscribe();
@@ -124,7 +152,11 @@ describe('cross-origin CSRF integration', () => {
   it('propagates CSRF rejection without replaying the write or clearing the session', () => {
     state.setUser(user);
     let status: number | undefined;
-    http.patch(`${api}/api/write`, {}).subscribe({ error: error => { status = error.status; } });
+    http.patch(`${api}/api/write`, {}).subscribe({
+      error: (error) => {
+        status = error.status;
+      },
+    });
     supplyToken();
     requests.expectOne(`${api}/api/write`).flush(null, { status: 403, statusText: 'Forbidden' });
     expect(status).toBe(403);

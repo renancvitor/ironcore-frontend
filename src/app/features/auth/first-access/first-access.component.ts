@@ -1,4 +1,5 @@
-import { Component, inject } from '@angular/core';
+import { passwordByteLimit } from '../../../shared/validators/password.validator';
+import { Component, inject, signal } from '@angular/core';
 import {
   AbstractControl,
   FormControl,
@@ -50,7 +51,7 @@ export class FirstAccessComponent {
   private readonly router = inject(Router);
   private readonly dialogService = inject(DialogService);
 
-  loading = false;
+  readonly loading = signal(false);
   errorMessage = '';
 
   readonly form = new FormGroup(
@@ -67,12 +68,12 @@ export class FirstAccessComponent {
 
       newPassword: new FormControl('', {
         nonNullable: true,
-        validators: [Validators.required, Validators.minLength(8)],
+        validators: [Validators.required, Validators.minLength(8), passwordByteLimit],
       }),
 
       confirmNewPassword: new FormControl('', {
         nonNullable: true,
-        validators: [Validators.required, Validators.minLength(8)],
+        validators: [Validators.required, Validators.minLength(8), passwordByteLimit],
       }),
     },
     {
@@ -89,12 +90,12 @@ export class FirstAccessComponent {
   }
 
   submit(): void {
-    if (this.form.invalid || this.loading) {
+    if (this.form.invalid || this.loading()) {
       this.form.markAllAsTouched();
       return;
     }
 
-    this.loading = true;
+    this.loading.set(true);
     this.errorMessage = '';
 
     const request: InitialChangePasswordRequest = this.form.getRawValue();
@@ -103,11 +104,12 @@ export class FirstAccessComponent {
       .initialChangePassword(request)
       .pipe(
         finalize(() => {
-          this.loading = false;
+          this.loading.set(false);
         }),
       )
       .subscribe({
         next: () => {
+          this.form.reset();
           this.router.navigate(['/login']);
         },
 

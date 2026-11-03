@@ -40,7 +40,7 @@
         </p>
       }
 
-      @if (loading) {
+      @if (loading()) {
         <app-loading />
       } @else {
         <app-button type="submit" variant="primary" [disabled]="form.invalid"> Entrar </app-button>

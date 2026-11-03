@@ -1,6 +1,10 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 
+import { catchError, switchMap, throwError } from 'rxjs';
+
+import { SessionService, SKIP_SESSION_RECOVERY } from '../../core/auth/session.service';
 import { API_BASE_URL } from '../../core/http/api-base-url.token';
 import {
   ChangeNicknameRequest,
@@ -16,6 +20,8 @@ import {
 })
 export class ProfileService {
   private readonly http = inject(HttpClient);
+  private readonly session = inject(SessionService);
+  private readonly router = inject(Router);
   private readonly apiBaseUrl = inject(API_BASE_URL);
 
   getPerson() {
@@ -34,6 +40,26 @@ export class ProfileService {
   }
 
   changePassword(request: ChangePasswordRequest) {
-    return this.http.post<void>(`${this.apiBaseUrl}/api/users/me/change-password`, request);
+    return this.session
+      .mutate(
+        () =>
+          this.http.post<void>(`${this.apiBaseUrl}/api/users/me/change-password`, request, {
+            context: new HttpContext().set(SKIP_SESSION_RECOVERY, true),
+          }),
+        'changed',
+      )
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          if (error.status !== 401) return throwError(() => error);
+          return this.session.recover().pipe(
+            catchError((failure: HttpErrorResponse) => {
+              if (failure.status === 401)
+                void this.router.navigate(['/login']).catch(() => undefined);
+              return throwError(() => failure);
+            }),
+            switchMap(() => throwError(() => error)),
+          );
+        }),
+      );
   }
 }

@@ -1,5 +1,6 @@
+import { finalize } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, output } from '@angular/core';
+import { Component, computed, inject, output, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -21,6 +22,8 @@ export class HeaderComponent {
   private readonly router = inject(Router);
   private readonly themeService = inject(ThemeService);
   private readonly dialogService = inject(DialogService);
+
+  readonly loggingOut = signal(false);
 
   readonly menuToggle = output<void>();
   private readonly nextPreference = computed<ThemePreference>(() => {
@@ -46,25 +49,29 @@ export class HeaderComponent {
   });
 
   logout(): void {
-    this.authService.logout().subscribe({
-      next: () => {
-        void this.router.navigate(['/login']);
-      },
-      error: (error: HttpErrorResponse) => {
-        if (error.status === 401) {
+    if (this.loggingOut()) return;
+    this.loggingOut.set(true);
+    this.authService
+      .logout()
+      .pipe(
+        finalize(() => {
+          this.loggingOut.set(false);
+        }),
+      )
+      .subscribe({
+        next: () => {
           void this.router.navigate(['/login']);
-          return;
-        }
+        },
+        error: (error: HttpErrorResponse) => {
+          const message = error.error?.message ?? 'Não foi possível encerrar a sessão.';
 
-        const message = error.error?.message ?? 'Não foi possível encerrar a sessão.';
-
-        this.dialogService.open({
-          title: 'Não foi possível sair da conta',
-          message,
-          primaryAction: 'Ok',
-        });
-      },
-    });
+          this.dialogService.open({
+            title: 'Não foi possível sair da conta',
+            message,
+            primaryAction: 'Ok',
+          });
+        },
+      });
   }
 
   changeTheme(): void {

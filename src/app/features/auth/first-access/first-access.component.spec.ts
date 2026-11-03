@@ -115,12 +115,12 @@ describe('FirstAccessComponent', () => {
     fixture.detectChanges();
 
     expect(initialChangePassword).toHaveBeenCalledWith(validFormValue);
-    expect(component.loading).toBe(true);
+    expect(component.loading()).toBe(true);
     expect(fixture.nativeElement.querySelector('app-loading')).toBeTruthy();
 
     result.complete();
 
-    expect(component.loading).toBe(false);
+    expect(component.loading()).toBe(false);
   });
 
   it('should return to login after a successful password change', () => {
@@ -145,7 +145,7 @@ describe('FirstAccessComponent', () => {
     component.submit();
     fixture.detectChanges();
 
-    expect(component.loading).toBe(false);
+    expect(component.loading()).toBe(false);
     expect(openDialog).toHaveBeenCalledWith({
       title: 'N\u00e3o foi poss\u00edvel alterar a senha',
       message: 'Credenciais inv\u00e1lidas.',

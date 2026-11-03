@@ -62,6 +62,7 @@
         type="button"
         aria-label="Sair da conta"
         matTooltip="Sair"
+        [disabled]="loggingOut()"
         (click)="logout()"
       >
         <mat-icon>logout</mat-icon>

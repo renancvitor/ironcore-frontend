@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
+import { catchError, EMPTY } from 'rxjs';
 import { routes } from './app.routes';
 import { provideCoreHttp } from './core/http/http.providers';
 import { registerLocaleData } from '@angular/common';
@@ -30,7 +31,7 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       const authService = inject(AuthService);
 
-      return authService.restoreSession();
+      return authService.restoreSession().pipe(catchError(() => EMPTY));
     }),
     {
       provide: LOCALE_ID,

@@ -1,4 +1,5 @@
-import { Component, inject } from '@angular/core';
+import { passwordByteLimit } from '../../../shared/validators/password.validator';
+import { Component, inject, signal } from '@angular/core';
 import {
   AbstractControl,
   FormControl,
@@ -51,7 +52,7 @@ export class ChangePasswordComponent {
   private readonly toastService = inject(ToastService);
   private readonly dialogService = inject(DialogService);
 
-  loading = false;
+  readonly loading = signal(false);
 
   readonly form = new FormGroup(
     {
@@ -62,12 +63,12 @@ export class ChangePasswordComponent {
 
       newPassword: new FormControl('', {
         nonNullable: true,
-        validators: [Validators.required, Validators.minLength(8)],
+        validators: [Validators.required, Validators.minLength(8), passwordByteLimit],
       }),
 
       confirmNewPassword: new FormControl('', {
         nonNullable: true,
-        validators: [Validators.required, Validators.minLength(8)],
+        validators: [Validators.required, Validators.minLength(8), passwordByteLimit],
       }),
     },
     {
@@ -76,12 +77,12 @@ export class ChangePasswordComponent {
   );
 
   submit(): void {
-    if (this.form.invalid || this.loading) {
+    if (this.form.invalid || this.loading()) {
       this.form.markAllAsTouched();
       return;
     }
 
-    this.loading = true;
+    this.loading.set(true);
 
     const request: ChangePasswordRequest = this.form.getRawValue();
 
@@ -89,11 +90,12 @@ export class ChangePasswordComponent {
       .changePassword(request)
       .pipe(
         finalize(() => {
-          this.loading = false;
+          this.loading.set(false);
         }),
       )
       .subscribe({
         next: () => {
+          this.form.reset();
           void this.router.navigate(['/profile']).then((navigated) => {
             if (navigated) {
               this.toastService.success('Senha alterada com sucesso.');

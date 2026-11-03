@@ -14,9 +14,13 @@ describe('authInterceptor', () => {
   let navigationToLoginInProgress = false;
   const router = {
     url: '/profile',
-    currentNavigation: vi.fn(() => navigationToLoginInProgress ? {
-      initialUrl: { toString: () => '/login' },
-    } : null),
+    currentNavigation: vi.fn(() =>
+      navigationToLoginInProgress
+        ? {
+            initialUrl: { toString: () => '/login' },
+          }
+        : null,
+    ),
     navigate: vi.fn().mockImplementation(() => {
       navigationToLoginInProgress = true;
 
@@ -33,7 +37,7 @@ describe('authInterceptor', () => {
         provideHttpClientTesting(),
         {
           provide: API_BASE_URL,
-          useValue: 'https://api.ironcore.test/api',
+          useValue: 'https://api.ironcore.test',
         },
         { provide: Router, useValue: router },
       ],
@@ -97,6 +101,9 @@ describe('authInterceptor', () => {
 
     const request = httpTestingController.expectOne('https://api.ironcore.test/api/users/me');
     request.flush(null, { status: 401, statusText: 'Unauthorized' });
+    httpTestingController
+      .expectOne('https://api.ironcore.test/api/users/me')
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
 
     expect(authState.isAuthenticated()).toBe(false);
     expect(router.navigate).not.toHaveBeenCalled();
@@ -120,10 +127,15 @@ describe('authInterceptor', () => {
   });
 
   it('should treat public authentication endpoints as public only for their configured HTTP methods and exact paths', () => {
-    httpClient.get('https://api.ironcore.test/api/auth/login').subscribe({ error: () => undefined });
+    httpClient
+      .get('https://api.ironcore.test/api/auth/login')
+      .subscribe({ error: () => undefined });
 
     const request = httpTestingController.expectOne('https://api.ironcore.test/api/auth/login');
     request.flush(null, { status: 401, statusText: 'Unauthorized' });
+    httpTestingController
+      .expectOne('https://api.ironcore.test/api/users/me')
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
 
     expect(router.navigate).toHaveBeenCalledOnce();
   });
@@ -136,10 +148,17 @@ describe('authInterceptor', () => {
       mustChangePassword: false,
     });
 
-    httpClient.get('https://api.ironcore.test/api/users/me/person').subscribe({ error: () => undefined });
+    httpClient
+      .get('https://api.ironcore.test/api/users/me/person')
+      .subscribe({ error: () => undefined });
 
-    const request = httpTestingController.expectOne('https://api.ironcore.test/api/users/me/person');
+    const request = httpTestingController.expectOne(
+      'https://api.ironcore.test/api/users/me/person',
+    );
     request.flush(null, { status: 401, statusText: 'Unauthorized' });
+    httpTestingController
+      .expectOne('https://api.ironcore.test/api/users/me')
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
 
     expect(authState.isAuthenticated()).toBe(false);
     expect(router.navigate).toHaveBeenCalledOnce();
@@ -149,10 +168,17 @@ describe('authInterceptor', () => {
   it('should consume navigation failures after a protected API request is unauthorized', async () => {
     router.navigate.mockImplementationOnce(() => Promise.reject(new Error('Navigation failed')));
 
-    httpClient.get('https://api.ironcore.test/api/users/me/person').subscribe({ error: () => undefined });
+    httpClient
+      .get('https://api.ironcore.test/api/users/me/person')
+      .subscribe({ error: () => undefined });
 
-    const request = httpTestingController.expectOne('https://api.ironcore.test/api/users/me/person');
+    const request = httpTestingController.expectOne(
+      'https://api.ironcore.test/api/users/me/person',
+    );
     request.flush(null, { status: 401, statusText: 'Unauthorized' });
+    httpTestingController
+      .expectOne('https://api.ironcore.test/api/users/me')
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
 
     await Promise.resolve();
 
@@ -191,7 +217,9 @@ describe('authInterceptor', () => {
       },
     });
 
-    const request = httpTestingController.expectOne('https://api.ironcore.test/api/users/me/person');
+    const request = httpTestingController.expectOne(
+      'https://api.ironcore.test/api/users/me/person',
+    );
     request.flush(null, { status: 403, statusText: 'Forbidden' });
 
     expect(receivedStatus).toBe(403);
@@ -200,14 +228,25 @@ describe('authInterceptor', () => {
   });
 
   it('should avoid duplicate navigation when protected API requests are unauthorized together', () => {
-    httpClient.get('https://api.ironcore.test/api/users/me/person').subscribe({ error: () => undefined });
-    httpClient.get('https://api.ironcore.test/api/users/me/change-password').subscribe({ error: () => undefined });
+    httpClient
+      .get('https://api.ironcore.test/api/users/me/person')
+      .subscribe({ error: () => undefined });
+    httpClient
+      .get('https://api.ironcore.test/api/users/me/change-password')
+      .subscribe({ error: () => undefined });
 
-    const personRequest = httpTestingController.expectOne('https://api.ironcore.test/api/users/me/person');
-    const passwordRequest = httpTestingController.expectOne('https://api.ironcore.test/api/users/me/change-password');
+    const personRequest = httpTestingController.expectOne(
+      'https://api.ironcore.test/api/users/me/person',
+    );
+    const passwordRequest = httpTestingController.expectOne(
+      'https://api.ironcore.test/api/users/me/change-password',
+    );
 
     personRequest.flush(null, { status: 401, statusText: 'Unauthorized' });
     passwordRequest.flush(null, { status: 401, statusText: 'Unauthorized' });
+    httpTestingController
+      .expectOne('https://api.ironcore.test/api/users/me')
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
 
     expect(router.navigate).toHaveBeenCalledOnce();
   });

@@ -105,6 +105,7 @@ describe('HeaderComponent', () => {
     ) as HTMLButtonElement;
     logoutButton.click();
 
+    component.logout();
     expect(logout).toHaveBeenCalledOnce();
     expect(navigate).not.toHaveBeenCalled();
 
@@ -113,15 +114,27 @@ describe('HeaderComponent', () => {
     expect(navigate).toHaveBeenCalledWith(['/login']);
   });
 
-  it('should redirect to login when logout returns unauthorized', () => {
+  it('reenables logout after an asynchronous failure', async () => {
+    const result = new Subject<void>();
+    logout.mockReturnValue(result);
+    component.logout();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.ic-header__logout').disabled).toBe(true);
+    await Promise.resolve();
+    result.error(new HttpErrorResponse({ status: 503 }));
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.ic-header__logout').disabled).toBe(false);
+  });
+
+  it('should report a rejected logout without claiming the session was revoked', () => {
     logout.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' })),
     );
 
     component.logout();
 
-    expect(navigate).toHaveBeenCalledWith(['/login']);
-    expect(openDialog).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
+    expect(openDialog).toHaveBeenCalled();
   });
 
   it('should show the backend message and keep the user in place when logout fails', () => {

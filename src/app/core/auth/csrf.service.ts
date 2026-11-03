@@ -15,14 +15,22 @@ export class CsrfService {
   private readonly apiBaseUrl = inject(API_BASE_URL);
   private pending?: Observable<CsrfToken>;
 
+  private revision = 0;
+
+  invalidate(): void {
+    ++this.revision;
+    this.pending = undefined;
+  }
+
   getToken(): Observable<CsrfToken> {
+    const revision = this.revision;
     this.pending ??= this.http
       .get<CsrfToken>(`${this.apiBaseUrl}/api/auth/csrf`, {
         withCredentials: true,
       })
       .pipe(
         finalize(() => {
-          this.pending = undefined;
+          if (revision === this.revision) this.pending = undefined;
         }),
         shareReplay({ bufferSize: 1, refCount: false }),
       );

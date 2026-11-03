@@ -51,7 +51,9 @@ describe('LoginComponent', () => {
   it('should configure the form fields for login', () => {
     fixture.detectChanges();
 
-    const [email, password] = fixture.nativeElement.querySelectorAll('input') as NodeListOf<HTMLInputElement>;
+    const [email, password] = fixture.nativeElement.querySelectorAll(
+      'input',
+    ) as NodeListOf<HTMLInputElement>;
     const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
 
     expect(email.type).toBe('email');
@@ -81,12 +83,12 @@ describe('LoginComponent', () => {
     fixture.detectChanges();
 
     expect(login).toHaveBeenCalledWith({ email: 'renan@ironcore.test', password: 'password' });
-    expect(component.loading).toBe(true);
+    expect(component.loading()).toBe(true);
     expect(fixture.nativeElement.querySelector('app-loading')).toBeTruthy();
 
     result.complete();
 
-    expect(component.loading).toBe(false);
+    expect(component.loading()).toBe(false);
   });
 
   it('should display the message returned by the backend after a failed login', () => {
@@ -104,7 +106,7 @@ describe('LoginComponent', () => {
     component.submit();
     fixture.detectChanges();
 
-    expect(component.loading).toBe(false);
+    expect(component.loading()).toBe(false);
     expect(openDialog).toHaveBeenCalledWith({
       title: 'N\u00e3o foi poss\u00edvel entrar',
       message: 'Credenciais inv\u00e1lidas.',
