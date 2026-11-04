@@ -71,6 +71,61 @@ describe('WorkoutSessionDetailComponent with HTTP', () => {
     ).find((element) => element.textContent?.trim() === text)!;
   }
 
+  it('shows compact pending mode actions below the selector and cancels without saving', () => {
+    const data = structuredClone(sessionDetail);
+    data.activities[0].actualLoadMode = 'TOTAL';
+    load(data);
+    const mode = fixture.nativeElement.querySelector('.ic-activity__mode') as HTMLElement;
+    expect(mode.querySelector('.ic-activity__mode-actions')).toBeNull();
+
+    const activity = component.editor.activities()[0];
+    activity.selectedMode.setValue('PER_SIDE');
+    fixture.detectChanges();
+    const actions = mode.querySelector('.ic-activity__mode-actions')!;
+    expect(actions.previousElementSibling?.tagName).toBe('MAT-FORM-FIELD');
+    expect(actions.nextElementSibling?.querySelector('summary')?.textContent).toContain('Como interpretar a carga?');
+    const buttons = actions.querySelectorAll('button');
+    expect(Array.from(buttons, (element) => element.getAttribute('aria-label'))).toEqual([
+      'Aplicar modo', 'Cancelar mudança de modo',
+    ]);
+    expect(Array.from(buttons, (element) => element.querySelector('mat-icon')?.textContent?.trim())).toEqual(['check', 'close']);
+    expect(Array.from(buttons, (element) => element.type)).toEqual(['button', 'button']);
+    expect(mode.querySelector('[role="status"]')?.textContent).toContain('A mudança de modo ainda não foi aplicada');
+    http.expectNone((request) => request.method !== 'GET');
+
+    buttons[1].click();
+    fixture.detectChanges();
+    expect(activity.selectedMode.value).toBe('TOTAL');
+    expect(mode.querySelector('.ic-activity__mode-actions')).toBeNull();
+    expect(mode.querySelector('[role="status"]')).toBeNull();
+    expect(dialog.open).not.toHaveBeenCalled();
+    http.expectNone((request) => request.method !== 'GET');
+  });
+
+  it('keeps the existing confirmation when the compact apply mode action is clicked', () => {
+    const data = structuredClone(sessionDetail);
+    data.activities[0].actualLoadMode = 'TOTAL';
+    load(data);
+    const confirmation = new Subject<boolean>();
+    dialog.open.mockReturnValue(confirmation);
+    component.editor.activities()[0].selectedMode.setValue('PER_SIDE');
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('button[aria-label="Aplicar modo"]').click();
+    fixture.detectChanges();
+    expect(dialog.open).toHaveBeenCalledTimes(1);
+    expect(dialog.open).toHaveBeenCalledWith(expect.objectContaining({ title: 'Reinterpretar cargas registradas' }));
+    for (const element of fixture.nativeElement.querySelectorAll('.ic-activity__mode-actions button')) {
+      expect(element.disabled).toBe(true);
+    }
+    http.expectNone((request) => request.method !== 'GET');
+    confirmation.next(false);
+    confirmation.complete();
+    fixture.detectChanges();
+    expect(component.editor.activities()[0].selectedMode.value).toBe('PER_SIDE');
+    expect(fixture.nativeElement.querySelector('button[aria-label="Aplicar modo"]').disabled).toBe(false);
+    http.expectNone((request) => request.method !== 'GET');
+  });
+
   it('loads independently on refresh and renders historical prescriptions with empty execution controls', () => {
     create();
     expect(fixture.nativeElement.querySelector('app-loading')).not.toBeNull();
