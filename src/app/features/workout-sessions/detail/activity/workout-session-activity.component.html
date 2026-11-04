@@ -49,14 +49,24 @@
               <mat-option value="PER_SIDE">Carga por lado</mat-option>
             </mat-select>
           </mat-form-field>
+          @if (editor.modePending(model)) {
+            <div class="ic-activity__mode-actions">
+              <button matIconButton type="button" aria-label="Aplicar modo" matTooltip="Aplicar modo"
+                [disabled]="!editor.canWrite() || !model.selectedMode.value" (click)="editor.applyMode(model)">
+                <mat-icon>check</mat-icon>
+              </button>
+              <button matIconButton type="button" aria-label="Cancelar mudança de modo" matTooltip="Cancelar mudança de modo"
+                [disabled]="blocked() || editor.busy()" (click)="editor.acknowledgeMode(model)">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          }
           <details [open]="modeOpen" (toggle)="modeOpen = $any($event.target).open">
             <summary>Como interpretar a carga?</summary>
             <p [id]="prefix() + '-mode-help'">Na carga por lado, são considerados dois lados equivalentes. Não é incluído peso presumido de barra, corpo ou equipamento. Sem carga registrada, a escolha é apenas local.</p>
           </details>
           @if (editor.modePending(model)) {
             <p role="status">A mudança de modo ainda não foi aplicada. Aplique-a antes de salvar séries deste exercício.</p>
-            <app-button [disabled]="!editor.canWrite() || !model.selectedMode.value" (click)="editor.applyMode(model)">Aplicar modo</app-button>
-            <app-button variant="secondary" [disabled]="blocked() || editor.busy()" (click)="editor.acknowledgeMode(model)">Cancelar mudança de modo</app-button>
           }
           @if (model.modeConflict) {
             <p role="alert">O modo mudou no servidor. Revise a interpretação dos rascunhos com carga.</p>
