@@ -108,4 +108,3 @@ A `v1.1.0` aprimora a organização visual dos ciclos de treino, oferecendo maio
 Registro reconciliado na Issue #101 a partir da [release oficial v1.1.0](https://github.com/renancvitor/ironcore-frontend/releases/tag/v1.1.0), publicada em 24/10/2026 como versão estável. O conteúdo oficial acima foi preservado; suas validações pertencem àquela publicação.
 
 <p align="right"><a href="../README.md">Voltar para releases</a></p>
-

@@ -181,4 +181,3 @@ A primeira fase funcional continua concluída, enquanto o produto permanece prep
 Registro reconciliado na Issue #101 a partir da [release oficial v1.0.1](https://github.com/renancvitor/ironcore-frontend/releases/tag/v1.0.1), publicada em 22/10/2026 como versão estável. O conteúdo oficial acima foi preservado; suas validações pertencem àquela publicação.
 
 <p align="right"><a href="../README.md">Voltar para releases</a></p>
-

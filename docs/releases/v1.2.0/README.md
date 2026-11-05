@@ -77,7 +77,7 @@ Executados em 04/11/2026 (America/Sao_Paulo), sobre o código funcional `4cadbc4
 
 A suíte cobre infraestrutura, autenticação, domínios anteriores, sessões, execução parcial, recuperação/conflitos, histórico, analytics, Home e navegação. HTTP é simulado; esses resultados não comprovam integração autenticada com produção.
 
-A conferência de 20 documentos e 183 referências locais não encontrou destinos ou âncoras ausentes. O diff contém 14 arquivos exclusivamente documentais, preservando os documentos de `v1.0.0` e anteriores. Prettier foi aplicado aos documentos correntes e à preparação; `git diff --check` passou. As notas oficiais incorporadas preservam seu texto. O inventário acima cobre todos os commits do delta revisado.
+A conferência de 20 documentos e 183 referências locais não encontrou destinos ou âncoras ausentes. O diff contém 14 arquivos exclusivamente documentais, preservando os documentos de `v1.0.0` e anteriores. Prettier foi aplicado aos documentos correntes e à preparação; a checagem final de `git diff --check` passou após a remoção de linhas vazias extras no fim dos dois históricos novos. As notas oficiais incorporadas preservam seu texto. O inventário acima cobre todos os commits do delta revisado.
 
 Não houve nova bateria visual em navegador, auditoria completa de acessibilidade, verificação dos headers/CSP servidos em produção ou validação da automação do GitHub Project nesta tarefa. Nenhum código funcional foi alterado para corrigir o aviso de build.
 
