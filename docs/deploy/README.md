@@ -8,18 +8,18 @@ As informações do Cloudflare Pages foram fornecidas pelo responsável pela imp
 
 ## Hospedagem
 
-| Item | Configuração de produção |
-|---|---|
-| Aplicação | Angular 21 |
-| Endereço público | `https://ironcore.dev.br` |
-| Hospedagem | Cloudflare Pages, plano gratuito |
-| Repositório integrado | `renancvitor/ironcore-frontend` |
-| Branch de produção | `main` |
-| Node.js | 24 |
-| Comando de build | `npm run build` |
-| Diretório publicado | `dist/ironcore-frontend/browser` |
-| API consumida | `https://api.ironcore.dev.br` |
-| Domínio e DNS | Registro.br e Cloudflare, respectivamente |
+| Item                  | Configuração de produção                  |
+| --------------------- | ----------------------------------------- |
+| Aplicação             | Angular 21                                |
+| Endereço público      | `https://ironcore.dev.br`                 |
+| Hospedagem            | Cloudflare Pages, plano gratuito          |
+| Repositório integrado | `renancvitor/ironcore-frontend`           |
+| Branch de produção    | `main`                                    |
+| Node.js               | 24                                        |
+| Comando de build      | `npm run build`                           |
+| Diretório publicado   | `dist/ironcore-frontend/browser`          |
+| API consumida         | `https://api.ironcore.dev.br`             |
+| Domínio e DNS         | Registro.br e Cloudflare, respectivamente |
 
 O Cloudflare Pages publica os arquivos do build Angular. O navegador executa a interface e envia as requisições de dados à API por HTTPS. A API está em uma VPS OVHcloud no Canadá, atrás do Caddy, e acessa o PostgreSQL no Supabase em São Paulo com TLS. O frontend não se conecta diretamente ao banco.
 
@@ -29,10 +29,10 @@ Detalhes da VPS, systemd, banco e publicação do JAR pertencem à [documentaç�
 
 O script `build` do [`package.json`](../../package.json) executa `ng build`. O [`angular.json`](../../angular.json) define `production` como configuração padrão de build e `development` como padrão de `serve`.
 
-| Arquivo | Uso | URL da API |
-|---|---|---|
-| [`environment.ts`](../../src/environments/environment.ts) | Build padrão de produção | `https://api.ironcore.dev.br` |
-| [`environment.development.ts`](../../src/environments/environment.development.ts) | Desenvolvimento, por substituição configurada no Angular | `http://localhost:8080` |
+| Arquivo                                                                           | Uso                                                      | URL da API                    |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------- |
+| [`environment.ts`](../../src/environments/environment.ts)                         | Build padrão de produção                                 | `https://api.ironcore.dev.br` |
+| [`environment.development.ts`](../../src/environments/environment.development.ts) | Desenvolvimento, por substituição configurada no Angular | `http://localhost:8080`       |
 
 `API_BASE_URL` é fornecido pelo environment ativo. Essa configuração é incorporada ao build; alterar o environment exige gerar e publicar um novo build. A URL da API é pública e os environments não devem conter credenciais ou segredos.
 
@@ -65,7 +65,9 @@ O deploy automático do frontend foi validado na implantação inicial, conforme
 - O backend configura CORS para `https://ironcore.dev.br` em produção, permitindo credenciais.
 - O `authInterceptor` envia `withCredentials: true` somente às chamadas identificadas como API. A autenticação utiliza o JWT no cookie `access_token`, com `HttpOnly`, `Secure` e `SameSite=Lax` em produção.
 - O `csrfInterceptor` obtém token em `GET /api/auth/csrf` e inclui o header indicado pela resposta antes das chamadas de escrita. Essa proteção também é aplicada aos fluxos de autenticação que usam métodos de escrita.
-- A sessão é restaurada por `GET /api/users/me`; o frontend não precisa persistir o JWT em armazenamento do navegador.
+- A sessão é restaurada por `GET /api/users/me`, com recuperação elegível por `POST /api/auth/refresh`. O navegador transporta os cookies de acesso/refresh definidos pelo backend; o frontend não armazena nem lê esses tokens. Emissão, rotação, expiração e atributos dos cookies pertencem à API.
+- `SessionService` coordena operações com Web Locks e eventos entre abas por BroadcastChannel quando disponíveis. Sem Web Locks, não envia refresh automaticamente. Leituras elegíveis podem ser repetidas uma vez; escritas exigem nova ação. `429` nos endpoints de autenticação usa `Retry-After` válido para bloquear novas tentativas locais por endpoint.
+- `public/_headers`, copiado como asset, declara CSP, `nosniff`, `X-Frame-Options`, referrer e permissões. A CSP permite scripts somente da própria origem e conexões com a API oficial; fontes/estilos do Google e estilos inline permanecem permitidos. O tema usa `/theme-init.js` externo e o build desativa `inlineCritical`. Essas configurações devem acompanhar os arquivos publicados; sua existência no repositório não comprova os headers efetivamente servidos.
 
 As responsabilidades dos interceptors e da sessão estão detalhadas em [Arquitetura](../architecture/README.md).
 

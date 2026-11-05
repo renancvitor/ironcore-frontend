@@ -5,7 +5,7 @@ Este documento descreve a organização principal do IronCore Frontend.
 O projeto usa Angular standalone e mantém responsabilidades transversais e visuais separadas:
 
 - `core`: autenticação, tema, HTTP, interceptor e guard globais.
-- `features`: páginas e fluxos funcionais de autenticação, avaliação corporal, exercícios, planejamento de treinos, início e perfil.
+- `features`: páginas e fluxos funcionais de autenticação, avaliação corporal, exercícios, planejamento e sessões de treino, início e perfil.
 - `shared`: componentes reutilizáveis de interação e feedback.
 - `layout`: application shell e estrutura visual persistente.
 
@@ -35,11 +35,15 @@ docs
 │   └── README.md
 ├── card-resume
 │   └── README.md
+├── deploy
+│   └── README.md
 ├── exercises
 │   └── README.md
 ├── project-structure
 │   └── README.md
 ├── workout-planning
+│   └── README.md
+├── workout-session
 │   └── README.md
 └── releases
     ├── README.md
@@ -51,8 +55,14 @@ docs
     │    └── README.md
     ├── v0.4.0
     │    └── README.md
-    └── v1.0.0
-        └── README.md
+    ├── v1.0.0
+    │    └── README.md
+    ├── v1.0.1
+    │    └── README.md
+    ├── v1.1.0
+    │    └── README.md
+    └── v1.2.0
+         └── README.md
 ```
 
 ## Código Principal
@@ -105,6 +115,7 @@ src/app
 │   │       ├── body-metrics-latest-card
 │   │       ├── body-metrics-progress-card
 │   │       ├── in-progress-workouts-card
+│   │       ├── today-workouts-card
 │   │       └── summary-card
 │   ├── workout-planning
 │   │   ├── workout-planning.models.ts
@@ -119,6 +130,10 @@ src/app
 │   │   ├── create
 │   │   ├── detail
 │   │   └── form
+│   ├── workout-sessions
+│   │   ├── detail
+│   │   ├── history
+│   │   └── progress
 │   └── profile
 │       └── change-password
 ├── layout
@@ -201,6 +216,10 @@ src/app
 │   │   ├── create
 │   │   ├── detail
 │   │   └── form
+│   ├── workout-sessions
+│   │   ├── detail
+│   │   ├── history
+│   │   └── progress
 │   └── profile
 ├── layout
 │   ├── app-shell
@@ -237,7 +256,10 @@ Os testes de `features/workout-planning` ficam próximos a serviço, formulário
 - Serviço, modelos, formulários, catálogo, criação e detalhe do planejamento permanecem em `features/workout-planning`. O detalhe compõe a API pública de seleção de `ExerciseCatalogComponent`, com estado de filtros local. Lifecycle e gravação de atividades pertencem ao planejamento. Contratos e permissões estão em [Workout Planning](../workout-planning/README.md).
 - `InProgressWorkoutsCardComponent` consulta `WorkoutPlanningService` com estados independentes, preserva a ordem recebida e abre o detalhe com `from=home`. Não cria serviço ou store exclusivo da Home.
 - O AppShell fornece a configuração compartilhada do paginator em português. `_actions.scss` concentra a disposição mobile de ações, conforme [Disposição de ações no mobile](../architecture/mobile-actions.md).
-- As rotas públicas são `/login` e `/first-access`. A área protegida monta o application shell e contém início, perfil, alteração de senha, avaliação corporal, `/exercises`, `/exercises/:id`, `/workout-planning`, `/workout-planning/create` e `/workout-planning/:id`, com componentes carregados sob demanda.
+- `features/workout-sessions` concentra modelos de sessão/analytics, serviço HTTP, início/recuperação, formulários de execução, editor com reconciliação/guards, histórico e evolução. O catálogo de exercícios é reutilizado na seleção da evolução; utilitários de período ficam em `shared/utils`, e o limite de senha em `shared/validators`.
+- `core/auth/session.service.ts` coordena recuperação e mutações de autenticação; `core/interceptors` contém autenticação, CSRF e rate limit. `public/_headers` e `public/theme-init.js` sustentam a política de conteúdo e inicialização do tema.
+- `TodayWorkoutsCardComponent` compõe APIs públicas de planejamento e sessões; não cria store global da Home.
+- As rotas públicas são `/login` e `/first-access`. A área protegida monta o application shell e contém início, perfil, alteração de senha, avaliação corporal, `/exercises`, `/exercises/:id`, `/workout-planning`, `/workout-planning/create` e `/workout-planning/:id`, além de `/workout-sessions`, `/workout-sessions/history`, `/workout-sessions/progress` e `/workout-sessions/:id`, com componentes carregados sob demanda.
 - [Home e Cards-Resumo](../card-resume/README.md) reúne o comportamento entregue e identifica separadamente as diretrizes de produto para integrações futuras. Releases preservam registros históricos próprios.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

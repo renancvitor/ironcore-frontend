@@ -2,7 +2,7 @@
 
 ## Escopo Implementado
 
-O Exercise Catalog permite consultar o catálogo global de exercícios, aplicar busca e filtros combinados, percorrer resultados paginados e abrir o detalhe com classificações e músculos-alvo. A feature está em `src/app/features/exercise`, foi entregue na `v0.4.0` e, na `v1.0.0`, também é reutilizada na seleção de exercícios do Workout Planning.
+O Exercise Catalog permite consultar o catálogo global de exercícios, aplicar busca e filtros combinados, percorrer resultados paginados e abrir o detalhe com classificações e músculos-alvo. A feature está em `src/app/features/exercise`, foi entregue na `v0.4.0` e, na `v1.0.0`, também é reutilizada na seleção de exercícios do Workout Planning. Na implementação atual, a evolução de [Workout Session](../workout-session/README.md) reutiliza o catálogo em seleção única, com contexto de filtros local à página.
 
 O catálogo é controlado pelo sistema. A interface consome consultas autenticadas; a manutenção de exercícios, classificações e associações musculares pertence ao backend, conforme sua [documentação do catálogo](https://github.com/renancvitor/ironcore-backend/blob/main/docs/exercises/README.md). Não há operações de cadastro, edição ou exclusão nesta feature.
 

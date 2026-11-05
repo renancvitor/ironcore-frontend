@@ -6,13 +6,16 @@ Cada release possui seu próprio `README.md` para facilitar navegação direta p
 
 ## Índice
 
-| Release  | Documento                                                     | Status                 |
-| -------- | ------------------------------------------------------------- | ---------------------- |
-| `v1.0.0` | [Primeira versão estável do IronCore Frontend](./v1.0.0/README.md) | Estável — documentação preparada |
-| `v0.4.0` | [Exercise Catalog](./v0.4.0/README.md)                        | Histórico |
-| `v0.3.0` | [Body Metrics](./v0.3.0/README.md)                            | Histórico              |
-| `v0.2.0` | [Autenticação, sessão e conta](./v0.2.0/README.md)            | Histórico              |
-| `v0.1.0` | [Foundation técnica e visual do frontend](./v0.1.0/README.md) | Histórico              |
+| Release  | Documento                                                               | Status                                      |
+| -------- | ----------------------------------------------------------------------- | ------------------------------------------- |
+| `v1.2.0` | [Workout Session, experiência e sessão autenticada](./v1.2.0/README.md) | Preparação — versão proposta, não publicada |
+| `v1.1.0` | [Início da semana configurável](./v1.1.0/README.md)                     | Estável — publicada em 24/10/2026           |
+| `v1.0.1` | [Integração segura e deploy em produção](./v1.0.1/README.md)            | Estável — publicada em 22/10/2026           |
+| `v1.0.0` | [Primeira versão estável do IronCore Frontend](./v1.0.0/README.md)      | Estável — publicada em 18/10/2026           |
+| `v0.4.0` | [Exercise Catalog](./v0.4.0/README.md)                                  | Histórico                                   |
+| `v0.3.0` | [Body Metrics](./v0.3.0/README.md)                                      | Histórico                                   |
+| `v0.2.0` | [Autenticação, sessão e conta](./v0.2.0/README.md)                      | Histórico                                   |
+| `v0.1.0` | [Foundation técnica e visual do frontend](./v0.1.0/README.md)           | Histórico                                   |
 
 ## Regra de Manutenção
 
