@@ -4,7 +4,7 @@
 
 O IronCore Frontend é uma aplicação Angular standalone. O bootstrap ocorre em `src/main.ts`; `app.config.ts` concentra os providers globais; e `AppComponent` hospeda o `router-outlet` e o fundo visual compartilhado.
 
-A aplicação separa infraestrutura transversal em `core`, elementos reutilizáveis em `shared`, composição visual persistente em `layout` e fluxos funcionais em `features`. As features atualmente entregues pertencem aos contextos de autenticação, avaliação corporal, exercícios, planejamento de treinos, início e perfil.
+A aplicação separa infraestrutura transversal em `core`, elementos reutilizáveis em `shared`, composição visual persistente em `layout` e fluxos funcionais em `features`. As features atualmente entregues pertencem aos contextos de autenticação, avaliação corporal, exercícios, planejamento e sessões de treino, início e perfil.
 
 ## Bootstrap e Providers
 
@@ -18,21 +18,22 @@ A aplicação separa infraestrutura transversal em `core`, elementos reutilizáv
 
 ## Camadas e Responsabilidades
 
-| Área                    | Responsabilidade atual                                                                         |
-| ----------------------- | ---------------------------------------------------------------------------------------------- |
-| `core/auth`             | Contratos de autenticação, login, logout, restauração de sessão e estado reativo em memória.   |
-| `core/http`             | Provider do `HttpClient` e token `API_BASE_URL`.                                               |
-| `core/interceptors`     | Inclusão de cookies nas chamadas à API e limpeza de sessão em respostas `401`.                 |
-| `core/guards`           | Guard reutilizável aplicado à área autenticada.                                                |
-| `core/theme`            | Estado e persistência da preferência de tema.                                                  |
-| `shared/components`     | Componentes de interação e feedback sem regra de domínio.                                      |
-| `layout`                | Application shell, header e sidebar.                                                           |
-| `features/auth`         | Páginas e fluxos de login e primeiro acesso.                                                   |
-| `features/body-metrics` | Contratos, consultas, formulários, exclusão, evolução e comparativo de avaliações corporais.   |
-| `features/exercise`     | Contratos e consultas do catálogo, filtros, contexto de navegação e detalhe com músculos-alvo. |
-| `features/workout-planning` | Contratos, catálogo, formulários, composição de ciclos/dias/atividades e lifecycle. |
-| `features/home`         | Composição dos resumos de última avaliação, evolução corporal e planejamento de treinos.      |
-| `features/profile`      | Perfil, dados de `Person`, nickname e alteração de senha.                                      |
+| Área                        | Responsabilidade atual                                                                         |
+| --------------------------- | ---------------------------------------------------------------------------------------------- |
+| `core/auth`                 | Contratos de autenticação, login, logout, restauração de sessão e estado reativo em memória.   |
+| `core/http`                 | Provider do `HttpClient` e token `API_BASE_URL`.                                               |
+| `core/interceptors`         | Cookies, recuperação após `401`, CSRF e limitação de tentativas em `429`.                      |
+| `core/guards`               | Guard reutilizável aplicado à área autenticada.                                                |
+| `core/theme`                | Estado e persistência da preferência de tema.                                                  |
+| `shared/components`         | Componentes de interação e feedback sem regra de domínio.                                      |
+| `layout`                    | Application shell, header e sidebar.                                                           |
+| `features/auth`             | Páginas e fluxos de login e primeiro acesso.                                                   |
+| `features/body-metrics`     | Contratos, consultas, formulários, exclusão, evolução e comparativo de avaliações corporais.   |
+| `features/exercise`         | Contratos e consultas do catálogo, filtros, contexto de navegação e detalhe com músculos-alvo. |
+| `features/workout-planning` | Contratos, catálogo, formulários, composição de ciclos/dias/atividades e lifecycle.            |
+| `features/workout-sessions` | Execução, recuperação, edição, histórico e evolução por exercício.                             |
+| `features/home`             | Composição dos resumos de última avaliação, evolução corporal e planejamento de treinos.       |
+| `features/profile`          | Perfil, dados de `Person`, nickname e alteração de senha.                                      |
 
 Uma feature pode usar APIs públicas de `core` e elementos de `shared`, mas não deve acessar detalhes internos de outra feature. `shared` não deve depender de features e `core` não deve depender de `features` ou `layout`.
 
@@ -40,18 +41,18 @@ A composição atual da Home utiliza a API pública de apresentação de `BodyMe
 
 O card de evolução usa `BodyMetricsService.getChanges` e `defaultProgressPeriod`, com estado local e uma consulta de `/progress/changes`. Ele seleciona peso e composição corporal da resposta, preserva diferenças e datas e oferece loading, empty state e retry. Não há outro serviço ou store para a Home, nem duplicação da página completa de evolução. Conteúdo, estados e decisões de produto estão em [Home e Cards-Resumo](../card-resume/README.md).
 
-O card de planejamento usa a API pública de `WorkoutPlanningService`, com consulta e estados próprios. Busca até três ciclos em andamento e consulta não iniciados apenas se a primeira resposta estiver vazia. Os três summaries são independentes, sem store ou estado de carregamento global da Home.
+O card de planejamento usa a API pública de `WorkoutPlanningService`, com consulta e estados próprios. Busca até três ciclos em andamento e consulta não iniciados apenas se a primeira resposta estiver vazia. Os resumos são independentes, sem store ou estado de carregamento global da Home. `TodayWorkoutsCardComponent` acrescenta treinos do dia e sessão em andamento, consultando as APIs públicas de planejamento e sessões.
 
 ## Comunicação HTTP e Environments
 
-`provideCoreHttp()` registra o `HttpClient` com `authInterceptor` e `csrfInterceptor` e fornece `API_BASE_URL` a partir do environment ativo. Serviços devem receber esse token; URLs da API não devem ser repetidas nas features.
+`provideCoreHttp()` registra o `HttpClient` com `rateLimitInterceptor`, `authInterceptor` e `csrfInterceptor`, nessa ordem, e fornece `API_BASE_URL` a partir do environment ativo. Serviços devem receber esse token; URLs da API não devem ser repetidas nas features.
 
-O interceptor identifica chamadas para a API por origem e caminho. Somente essas chamadas recebem `withCredentials: true`; chamadas externas permanecem inalteradas. Em uma resposta `401`, o estado local é limpo e o erro continua no fluxo RxJS. Para chamadas que não sejam login, logout, primeiro acesso ou restauração de sessão, também há navegação para `/login`.
+O interceptor identifica chamadas para a API por origem e caminho. Somente essas chamadas recebem `withCredentials: true`; chamadas externas permanecem inalteradas. Respostas `401` elegíveis acionam `SessionService.recover()`; a limpeza e o redirecionamento dependem do resultado da recuperação, conforme o fluxo abaixo.
 
-| Arquivo                                       | Uso                                     | `apiBaseUrl`                                  |
-| --------------------------------------------- | --------------------------------------- | --------------------------------------------- |
+| Arquivo                                       | Uso                                     | `apiBaseUrl`                  |
+| --------------------------------------------- | --------------------------------------- | ----------------------------- |
 | `src/environments/environment.ts`             | configuração padrão e build de produção | `https://api.ironcore.dev.br` |
-| `src/environments/environment.development.ts` | `ng serve` e build `development`        | `http://localhost:8080`                       |
+| `src/environments/environment.development.ts` | `ng serve` e build `development`        | `http://localhost:8080`       |
 
 `angular.json` substitui o environment padrão pelo de desenvolvimento nessa configuração. Arquivos de environment não devem conter segredos.
 
@@ -65,16 +66,39 @@ O frontend está publicado no Cloudflare Pages em `https://ironcore.dev.br`, int
 
 - `POST /api/auth/login`;
 - `GET /api/users/me`, para restaurar a sessão por cookie;
+- `POST /api/auth/refresh`, pela recuperação coordenada;
 - `POST /api/auth/logout`.
 - `POST /api/users/change-initial-password`.
 
-`AuthStateService` guarda apenas o usuário autenticado em um `signal`, com `userId`, e-mail, nickname e o indicador `mustChangePassword`. O token eventualmente retornado no login não é persistido nem usado como credencial pelo frontend; a sessão usa o cookie enviado pelo navegador com `withCredentials`. Ao recarregar a página, a sessão é reconstruída por `GET /api/users/me`. Um `401` nessa restauração representa ausência de sessão e não interrompe a inicialização.
+`AuthStateService` guarda apenas o usuário autenticado em um `signal`, com `userId`, e-mail, nickname e o indicador `mustChangePassword`. Os contratos de login/refresh retornam `expiresAt`, sem token no corpo; esse campo não alimenta contadores ou renovação antecipada no cliente; a sessão usa o cookie enviado pelo navegador com `withCredentials`. Ao recarregar a página, a sessão é reconstruída por `GET /api/users/me`. Um `401` nessa restauração representa ausência de sessão e não interrompe a inicialização.
 
 `authGuard` permite navegação somente quando há usuário no estado e, caso contrário, cria uma `UrlTree` para `/login`. Ele está aplicado à rota que monta a área autenticada. Como a restauração ocorre no inicializador, uma entrada direta nessa área é liberada quando `GET /api/users/me` restabelece uma sessão válida antes da avaliação do guard.
 
+### Recuperação e Coordenação de Sessão
+
+`SessionService` centraliza recuperação e serializa login, logout, primeiro acesso e alteração de senha com Web Locks (`navigator.locks`) por API. `recover()` compartilha a requisição pendente na aba. Dentro do lock, consulta `GET /api/users/me`; somente após `401`, com Web Locks disponível e sem refresh local incerto, envia `POST /api/auth/refresh` e consulta `/me` novamente. Assim, outra aba pode aproveitar cookies já renovados sem novo refresh. Sem Web Locks, a sondagem continua disponível, mas não há envio automático de refresh.
+
+`authInterceptor` envia credenciais apenas à API e exclui login, refresh, logout, troca inicial, obtenção de CSRF e requisições com `SKIP_SESSION_RECOVERY` da recuperação recursiva. Após recuperação, repete uma vez apenas `GET`/`HEAD`. Para escritas, devolve feedback para o usuário repetir conscientemente a operação, sem reenviar o corpo. Um `401` definitivo pode limpar o estado e levar ao login; a restauração inicial não redireciona por si só. Falhas de rede/servidor não equivalem automaticamente a expiração.
+
+Um refresh com resultado incerto (`0`/`5xx`) é sinalizado para evitar repetição local cega. `BroadcastChannel`, quando disponível, comunica incertezas/renovações e eventos `changed`/`logout`, sem transmitir tokens. `changed` invalida CSRF e estado, consulta novamente o usuário e recarrega a página se uma conta anteriormente conhecida mudou; `logout` limpa e navega para login. Revisões de sessão impedem aceitar respostas antigas após mudança de autenticação. Essas proteções não sincronizam dados de domínio entre abas.
+
+O logout só limpa o estado local e notifica as demais abas após sucesso; falhas são apresentadas pelo header. Primeiro acesso bem-sucedido limpa o estado e retorna ao login. A alteração normal de senha usa `ProfileService` e `SessionService.mutate(..., 'changed')`; em `401`, verifica/recupera a sessão e devolve o erro, sem repetir a alteração. O formulário retorna ao perfil após sucesso. Primeiro acesso e alteração normal antecipam o limite de 72 bytes UTF-8 para nova senha e confirmação, além das validações já existentes; não é um limite de 72 caracteres.
+
+### CSRF, Cookies e Limitação de Tentativas
+
+`CsrfService` compartilha somente a obtenção de token em andamento e invalida esse contexto após mutações de autenticação e eventos entre abas. Não mantém um token permanente em storage. `csrfInterceptor` obtém o token antes de escritas, incluindo login, refresh e logout. O backend emite os cookies e define atributos, rotação, expiração e revogação; Angular não lê cookies `HttpOnly` nem controla a validade dos tokens. Ownership e autorização continuam na API.
+
+`rateLimitInterceptor` trata `429` de POSTs de login, refresh, troca inicial e alteração normal de senha. Com `Retry-After` válido (segundos ou data HTTP futura), guarda um prazo em memória por endpoint e impede novas tentativas locais até esse prazo, apresentando a mensagem correspondente. Sem header válido, preserva o erro recebido. Não há retry automático, contador visual ou aviso antecipado de expiração de sessão.
+
+### Conteúdo e Headers de Segurança
+
+[`public/_headers`](../../public/_headers) declara CSP para o Pages: scripts da própria origem, conexão com a API de produção, fontes/estilos do Google, bloqueio de objetos, frames e formulários externos. Também declara `nosniff`, `DENY`, política de referrer e restrições de câmera, microfone e geolocalização. `style-src` ainda permite `unsafe-inline`; não se trata de eliminar todo conteúdo inline.
+
+O tema inicial usa o arquivo externo [`public/theme-init.js`](../../public/theme-init.js), antes do bootstrap. A otimização de produção mantém scripts/minificação e desativa `inlineCritical`, evitando injeção de script de carregamento de CSS incompatível com `script-src 'self'`. Dados e relatos seguem bindings/interpolação Angular, sem introduzir renderização HTML de conteúdo do usuário ou bypass de sanitização. CSP é proteção complementar contra XSS; sua aplicação em produção depende do host. A revisão documental não verifica headers servidos ao vivo.
+
 ## Routing e Application Shell
 
-O routing possui as rotas públicas `/login` e `/first-access`. A rota raiz, composta por `AppShellComponent` e protegida por `authGuard`, contém início, `/profile`, `/change-password` e as rotas de avaliação corporal, exercícios e planejamento de treinos. Os componentes de rota usam `loadComponent` para carregamento sob demanda. O shell organiza header, sidebar, área de conteúdo com `.ic-container` e um `router-outlet` interno. Header e sidebar oferecem acesso ao perfil, histórico corporal, catálogo de exercícios e planejamento de treinos; a sidebar também oferece evolução. O header oferece logout e preferência de tema. No mobile, os atalhos de histórico, exercícios e planejamento do header ficam ocultos, mantendo o acesso pela sidebar.
+O routing possui as rotas públicas `/login` e `/first-access`. A rota raiz, composta por `AppShellComponent` e protegida por `authGuard`, contém início, `/profile`, `/change-password` e as rotas de avaliação corporal, exercícios, planejamento e sessões de treino. Os componentes de rota usam `loadComponent` para carregamento sob demanda. O shell organiza header, sidebar, área de conteúdo com `.ic-container` e um `router-outlet` interno. Header e sidebar oferecem acesso ao perfil, histórico corporal, catálogo de exercícios e planejamento de treinos; a sidebar também oferece evolução. O header oferece logout e preferência de tema. No mobile, os atalhos de histórico, exercícios e planejamento do header ficam ocultos, mantendo o acesso pela sidebar.
 
 A avaliação corporal possui `/body-metrics`, `/body-metrics/latest`, `/body-metrics/progress`, `/body-metrics/create` e `/body-metrics/:id`, com rotas estáticas antes de `:id`. A edição ocorre dentro do detalhe. `bodyMetricsHistoryGuard` impede saída do histórico enquanto há exclusão pendente. O provider de `MatPaginatorIntl` em português pertence ao AppShell e é compartilhado com suas páginas carregadas sob demanda.
 
@@ -88,11 +112,11 @@ Login envia `POST /api/auth/login`, atualiza o estado de sessão e navega para o
 
 O perfil consome o `User` mantido em `AuthStateService` e busca `Person` por `GET /api/users/me/person`. A separação é intencional: e-mail e nickname pertencem a `User`; nome, sexo e data de nascimento pertencem a `Person`. A alteração de nickname usa `PUT /api/users/me/change-nickname` e atualiza o estado de sessão. A edição dos dados pessoais usa `PATCH /api/users/me/person`. A alteração normal de senha, distinta do primeiro acesso, usa `POST /api/users/me/change-password`.
 
-O logout é acionado no header por `POST /api/auth/logout`. Após sucesso, o estado em memória é limpo e a aplicação navega para `/login`; o frontend não manipula cookies `HttpOnly` diretamente. Se o logout retornar `401`, a navegação para login também ocorre; outros erros mantêm o usuário na tela e exibem feedback.
+O logout é acionado no header por `POST /api/auth/logout`. Após sucesso, o estado em memória é limpo e a aplicação navega para `/login`; o frontend não manipula cookies `HttpOnly` diretamente. Falhas, inclusive `401`, exibem feedback no header; esse endpoint não aciona recuperação automática nem garante limpeza local em erro.
 
 ## Tema, Responsividade e Componentes Compartilhados
 
-Os tokens e temas SCSS centralizam paleta, cores semânticas, espaçamentos, bordas, foco e tipografia. Há temas claro (`data-theme='light'`) e escuro, com integração ao Angular Material. `ThemeService` oferece preferências `light`, `dark` e `system`, persistidas no `localStorage` pela chave `Ironcore-theme`; o header permite alterná-las. Sem escolha explícita de claro/escuro, a aplicação acompanha `prefers-color-scheme`, usando escuro como fallback quando essa informação não está disponível. O script em `index.html` aplica o tema antes do bootstrap e permanece alinhado à inicialização do serviço. Mudanças do sistema são acompanhadas enquanto a preferência é `system`.
+Os tokens e temas SCSS centralizam paleta, cores semânticas, espaçamentos, bordas, foco e tipografia. Há temas claro (`data-theme='light'`) e escuro, com integração ao Angular Material. `ThemeService` oferece preferências `light`, `dark` e `system`, persistidas no `localStorage` pela chave `Ironcore-theme`; o header permite alterná-las. Sem escolha explícita de claro/escuro, a aplicação acompanha `prefers-color-scheme`, usando escuro como fallback quando essa informação não está disponível. O script externo `/theme-init.js`, referenciado por `index.html`, aplica o tema antes do bootstrap e permanece alinhado à inicialização do serviço. Mudanças do sistema são acompanhadas enquanto a preferência é `system`.
 
 A estratégia responsiva centraliza os breakpoints mobile (`até 600px`), tablet (`601px–960px`) e desktop (`a partir de 961px`), além do container com largura máxima de `1200px`. Os mixins de `_actions.scss` organizam cabeçalhos, grupos de ícones e rodapés de formulário no mobile, conforme [Disposição de ações no mobile](mobile-actions.md). Ícones de ações preservam `aria-label` e tooltips; gráficos e tabelas corporais permitem rolagem horizontal quando necessária.
 
@@ -128,10 +152,16 @@ As consultas auxiliares têm carregamento e recuperação próprios. No detalhe,
 
 Os objetivos ativos vêm da API. A seleção de exercícios reutiliza o catálogo e prepara inclusões individuais com prescrição híbrida, sem exclusividade artificial por tipo de atividade. Após mutações de dias e atividades, uma nova consulta apresenta a composição e as posições normalizadas pelo backend. Reorder envia somente a posição desejada e, para dias, o `weekDay` de destino.
 
-A UI reflete permissões por status: edição e composição em `NOT_STARTED`/`IN_PROGRESS`, estados terminais somente para consulta e exclusão de ciclo apenas em `NOT_STARTED`. O backend é autoridade para ownership, pré-condições de início e transições; a interface apresenta suas recusas. Não há execução de sessões ou cálculo de progresso do ciclo. Contratos, feedbacks e decisões estão em [Workout Planning](../workout-planning/README.md).
+A UI reflete permissões por status: edição e composição em `NOT_STARTED`/`IN_PROGRESS`, estados terminais somente para consulta e exclusão de ciclo apenas em `NOT_STARTED`. O backend é autoridade para ownership, pré-condições de início e transições; a interface apresenta suas recusas. A execução é responsabilidade separada de `features/workout-sessions`; não há cálculo de progresso percentual do ciclo. Contratos, feedbacks e decisões estão em [Workout Planning](../workout-planning/README.md).
+
+## Estado do Workout Session
+
+`WorkoutSessionsService` centraliza HTTP e analytics. `WorkoutSessionEditorState`, fornecido pelo detalhe, preserva rascunhos em memória e reconcilia registros confirmados; `WorkoutSessionNavigation` coordena guards de entrada/saída e descarte. `WorkoutSessionHistoryState` mantém filtros e paginação em memória. A evolução reutiliza o catálogo em seleção única e utilitários de período em `shared/utils/progress-period.utils.ts`, também usados por Body Metrics.
+
+As rotas `/workout-sessions`, `/workout-sessions/history`, `/workout-sessions/progress` e `/workout-sessions/:id` ficam sob o shell. Histórico e evolução precedem `:id`; o detalhe possui guards e `runGuardsAndResolvers: 'always'`. Sidebar e catálogo de ciclos oferecem acessos a sessão, histórico e evolução; o destaque da sidebar acompanha a origem contextual do detalhe. Contratos, execução parcial, modos, edição posterior e navegação estão em [Workout Session](../workout-session/README.md).
 
 ## Recortes Atuais
 
-Execução ou histórico de sessões de treino, geração por IA/agent, métricas de aderência e progresso percentual de ciclos permanecem fora do escopo implementado. O deploy em produção e a publicação automática foram concluídos e validados em outubro de 2026, em registro posterior à release v1.0.0. Os três cards da Home usam dados reais do backend. Não há sincronização entre abas ou confirmação de alterações não salvas; formulários corporais e de planejamento não possuem guard de saída próprio. A regra de troca obrigatória de senha é direcionada pela resposta do login; o `authGuard` verifica somente a existência de usuário no estado local.
+Geração por IA/agent, métricas de aderência e progresso percentual de ciclos permanecem planejados. Os quatro cards da Home usam dados reais. A coordenação de autenticação entre abas não constitui atualização em tempo real de avaliações, planejamento ou execução. Formulários corporais e de planejamento não possuem guard próprio de alterações não salvas; o editor de sessão possui essa proteção. A regra de troca obrigatória de senha é direcionada pela resposta do login; o `authGuard` verifica a existência de usuário no estado local.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

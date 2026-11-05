@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Este documento reúne as decisões de produto, UX e composição dos cards-resumo da Home do IronCore na `v1.0.0`, incluindo a integração final de Workout Planning. Diretrizes para execução de sessões permanecem identificadas como futuras.
+Este documento reúne as decisões de produto, UX e composição dos cards-resumo da Home do IronCore no estado atual da `main`, incluindo Workout Planning e os atalhos de Workout Session.
 
 A Home apresenta informações recentes, o estado atual do usuário e caminhos úteis para as features. Histórico, cadastro e detalhes continuam nas páginas responsáveis por esses fluxos.
 
@@ -24,13 +24,14 @@ O backend define indicadores corporais, estado dos ciclos e regras de execução
 
 ## Cards da Home
 
-A estrutura atual contém três cards:
+A estrutura atual contém quatro cards:
 
-| Card                      | Estado na `v1.0.0`                           | Ação                                          |
-| ------------------------- | -------------------------------------------- | --------------------------------------------- |
-| Última avaliação corporal | Integrado ao backend.                        | `Ver detalhes`, quando existe avaliação.      |
-| Planejamento de treinos   | Integrado ao backend.                        | Links individuais e `Ver todos`.              |
-| Evolução corporal         | Integrado ao backend.                        | `Ver evolução completa`, em todos os estados. |
+| Card                      | Estado atual                                       | Ação                                          |
+| ------------------------- | -------------------------------------------------- | --------------------------------------------- |
+| Última avaliação corporal | Integrado ao backend.                              | `Ver detalhes`, quando existe avaliação.      |
+| Planejamento de treinos   | Integrado ao backend.                              | Links individuais e `Ver todos`.              |
+| Evolução corporal         | Integrado ao backend.                              | `Ver evolução completa`, em todos os estados. |
+| Treinos do dia            | Integrado ao planejamento e à sessão em andamento. | Iniciar/continuar sessão.                     |
 
 ### Última Avaliação Corporal
 
@@ -101,7 +102,7 @@ Header e sidebar também oferecem `Planejamento de treinos`. No mobile, o atalho
 
 ## Composição e Responsividade
 
-A Home compõe os três cards com `SummaryCardComponent`, que compartilha título, conteúdo e rodapé de ações. A estrutura atual usa duas colunas no desktop e uma coluna nos breakpoints de tablet e mobile, com espaçamento definido pelos tokens existentes.
+A Home compõe os quatro cards com `SummaryCardComponent`, que compartilha título, conteúdo e rodapé de ações. A estrutura atual usa duas colunas no desktop e uma coluna nos breakpoints de tablet e mobile, com espaçamento definido pelos tokens existentes.
 
 As ações do rodapé seguem alinhamento à direita e quebra conforme o espaço disponível. Cabeçalhos, ações e formulários seguem [Disposição de ações no mobile](../architecture/mobile-actions.md).
 
@@ -109,45 +110,27 @@ Não há carrossel automático, autoplay ou sistema de widgets. Novos componente
 
 ## Estados e Integração
 
-Loading, ausência de dados e erro acompanham cada consulta. Os três cards carregam independentemente e fazem novas consultas ao visitar a Home novamente; não há um loading ou erro global para todos. Evolução e planejamento cancelam suas requisições quando destruídos.
+Loading, ausência de dados e erro acompanham cada consulta. Os quatro cards carregam independentemente e fazem novas consultas ao visitar a Home novamente; não há um loading ou erro global para todos. Evolução e planejamento cancelam suas requisições quando destruídos.
 
 Um estado vazio representa ausência real de dados, incluindo a ausência de ciclos nos dois status consultados pelo planejamento. As estratégias de feedback específicas da última avaliação permanecem sob responsabilidade da feature corporal.
 
 Os cards usam os componentes compartilhados de loading e empty state, o locale `pt-BR` e as unidades dos dados apresentados. Não há dados fictícios, store global exclusivo da Home ou outra página de evolução.
 
+## Treinos do Dia e Sessão em Andamento
+
+`TodayWorkoutsCardComponent` usa `WorkoutPlanningService`, `WorkoutSessionsService` e uma instância local de `WorkoutSessionStartService`. Consulta todas as páginas de ciclos `IN_PROGRESS` (20 por página), elimina IDs repetidos e carrega seus detalhes com concorrência limitada a quatro. Ordena ciclos por ID e dias por `sortOrder`, apresentando todos os dias cujo `weekDay` corresponde ao dia local do navegador. Não escolhe um único ciclo principal, não seleciona treinos atrasados e não oculta automaticamente treinos já realizados.
+
+O dia é atualizado à meia-noite local e ao retomar a Home. A configuração `weekStartsOn` organiza a apresentação semanal do ciclo, sem mudar o dia de calendário usado neste card.
+
+A sessão em andamento é consultada separadamente por `/api/users/me/workout-sessions/in-progress`. Quando existe, oferece continuidade mesmo que pertença a outro dia ou ciclo. Durante consulta, falha, abertura ou existência de sessão ativa, o início de outra sessão fica bloqueado. Dias sem atividades também não podem iniciar. Falhas de planejamento e sessão têm estados e nova consulta próprios; falha de sessão não é apresentada como inexistência.
+
+Ao receber foco ou voltar à visibilidade, o card atualiza o dia e reconsulta a sessão ativa, sem duplicar requisição pendente. Esse retorno não recarrega automaticamente toda a composição dos ciclos. Resultado incerto de abertura exige `Verificar sessão`; o serviço consulta o backend antes de permitir nova tentativa e oferece continuidade quando encontra um registro. O sucesso abre `/workout-sessions/:id`. O planejamento completo continua acessível pela navegação global e pelo seu próprio card-resumo.
+
+O card mostra treinos previstos e estado confirmado da sessão. Não representa aderência, sequência obrigatória, volume executado ou conclusão inferida. O fluxo completo e os estados de recuperação estão em [Workout Session](../workout-session/README.md).
+
 ## Diretrizes para Cards Futuros
 
-As diretrizes abaixo preservam as decisões de produto para execução de treinos. Elas não descrevem funcionalidades entregues na `v1.0.0` nem novos requisitos para seu fechamento.
-
-### Treino de Hoje e Próximos Treinos
-
-A organização em `WorkoutCycle`, `WorkoutDay` e `WeekDay` representa planejamento. Ela não determina, por si só, a execução de um treino ou qual deve ser realizado em seguida.
-
-Múltiplos ciclos podem conter atividades no mesmo dia da semana. Sem histórico de execução, um dia planejado anterior pode ter sido cumprido ou estar pendente. O frontend não deve resolver essa seleção por uma regra temporária.
-
-Um card de treino de hoje ou próximos treinos depende de definição no backend sobre:
-
-- seleção entre múltiplos ciclos em andamento;
-- relação entre dia da semana e calendário de execução;
-- tratamento de treinos atrasados;
-- múltiplos treinos previstos para a mesma data;
-- prioridade e sessões já executadas.
-
-A nomenclatura pode precisar ser plural. Até existir uma regra real, não apresentar um card com `Nenhum próximo treino disponível.`, pois isso confundiria ausência de dados com ausência da funcionalidade.
-
-### Sessões de Treino
-
-A direção de produto prevê registros de execução, referidos como `workout_session_logs` nos documentos anteriores. Esse nome representa planejamento, não um contrato frontend entregue.
-
-Os registros poderão incluir data, início, término, status, atividades, séries, cargas, repetições, duração, esforço percebido, energia, dor e observações. Volume e aderência dependem desses dados reais.
-
-O registro deve ter pouco atrito. O fluxo pretendido é `Iniciar treino`, executar e `Concluir treino`, com captura progressiva dos detalhes. Carga, repetições, RIR, esforço, energia, dor e observações podem ser opcionais conforme o contrato e as decisões da feature.
-
-### Atividade Recente e Resumo de Sessões
-
-Com registros reais de execução, poderão ser avaliados cards de atividade recente, resumo de um período e frequência. As informações possíveis incluem última sessão, duração, status, ciclo associado, quantidade de treinos, tempo treinado, sequência e aderência.
-
-Esses cards dependem de execução registrada. A existência de ciclos planejados não sustenta números de sessões concluídas, volume real ou aderência.
+Cards de atividade recente, frequência ou aderência ainda não estão implementados. Sua eventual criação deve usar execução real e contratos próprios, sem transformar ciclos planejados em números de treinos concluídos. Geração por IA e campos estruturados de RIR, energia ou dor não fazem parte dos cards atuais.
 
 ## Testes
 
@@ -156,5 +139,7 @@ Os testes atuais verificam a composição da Home, o resumo da última avaliaç�
 Os testes de integração da página de evolução cobrem o retorno a partir da Home e do histórico, acesso direto, recarregamento, origem inválida e acesso pela sidebar. Os comandos de validação estão em [Avaliação corporal](../body-metrics/README.md#testes-e-validação-local).
 
 O card de planejamento possui testes de prioridade, fallback, limite de três, ordem da API, indicação de mais ciclos, links, tempo desde `startDate`, loading, erro/retry, vazio e cancelamento. A navegação integrada verifica o retorno do detalhe para a Home e os fallbacks para catálogo. A [validação final da v1.0.0](../releases/v1.0.0/README.md#validação-local) registra a suíte completa e o build de produção.
+
+Os testes de treinos de hoje cobrem múltiplas páginas/ciclos, ordenação, dia local, retomada, sessão ativa, bloqueios, erros, abertura incerta e continuidade. A validação atual está em [v1.2.0 — preparação](../releases/v1.2.0/README.md#testes-e-validações). Os resultados anteriores acima permanecem históricos.
 
 <p align="right"><a href="../README.md">Voltar para o índice da documentação</a></p>

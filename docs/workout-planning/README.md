@@ -4,7 +4,7 @@
 
 A feature `workout-planning` implementa o planejamento de treinos da pessoa autenticada: consulta de objetivos, criação de ciclos, composição de dias e atividades, prescrição, reordenação e lifecycle. Ela integra o catálogo de exercícios existente, a Home e a navegação global na primeira versão funcional e estável do frontend, [v1.0.0](../releases/v1.0.0/README.md).
 
-Planejamento não representa execução de sessões. O backend continua responsável por ownership, validações, normalização de posições e transições de domínio.
+Planejamento não representa execução de sessões. Essa responsabilidade está implementada em [Workout Session](../workout-session/README.md), com registros independentes da prescrição. O backend continua responsável por ownership, validações, normalização de posições e transições de domínio.
 
 ## Estrutura e Responsabilidades
 
@@ -39,25 +39,25 @@ Linhas do catálogo abrem o detalhe por clique, Enter ou Space. A ação de edi�
 
 Todos os endpoints exigem sessão por cookie. O serviço reutiliza o interceptor, `withCredentials` e o tratamento global de `401`, descritos em [Arquitetura](../architecture/README.md). O cliente não envia `personId`; a API resolve a pessoa autenticada.
 
-| Método   | Caminho                                         | Entrada                                             |
-| -------- | ----------------------------------------------- | --------------------------------------------------- |
-| `GET`    | `/api/training-goals`                           | Sem parâmetros.                                     |
-| `GET`    | `/api/users/me/workout-cycles`                  | Filtros, `page` e `size`.                           |
-| `POST`   | `/api/users/me/workout-cycles`                  | Nome, objetivo, duração desejada, `weekStartsOn` e observações.     |
-| `GET`    | `/api/users/me/workout-cycles/{id}`             | ID.                                                 |
-| `PUT`    | `/api/users/me/workout-cycles/{id}`             | Campos editáveis completos do ciclo, incluindo `weekStartsOn`.                |
-| `DELETE` | `/api/users/me/workout-cycles/{id}`             | ID de ciclo não iniciado.                           |
-| `PATCH`  | `/api/users/me/workout-cycles/{id}/start`       | Sem corpo de dados (`null`).                        |
-| `PATCH`  | `/api/users/me/workout-cycles/{id}/complete`    | Sem corpo de dados (`null`).                        |
-| `PATCH`  | `/api/users/me/workout-cycles/{id}/cancel`      | Sem corpo de dados (`null`).                        |
-| `POST`   | `/api/users/me/workout-days`                    | `workoutCycleId`, `weekDay`, `title`.               |
-| `PUT`    | `/api/users/me/workout-days/{id}`               | `title`.                                            |
-| `DELETE` | `/api/users/me/workout-days/{id}`               | ID.                                                 |
-| `PATCH`  | `/api/users/me/workout-days/{id}/reorder`       | `weekDay`, `sortOrder`.                             |
-| `POST`   | `/api/users/me/workout-activities`              | `workoutDayId`, `exerciseId` e prescrição opcional. |
-| `PUT`    | `/api/users/me/workout-activities/{id}`         | `exerciseId` e prescrição completa.                 |
-| `DELETE` | `/api/users/me/workout-activities/{id}`         | ID.                                                 |
-| `PATCH`  | `/api/users/me/workout-activities/{id}/reorder` | `orderIndex`.                                       |
+| Método   | Caminho                                         | Entrada                                                         |
+| -------- | ----------------------------------------------- | --------------------------------------------------------------- |
+| `GET`    | `/api/training-goals`                           | Sem parâmetros.                                                 |
+| `GET`    | `/api/users/me/workout-cycles`                  | Filtros, `page` e `size`.                                       |
+| `POST`   | `/api/users/me/workout-cycles`                  | Nome, objetivo, duração desejada, `weekStartsOn` e observações. |
+| `GET`    | `/api/users/me/workout-cycles/{id}`             | ID.                                                             |
+| `PUT`    | `/api/users/me/workout-cycles/{id}`             | Campos editáveis completos do ciclo, incluindo `weekStartsOn`.  |
+| `DELETE` | `/api/users/me/workout-cycles/{id}`             | ID de ciclo não iniciado.                                       |
+| `PATCH`  | `/api/users/me/workout-cycles/{id}/start`       | Sem corpo de dados (`null`).                                    |
+| `PATCH`  | `/api/users/me/workout-cycles/{id}/complete`    | Sem corpo de dados (`null`).                                    |
+| `PATCH`  | `/api/users/me/workout-cycles/{id}/cancel`      | Sem corpo de dados (`null`).                                    |
+| `POST`   | `/api/users/me/workout-days`                    | `workoutCycleId`, `weekDay`, `title`.                           |
+| `PUT`    | `/api/users/me/workout-days/{id}`               | `title`.                                                        |
+| `DELETE` | `/api/users/me/workout-days/{id}`               | ID.                                                             |
+| `PATCH`  | `/api/users/me/workout-days/{id}/reorder`       | `weekDay`, `sortOrder`.                                         |
+| `POST`   | `/api/users/me/workout-activities`              | `workoutDayId`, `exerciseId` e prescrição opcional.             |
+| `PUT`    | `/api/users/me/workout-activities/{id}`         | `exerciseId` e prescrição completa.                             |
+| `DELETE` | `/api/users/me/workout-activities/{id}`         | ID.                                                             |
+| `PATCH`  | `/api/users/me/workout-activities/{id}/reorder` | `orderIndex`.                                                   |
 
 ### TrainingGoal
 
@@ -168,6 +168,12 @@ O card `Planejamento de treinos` consulta até três ciclos `IN_PROGRESS`. Somen
 
 Telas e formulários reutilizam tokens, breakpoints, botões, inputs, loading, empty state, dialogs, toasts e paginator existentes. Filtros reduzem colunas conforme o espaço; tabelas permitem rolagem horizontal; formulários e ações seguem [Disposição de ações no mobile](../architecture/mobile-actions.md). Ícones possuem labels e tooltips, linhas aceitam teclado e a seleção usa checkboxes rotulados. Loading, erros e seleção possuem indicações acessíveis nos templates. Isso não representa certificação ou auditoria completa de acessibilidade.
 
+### Integração com Workout Session
+
+O catálogo oferece atalhos para sessão em andamento, histórico e evolução. O detalhe permite iniciar sessão para dias com atividades de ciclos `IN_PROGRESS`, respeitando bloqueios de edição/gravação. Usa `WorkoutSessionStartService` para abertura e conferência de resultados incertos; o sucesso abre `/workout-sessions/:id`. Iniciar ciclo e iniciar sessão são ações distintas. Os ícones de planejamento (`event_note`), início de sessão e encerramento foram padronizados na navegação e nas ações contextuais.
+
+A Home mantém o resumo de ciclos e acrescenta treinos previstos para o dia, com início e continuidade de sessão. `weekStartsOn` altera somente a ordenação visual semanal, sem deslocar o dia de calendário ou atribuir execução. Sessões preservam snapshots e os dados efetivamente registrados; editar a prescrição não equivale a editar execução histórica.
+
 ## Revisão e Validação Local
 
 A [Issue #78](https://github.com/renancvitor/ironcore-frontend/issues/78) fecha documentalmente o milestone. Foram conferidas as entregas mergeadas pelos PRs [#79](https://github.com/renancvitor/ironcore-frontend/pull/79) (modelos/serviço), [#80](https://github.com/renancvitor/ironcore-frontend/pull/80) (catálogo/detalhe), [#81](https://github.com/renancvitor/ironcore-frontend/pull/81) (ciclos), [#82](https://github.com/renancvitor/ironcore-frontend/pull/82) (dias), [#83](https://github.com/renancvitor/ironcore-frontend/pull/83) (atividades/seleção), [#84](https://github.com/renancvitor/ironcore-frontend/pull/84) (lifecycle) e [#85](https://github.com/renancvitor/ironcore-frontend/pull/85) (Home), até o commit `b615a9c`.
@@ -183,8 +189,8 @@ Na revisão de 17/10/2026 (America/Sao_Paulo), passaram 699 testes em 59 arquivo
 
 ## Fora do Escopo
 
-Workout Session, execução/acompanhamento real de sessões, histórico de treinos executados, geração com IA/agent, métricas de aderência e progresso percentual de ciclos não fazem parte da v1.0.0. A enumeração de origem `AGENT` no contrato não disponibiliza geração de treino na interface.
+Workout Session, histórico e evolução foram entregues após a v1.0.0 e possuem documentação própria. Geração com IA/agent, métricas de aderência e progresso percentual de ciclos permanecem fora do escopo implementado. A enumeração de origem `AGENT` no contrato não disponibiliza geração de treino na interface.
 
-Não há sincronização automática entre abas, confirmação de alterações não salvas ou guard de saída específico para os formulários desta feature. Os bloqueios documentados são locais à interação. A integração depende da disponibilidade da API e da configuração de sessão/cookies/CORS. Esses recortes não são bugs de planejamento.
+Não há sincronização automática dos dados de planejamento entre abas, confirmação de alterações não salvas ou guard de saída específico para os formulários desta feature. A coordenação de autenticação entre abas e os guards de Workout Session têm responsabilidades distintas. Os bloqueios documentados são locais à interação. A integração depende da disponibilidade da API e da configuração de sessão/cookies/CORS. Esses recortes não são bugs de planejamento.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

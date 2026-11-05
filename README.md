@@ -49,7 +49,7 @@ Planejamento, tarefas e histórico de evolução disponíveis no GitHub Projects
 
 <b>IronCore Frontend</b> é a interface web do ecossistema IronCore. Construído com <b>[Angular](https://angular.dev/)</b>, oferece a camada de apresentação para os fluxos disponibilizados pelo [IronCore Backend](https://github.com/renancvitor/ironcore-backend).
 
-A aplicação permite acompanhar evolução física, consultar o catálogo de exercícios e organizar ciclos de treino. Registro de sessões executadas e recursos apoiados por IA permanecem como evoluções futuras, fora da v1.0.0.
+A aplicação permite acompanhar evolução física, consultar o catálogo de exercícios e organizar ciclos de treino. Também registra sessões executadas, consulta seu histórico e apresenta evolução de força e cardio. Geração de treinos por IA permanece planejada.
 
 O frontend não replica regras de domínio. Sua responsabilidade é apresentar informações, orientar a interação, consumir os contratos reais da API e tratar adequadamente os estados de carregamento, sucesso e erro. As validações de domínio, autenticação, autorização e integridade dos dados permanecem sob responsabilidade do backend.
 
@@ -68,14 +68,14 @@ O desenvolvimento do projeto busca consolidar habilidades como:
 
 <h2 id="status-atual-do-projeto" align="center">Status Atual do Projeto</h2>
 
-O <b>IronCore Frontend v1.0.0</b> é a primeira versão funcional e estável da interface e encerra a primeira fase do produto no frontend. Consolida autenticação, conta, avaliação e evolução corporal, catálogo de exercícios e Workout Planning completo, integrados à Home e à navegação global. O registro da release está em [v1.0.0](docs/releases/v1.0.0/README.md); sua preparação documental não implica publicação no GitHub.
+A última release publicada é a [v1.1.0](docs/releases/v1.1.0/README.md), de 24/10/2026. A `main` também integra Workout Session, melhorias de Home, navegação e autenticação. A documentação da [próxima versão proposta, v1.2.0](docs/releases/v1.2.0/README.md), consolida o delta `v1.1.0...main`; sua preparação não publica release nem cria tag. O milestone `v1.0.0` de Workout Session tem numeração independente.
 
 ### Já existe no projeto
 
 A implantação inicial em produção foi concluída e validada em outubro de 2026. A interface está disponível em [ironcore.dev.br](https://ironcore.dev.br), integrada à API em `https://api.ironcore.dev.br`, com publicação automática pelo Cloudflare Pages. Consulte [Deploy e Produção](docs/deploy/README.md).
 
 - Aplicação Angular 21 configurada com TypeScript e SCSS.
-- Rotas públicas para login e primeiro acesso, e rotas protegidas carregadas sob demanda para início, perfil, alteração de senha, avaliação corporal, exercícios e planejamento de treinos.
+- Rotas públicas para login e primeiro acesso, e rotas protegidas carregadas sob demanda para início, perfil, alteração de senha, avaliação corporal, exercícios, planejamento e sessões de treino.
 - Provider HTTP com URL base configurável por environment.
 - Fluxos de login, primeiro acesso, logout e restauração de sessão pelo contrato real da API.
 - Estado do usuário autenticado em memória, interceptor com `withCredentials` para a API e `authGuard` aplicado às rotas protegidas.
@@ -83,10 +83,12 @@ A implantação inicial em produção foi concluída e validada em outubro de 20
 - Avaliação corporal com cadastro, histórico paginado, detalhe, última avaliação, edição, exclusão, evolução e comparativo integrados ao backend.
 - Catálogo de exercícios com classificações auxiliares, busca por nome, filtros combinados, paginação, detalhe e apresentação de músculos-alvo e seus papéis.
 - Workout Planning com objetivos ativos da API, catálogo filtrado e paginado, criação/edição de ciclos, composição de dias e atividades, seleção de exercícios, prescrição híbrida, reorder, exclusão e lifecycle conforme status.
-- Home com resumos independentes de última avaliação, evolução corporal e planejamento de treinos; o resumo de planejamento prioriza ciclos em andamento, com fallback para não iniciados, até três itens, links individuais e acesso ao catálogo completo.
+- Workout Session com início, recuperação, encerramento, execução parcial por exercício/série, relatos opcionais, modos de carga, edição posterior, histórico paginado e evolução de força/cardio.
+- Recuperação de autenticação por refresh token, coordenação entre abas, CSRF e tratamento de `401`/`429`, conforme os contratos da API.
+- Home com treinos do dia e atalhos para iniciar/continuar sessão, além de resumos independentes de última avaliação, evolução corporal e planejamento de treinos; o resumo de planejamento prioriza ciclos em andamento, com fallback para não iniciados, até três itens, links individuais e acesso ao catálogo completo.
 - Angular Material, design tokens, preferência persistente de tema claro, escuro ou do sistema e breakpoints responsivos centralizados.
 - Componentes compartilhados de botão, input, loading, empty state, diálogo de confirmação e toast.
-- Application shell com header, sidebar, acesso ao perfil, avaliação corporal, exercícios e planejamento de treinos, logout, preferência de tema, container de conteúdo e `router-outlet` interno.
+- Application shell com header, sidebar, acesso ao perfil, avaliação corporal, exercícios, planejamento e sessões de treino, logout, preferência de tema, container de conteúdo e `router-outlet` interno.
 - Actions mobile compartilhadas, ícones com labels acessíveis e tooltips, além de gráficos e tabelas com rolagem horizontal quando necessária.
 - Configuração de build de produção e desenvolvimento.
 - Estrutura de testes unitários baseada em Vitest.
@@ -97,7 +99,6 @@ A implantação inicial em produção foi concluída e validada em outubro de 20
 
 ### Planejado para as próximas etapas
 
-- Registro e histórico de sessões executadas e visualizações de progresso de treino.
 - Geração de treino com IA/agent, conforme futuros contratos do backend.
 - Métricas de aderência e progresso percentual de ciclos apoiadas em dados reais de execução.
 - Evolução dos testes para os novos fluxos de domínio e de interface.
@@ -146,7 +147,7 @@ Essa integração segue os seguintes princípios:
 - não expor detalhes técnicos desnecessários ao usuário;
 - não armazenar credenciais, tokens ou dados sensíveis de forma insegura no navegador.
 
-Os mecanismos implementados de comunicação HTTP, sessão e proteção de rotas estão documentados em [Arquitetura](docs/architecture/README.md). O interceptor trata globalmente respostas `401`; os demais erros dos fluxos são apresentados pelas telas. Os contratos utilizados estão em [Avaliação corporal](docs/body-metrics/README.md), [Catálogo de Exercícios](docs/exercises/README.md) e [Workout Planning](docs/workout-planning/README.md).
+Os mecanismos implementados de comunicação HTTP, sessão e proteção de rotas estão documentados em [Arquitetura](docs/architecture/README.md). A infraestrutura HTTP trata recuperação após `401` e limitação de tentativas de autenticação em `429`; as telas apresentam os erros dos fluxos. Os contratos utilizados estão em [Avaliação corporal](docs/body-metrics/README.md), [Catálogo de Exercícios](docs/exercises/README.md), [Workout Planning](docs/workout-planning/README.md) e [Workout Session](docs/workout-session/README.md).
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -156,7 +157,7 @@ Os mecanismos implementados de comunicação HTTP, sessão e proteção de rotas
 
 A documentação técnica detalhada do projeto está disponível no índice central da pasta [docs](docs/README.md).
 
-Esse índice central reúne os principais documentos sobre arquitetura, estrutura do projeto, módulos funcionais, Home e cards-resumo, padrões responsivos e notas de release. Para o fluxo de ciclos, consulte [Workout Planning](docs/workout-planning/README.md). A primeira fase do frontend está consolidada na [release v1.0.0](docs/releases/v1.0.0/README.md).
+Esse índice central reúne os principais documentos sobre arquitetura, estrutura do projeto, módulos funcionais, Home e cards-resumo, padrões responsivos e notas de release. Para o fluxo de ciclos, consulte [Workout Planning](docs/workout-planning/README.md) e [Workout Session](docs/workout-session/README.md). A primeira fase do frontend está consolidada na [release v1.0.0](docs/releases/v1.0.0/README.md).
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -175,10 +176,12 @@ O escopo funcional da primeira fase está entregue na v1.0.0, incluindo os fluxo
 - Criação, consulta e organização de ciclos de treino.
 - Feedbacks de carregamento, erro e sucesso nos fluxos principais.
 
-### Evoluções futuras, fora da v1.0.0
+### Evoluções posteriores à primeira versão
 
-- Registro e histórico de sessões de treino executadas.
-- Visualizações de treino.
+- Registro e histórico de sessões, edição de execução e evolução de força/cardio estão implementados na `main`; consulte [Workout Session](docs/workout-session/README.md).
+
+### Ainda planejado
+
 - Recursos de planejamento de treino apoiados por IA, quando disponibilizados pelo backend.
 - Evoluções de acessibilidade, responsividade e experiência de uso baseadas nos fluxos implementados.
 
@@ -188,12 +191,12 @@ O escopo funcional da primeira fase está entregue na v1.0.0, incluindo os fluxo
 
 <h2 id="funcionalidades-disponiveis" align="center">Funcionalidades Disponíveis</h2>
 
-As funcionalidades abaixo compõem a [v1.0.0](docs/releases/v1.0.0/README.md). As versões incrementais identificam a origem das entregas e preservam seu próprio registro histórico. Execução e histórico de sessões permanecem explicitamente futuros.
+As funcionalidades abaixo descrevem a implementação atual. As [releases](docs/releases/README.md) preservam a origem e o recorte histórico das entregas.
 
 ### Acesso e sessão
 
 - Login, logout, proteção de rotas, restauração de sessão e fluxos de troca de senha foram entregues na [v0.2.0](docs/releases/v0.2.0/README.md).
-- Evoluções adicionais de tratamento de sessão e autenticação serão realizadas conforme novos contratos forem disponibilizados.
+- Recuperação automática por refresh token após `401`, coordenação entre abas e tratamento de `429`, com cookies e CSRF. Leituras elegíveis podem ser repetidas após recuperação; gravações exigem nova ação do usuário.
 
 ### Pessoa e evolução física
 
@@ -210,15 +213,17 @@ As funcionalidades abaixo compõem a [v1.0.0](docs/releases/v1.0.0/README.md). A
 ### Planejamento de treinos
 
 - Consulta de objetivos ativos da API e catálogo de ciclos com filtros e paginação.
-- Criação/edição de ciclos e composição de dias e atividades com exercícios do catálogo existente.
+- Criação/edição de ciclos, início da semana configurável e composição de dias e atividades com exercícios do catálogo existente.
 - Seleção contextual múltipla, prevenção de duplicidade por dia e prescrição híbrida combinável.
 - Reorder de dias/atividades, exclusão conforme status e lifecycle de início, conclusão e cancelamento.
 - Integração à Home e navegação global, com retorno contextual do detalhe; entrega consolidada na [v1.0.0](docs/releases/v1.0.0/README.md).
 
-### Execução e histórico — futuros
+### Execução, histórico e evolução de treinos
 
-- Registro de sessões e atividades executadas, quando esse fluxo for disponibilizado pelo backend.
-- Consulta de histórico e resumo de treinos realizados.
+- Início, recuperação e encerramento de sessões, com prescrição separada da execução registrada.
+- Séries, repetições, cargas `TOTAL`/`PER_SIDE`, duração, distância e relatos opcionais; edição inline e posterior dos registros.
+- Histórico com busca, datas e paginação; gráficos de força/cardio usando os indicadores reais da API.
+- Home com treinos previstos para o dia e acesso à sessão em andamento.
 
 ### Experiência de uso
 
@@ -232,7 +237,7 @@ As funcionalidades abaixo compõem a [v1.0.0](docs/releases/v1.0.0/README.md). A
 
 <h2 id="testes-automatizados" align="center">Testes Automatizados</h2>
 
-O projeto possui testes com Vitest para a foundation e os fluxos de autenticação, conta, avaliação corporal, catálogo de exercícios e Workout Planning: infraestrutura HTTP, rotas, layout, tema, perfil, componentes compartilhados, formulários, gráficos/comparativo, filtros, paginação, músculos-alvo, composição, seleção, prescrição, reorder, lifecycle e resumos da Home. Testes de integração verificam consultas após mutações e navegação contextual. Os testes HTTP usam respostas simuladas e não alteram dados de uma API real. A [validação final da v1.0.0](docs/releases/v1.0.0/README.md#validação-local) registra 699 testes aprovados em 59 arquivos e build de produção sem avisos.
+O projeto usa Vitest para infraestrutura, autenticação, conta, avaliação corporal, exercícios, Workout Planning, Workout Session e integração com a Home e a navegação. Os testes HTTP usam respostas simuladas. Resultados desta revisão e limitações de validação estão em [v1.2.0 — preparação](docs/releases/v1.2.0/README.md#testes-e-validações).
 
 Os testes protegem, quando aplicável:
 
